@@ -1,0 +1,6 @@
+import client from './client'
+
+export const getBalance = () => client.get('/userprofiles/my')
+export const deposit = (data) => client.post('/payments/deposit', data)
+export const getTransactions = (params) => client.get('/payments/history/paged', { params })
+export const getAllPayments = (params) => client.get('/payments/all/paged', { params })
