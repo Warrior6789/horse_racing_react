@@ -103,7 +103,7 @@ export default function App() {
           <Route path="/admin/withdrawals" element={<PrivateRoute roles={['Admin']}><WithdrawalManagement /></PrivateRoute>} />
           <Route path="/admin/config" element={<PrivateRoute roles={['Admin']}><ConfigManagement /></PrivateRoute>} />
           <Route path="/admin/payments" element={<PrivateRoute roles={['Admin']}><PaymentManagement /></PrivateRoute>} />
-          <Route path="/admin/referee-assignment" element={<PrivateRoute roles={['Admin']}><RefereeAssignment /></PrivateRoute>} />
+          <Route path="/admin/referees" element={<PrivateRoute roles={['Admin']}><RefereeAssignment /></PrivateRoute>} />
 
           <Route path="/unauthorized" element={<div className="flex items-center justify-center h-screen text-secondary text-body-lg">You do not have permission to access this page.</div>} />
           <Route path="*" element={<Navigate to="/login" replace />} />

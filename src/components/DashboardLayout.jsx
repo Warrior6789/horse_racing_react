@@ -11,7 +11,7 @@ const ROLE_NAV = {
     { to: '/admin/races',           icon: 'sports',                   label: 'Races' },
     { to: '/admin/racecourses',     icon: 'stadium',                  label: 'Racecourses' },
     { to: '/admin/registrations',   icon: 'app_registration',         label: 'Registrations' },
-    { to: '/admin/referee-assignment', icon: 'assignment_ind',          label: 'Referee Assignment' },
+    { to: '/admin/referees', icon: 'assignment_ind',          label: 'Referees' },
     { to: '/admin/referee-reports', icon: 'gavel',                    label: 'Referee Reports' },
     { to: '/admin/withdrawals',     icon: 'payments',                 label: 'Withdrawals' },
     { to: '/admin/payments',        icon: 'credit_card',              label: 'Payments' },
