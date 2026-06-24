@@ -192,8 +192,8 @@ export default function LiveRace({ Layout = SpectatorLayout, backUrl = '/spectat
 
   const tracks  = regs.map((reg, i) => {
     const live = findLive(reg)
-    if (!live && horses.length > 0) {
-      console.warn('[findLive] NO MATCH for reg:', { registrationId: reg.registrationId, horseId: reg.horse?.id ?? reg.horse?.horseId })
+    if (horses.length > 0) {
+      console.log(`[track ${i}] reg.horse keys:`, Object.keys(reg.horse || {}), '| horse.id:', reg.horse?.id, '| horse.horseId:', reg.horse?.horseId, '| matched progress:', live?.progress ?? 'NO MATCH')
     }
     return { ...reg, progress: live?.progress ?? 0, isFinished: live?.isFinished ?? false, lane: i }
   })
