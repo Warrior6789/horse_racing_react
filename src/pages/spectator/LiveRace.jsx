@@ -145,7 +145,10 @@ export default function LiveRace({ Layout = SpectatorLayout, backUrl = '/spectat
   }, [fetchBets])
 
   const handleRaceUpdate = useCallback((data) => {
-    if (data.horses) setHorses(data.horses)
+    if (data.horses) {
+      console.log('[RaceUpdate] horses:', data.horses.map(h => ({ id: h.id, horseId: h.horseId, registrationId: h.registrationId, progress: h.progress })))
+      setHorses(data.horses)
+    }
     if (data.status) setLiveStatus(data.status)
   }, [])
 
@@ -189,6 +192,9 @@ export default function LiveRace({ Layout = SpectatorLayout, backUrl = '/spectat
 
   const tracks  = regs.map((reg, i) => {
     const live = findLive(reg)
+    if (!live && horses.length > 0) {
+      console.warn('[findLive] NO MATCH for reg:', { registrationId: reg.registrationId, horseId: reg.horse?.id ?? reg.horse?.horseId })
+    }
     return { ...reg, progress: live?.progress ?? 0, isFinished: live?.isFinished ?? false, lane: i }
   })
 
