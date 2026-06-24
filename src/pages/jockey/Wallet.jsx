@@ -117,7 +117,11 @@ export default function JockeyWallet() {
     if (!amount || Number(amount) <= 0) return
     setActionLoading(true)
     try {
-      const r = await deposit({ amount: Number(amount) })
+      const r = await deposit({
+        amount:    Number(amount),
+        cancelUrl: `${window.location.origin}/payment/cancel`,
+        returnUrl: `${window.location.origin}/payment/return`,
+      })
       const paymentUrl =
         r.data?.data?.paymentUrl ||
         r.data?.paymentUrl ||

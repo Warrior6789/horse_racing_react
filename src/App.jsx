@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import RoleUpgrade from './pages/auth/RoleUpgrade'
+import PaymentCancel from './pages/payment/Cancel'
 
 import SpectatorDashboard from './pages/spectator/Dashboard'
 import UpcomingRaces from './pages/spectator/UpcomingRaces'
@@ -55,6 +56,9 @@ export default function App() {
 
           {/* Upgrade (any authenticated user) */}
           <Route path="/upgrade" element={<PrivateRoute><RoleUpgrade /></PrivateRoute>} />
+
+          {/* Payment return pages */}
+          <Route path="/payment/cancel" element={<PrivateRoute><PaymentCancel /></PrivateRoute>} />
 
           {/* Spectator */}
           <Route path="/spectator/dashboard" element={<PrivateRoute><SpectatorDashboard /></PrivateRoute>} />
