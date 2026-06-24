@@ -38,7 +38,7 @@ export default function JockeyWallet() {
   const [page, setPage]                 = useState(1)
   const [totalPages, setTotalPages]     = useState(1)
   const [totalCount, setTotalCount]     = useState(0)
-  const PAGE_SIZE = 8
+  const PAGE_SIZE = 3
 
   const [depositModal, setDepositModal]   = useState(false)
   const [withdrawModal, setWithdrawModal] = useState(false)
