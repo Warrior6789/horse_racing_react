@@ -13,48 +13,107 @@ const STATUS_COLOR = {
   Scheduled:     'bg-blue-700',
 }
 
+const LANE_H    = 44
+const GATE_W    = 28
+const FINISH_W  = 12
+
 function TrackVisualization({ tracks }) {
-  const sorted = [...tracks].sort((a, b) => b.progress - a.progress)
+  const sorted      = [...tracks].sort((a, b) => b.progress - a.progress)
+  const totalH      = tracks.length * LANE_H
+  const TRACK_START = 4
+  const TRACK_END   = 92
 
   return (
-    <div
-      className="relative bg-[#14310f] border border-stone-700/60 rounded-xl overflow-hidden mb-6"
-      style={{ height: `${Math.max(160, tracks.length * 44 + 24)}px` }}
-    >
-      {tracks.map((_, i) => (
-        <div
-          key={i}
-          className="absolute left-0 right-0 border-b border-[#1a4a14]/40"
-          style={{ top: `${((i + 1) / (tracks.length + 1)) * 100}%` }}
-        />
-      ))}
-      <div className="absolute right-6 top-0 bottom-0 w-0.5 bg-white/30 border-dashed" />
+    <div className="mb-6 rounded-xl overflow-hidden border border-stone-700/60 select-none">
+      {/* Header */}
+      <div className="flex bg-[#0e2409] px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-stone-500">
+        <div style={{ width: GATE_W }} className="text-center shrink-0">#</div>
+        <div className="flex-1 pl-2">Track</div>
+      </div>
 
-      {tracks.map((h) => {
-        const laneY = ((h.lane + 1) / (tracks.length + 1)) * 100
-        const posX  = Math.min(88, h.progress * 88)
-        const rank  = sorted.findIndex(s => s.registrationId === h.registrationId)
-        return (
+      <div className="relative" style={{ height: totalH }}>
+
+        {/* Lane backgrounds */}
+        {tracks.map((_, i) => (
           <div
-            key={h.registrationId}
-            className="absolute flex items-center gap-1 transition-all duration-150"
-            style={{ top: `calc(${laneY}% - 13px)`, left: `${posX}%` }}
-          >
-            <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black shadow-md
-              ${h.isFinished
-                ? 'bg-stone-500 text-white'
-                : rank === 0 ? 'bg-[#f7e0a3] text-black'
-                : rank === 1 ? 'bg-stone-300 text-black'
-                : rank === 2 ? 'bg-amber-700 text-white'
-                : 'bg-stone-700 text-stone-300'}`}>
-              {rank + 1}
+            key={i}
+            className="absolute left-0 right-0"
+            style={{
+              top:    i * LANE_H,
+              height: LANE_H,
+              background: i % 2 === 0 ? '#14310f' : '#112c0d',
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
+            }}
+          />
+        ))}
+
+        {/* Gate number column */}
+        <div
+          className="absolute top-0 bottom-0 bg-black/30 border-r border-stone-700/40"
+          style={{ width: GATE_W }}
+        >
+          {tracks.map((h, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-center text-[10px] font-black text-stone-400"
+              style={{ height: LANE_H }}
+            >
+              {h.gateNumber ?? i + 1}
             </div>
-            <span className="text-[9px] font-bold text-white bg-black/70 px-1 py-0.5 rounded whitespace-nowrap hidden sm:block">
-              {h.horse?.horseName || `#${h.gateNumber}`}
-            </span>
+          ))}
+        </div>
+
+        {/* Track area */}
+        <div className="absolute top-0 bottom-0" style={{ left: GATE_W, right: 0 }}>
+
+          {/* Start line */}
+          <div className="absolute top-0 bottom-0 w-px bg-white/25" style={{ left: `${TRACK_START}%` }} />
+
+          {/* Finish line - checkered */}
+          <div
+            className="absolute top-0 bottom-0 overflow-hidden"
+            style={{ left: `${TRACK_END}%`, width: FINISH_W }}
+          >
+            {Array.from({ length: tracks.length * 4 }).map((_, i) => (
+              <div
+                key={i}
+                style={{ height: LANE_H / 4 }}
+                className={i % 2 === 0 ? 'bg-white/80' : 'bg-black/70'}
+              />
+            ))}
           </div>
-        )
-      })}
+
+          {/* Horses */}
+          {tracks.map((h) => {
+            const rank = sorted.findIndex(s => s.registrationId === h.registrationId)
+            const posX = TRACK_START + h.progress * (TRACK_END - TRACK_START)
+            return (
+              <div
+                key={h.registrationId}
+                className="absolute flex items-center gap-1 transition-all duration-150"
+                style={{
+                  top:  h.lane * LANE_H + (LANE_H / 2) - 11,
+                  left: `${posX}%`,
+                }}
+              >
+                <div className={`w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black shadow
+                  ${h.isFinished
+                    ? 'bg-stone-500 text-white'
+                    : rank === 0 ? 'bg-[#f7e0a3] text-black'
+                    : rank === 1 ? 'bg-stone-300 text-black'
+                    : rank === 2 ? 'bg-amber-700 text-white'
+                    : 'bg-stone-700 text-stone-300'}`}
+                >
+                  {rank + 1}
+                </div>
+                <span className="text-[8px] font-bold text-white bg-black/70 px-1 py-0.5 rounded whitespace-nowrap hidden sm:block">
+                  {h.horse?.horseName || `#${h.gateNumber}`}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
