@@ -37,7 +37,7 @@ export default function WalletPage() {
   const [page, setPage]                 = useState(1)
   const [totalPages, setTotalPages]     = useState(1)
   const [totalCount, setTotalCount]     = useState(0)
-  const PAGE_SIZE = 8
+  const PAGE_SIZE = 3
 
   const [totalWinnings, setTotalWinnings] = useState(0)
   const [pendingBets, setPendingBets]     = useState(0)
