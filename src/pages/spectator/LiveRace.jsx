@@ -145,10 +145,7 @@ export default function LiveRace({ Layout = SpectatorLayout, backUrl = '/spectat
   }, [fetchBets])
 
   const handleRaceUpdate = useCallback((data) => {
-    if (data.horses) {
-      console.log('[RaceUpdate] horses:', data.horses.map(h => ({ id: h.id, horseId: h.horseId, registrationId: h.registrationId, progress: h.progress })))
-      setHorses(data.horses)
-    }
+    if (data.horses) setHorses(data.horses)
     if (data.status) setLiveStatus(data.status)
   }, [])
 
@@ -190,14 +187,19 @@ export default function LiveRace({ Layout = SpectatorLayout, backUrl = '/spectat
       h.registrationId === reg.registrationId
     )
 
-  console.log('[tracks] regs.length:', regs.length, '| horses.length:', horses.length)
-  const tracks  = regs.map((reg, i) => {
-    const live = findLive(reg)
-    if (horses.length > 0) {
-      console.log(`[track ${i}] reg.horse keys:`, Object.keys(reg.horse || {}), '| horse.id:', reg.horse?.id, '| horse.horseId:', reg.horse?.horseId, '| matched progress:', live?.progress ?? 'NO MATCH')
-    }
-    return { ...reg, progress: live?.progress ?? 0, isFinished: live?.isFinished ?? false, lane: i }
-  })
+  const tracks = regs.length > 0
+    ? regs.map((reg, i) => {
+        const live = findLive(reg)
+        return { ...reg, progress: live?.progress ?? 0, isFinished: live?.isFinished ?? false, lane: i }
+      })
+    : horses.map((h, i) => ({
+        registrationId: h.id,
+        gateNumber: i + 1,
+        horse: { id: h.id, horseName: `Horse ${i + 1}` },
+        progress: h.progress ?? 0,
+        isFinished: h.isFinished ?? false,
+        lane: i,
+      }))
 
   const leaders = [...tracks].sort((a, b) => b.progress - a.progress)
 
