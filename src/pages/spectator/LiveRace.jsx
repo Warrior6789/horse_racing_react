@@ -190,6 +190,7 @@ export default function LiveRace({ Layout = SpectatorLayout, backUrl = '/spectat
       h.registrationId === reg.registrationId
     )
 
+  console.log('[tracks] regs.length:', regs.length, '| horses.length:', horses.length)
   const tracks  = regs.map((reg, i) => {
     const live = findLive(reg)
     if (horses.length > 0) {
