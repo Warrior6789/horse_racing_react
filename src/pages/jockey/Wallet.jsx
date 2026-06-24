@@ -146,7 +146,7 @@ export default function JockeyWallet() {
   const handleWithdraw = async () => {
     if (!amount || Number(amount) <= 0) return
     if (!bankName.trim() || !bankAccountNumber.trim() || !accountHolderName.trim()) {
-      setMsg({ type: 'error', text: 'Vui lòng điền đầy đủ thông tin ngân hàng.' })
+      setMsg({ type: 'error', text: 'Please fill in all bank details.' })
       return
     }
     setActionLoading(true)
@@ -400,11 +400,11 @@ export default function JockeyWallet() {
             </div>
           )}
           {(conversionRate == null || Number(amount) <= 0) && <div className="mb-4" />}
-          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Tên ngân hàng</label>
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Bank Name</label>
           <input type="text" placeholder="Vietcombank" value={bankName} onChange={e => setBankName(e.target.value)} className={`${inputCls} mb-3`} />
-          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Số tài khoản</label>
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Account Number</label>
           <input type="text" placeholder="0123456789" value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} className={`${inputCls} mb-3`} />
-          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Chủ tài khoản</label>
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Account Holder Name</label>
           <input type="text" placeholder="NGUYEN VAN A" value={accountHolderName} onChange={e => setAccountHolderName(e.target.value)} className={`${inputCls} mb-4`} />
           {msg.type === 'error' && <p className="text-xs text-red-400 mb-3">{msg.text}</p>}
           <button onClick={handleWithdraw} disabled={actionLoading}

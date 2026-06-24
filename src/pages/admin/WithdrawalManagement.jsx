@@ -151,7 +151,7 @@ export default function WithdrawalManagement() {
                       {/* Bank Details */}
                       <td className="py-5 px-6">
                         <p className="font-bold text-zinc-950">{item.bankName || '—'}</p>
-                        <p className="text-xs font-mono text-zinc-400">{maskAccount(item.bankAccountNumber)}</p>
+                        <p className="text-xs font-mono text-zinc-400">{item.bankAccountNumber || '—'}</p>
                       </td>
 
                       {/* Date */}
