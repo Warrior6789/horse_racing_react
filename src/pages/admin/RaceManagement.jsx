@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
-import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace, resetRace } from '../../api/races'
+import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace, resetRace, overrideResult, getRaceRegistrations } from '../../api/races'
 import { getRacecoursesPaged } from '../../api/racecourses'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
@@ -24,6 +24,112 @@ function StatusBadge({ status }) {
       {s.dot && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse" />}
       {s.label}
     </span>
+  )
+}
+
+function SetResultModal({ race, onClose, onSuccess }) {
+  const [regs, setRegs]       = useState([])
+  const [ranks, setRanks]     = useState({})
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving]   = useState(false)
+  const [error, setError]     = useState('')
+
+  useEffect(() => {
+    getRaceRegistrations(race.raceId)
+      .then(r => {
+        const payload = r.data?.data
+        const list = Array.isArray(payload) ? payload : payload?.items || []
+        setRegs(list)
+        const init = {}
+        list.forEach((reg, i) => { init[reg.registrationId] = String(i + 1) })
+        setRanks(init)
+      })
+      .catch(() => setError('Failed to load registrations.'))
+      .finally(() => setLoading(false))
+  }, [race.raceId])
+
+  const setRank = (regId, val) => setRanks(prev => ({ ...prev, [regId]: val }))
+
+  const confirm = async () => {
+    const values = Object.values(ranks)
+    const unique = new Set(values)
+    if (unique.size !== values.length) { setError('Two horses cannot share the same rank.'); return }
+
+    const body = regs.map(reg => ({
+      horseId: reg.horse?.horseId || reg.horse?.id || reg.horseId,
+      rank: Number(ranks[reg.registrationId]),
+    }))
+
+    setSaving(true); setError('')
+    try {
+      await overrideResult(race.raceId, body)
+      onSuccess()
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to set result.')
+    } finally { setSaving(false) }
+  }
+
+  const n = regs.length
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-4 my-auto">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-gray-900">Set Result — Race #{race.raceNumber}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
+          </div>
+        ) : regs.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">No registered horses found.</p>
+        ) : (
+          <div className="space-y-2">
+            {regs.map(reg => (
+              <div key={reg.registrationId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-9 h-9 rounded-lg bg-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-lg">
+                  {reg.horse?.imageUrl
+                    ? <img src={reg.horse.imageUrl} alt="" className="w-full h-full object-cover" />
+                    : '🐎'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{reg.horse?.horseName || `Horse #${reg.gateNumber}`}</p>
+                  <p className="text-[11px] text-gray-400">Gate #{reg.gateNumber ?? '?'}</p>
+                </div>
+                <select
+                  value={ranks[reg.registrationId] || '1'}
+                  onChange={e => setRank(reg.registrationId, e.target.value)}
+                  className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:border-gray-400 bg-white"
+                >
+                  {Array.from({ length: n }, (_, i) => i + 1).map(v => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {error && <p className="text-xs text-red-500">{error}</p>}
+
+        <div className="flex gap-3 pt-1">
+          <button onClick={onClose} className="flex-1 h-11 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={confirm}
+            disabled={saving || regs.length === 0}
+            className="flex-1 h-11 bg-gray-950 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors disabled:opacity-60"
+          >
+            {saving ? 'Saving…' : 'Confirm'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -62,6 +168,8 @@ export default function RaceManagement() {
   const [imageFile, setImageFile]       = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [origStartTime, setOrigStartTime] = useState('')
+  const [resultRace, setResultRace]     = useState(null)
+  const [toast, setToast]               = useState('')
 
   const loadCards = ({ silent = false } = {}) => {
     if (!silent) setCLoading(true)
@@ -201,6 +309,8 @@ export default function RaceManagement() {
     setDeleting(null)
   }
 
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
   const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white'
   const f = (k) => ({ value: form[k], onChange: e => setForm(p => ({ ...p, [k]: e.target.value })) })
 
@@ -293,6 +403,14 @@ export default function RaceManagement() {
                         Advance
                       </button>
                     )}
+                    {(r.status === 'BettingClosed' || r.status === 'Live') && (
+                      <button
+                        onClick={() => setResultRace(r)}
+                        className="flex-1 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-500 transition-colors"
+                      >
+                        Set Result
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(r.raceId)}
                       disabled={deleting === r.raceId}
@@ -383,6 +501,14 @@ export default function RaceManagement() {
                               {acting === r.raceId ? '…' : 'Advance'}
                             </button>
                           )}
+                          {(r.status === 'BettingClosed' || r.status === 'Live') && (
+                            <button
+                              onClick={() => setResultRace(r)}
+                              className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-500 transition-colors"
+                            >
+                              Set Result
+                            </button>
+                          )}
                           <button
                             onClick={() => handleAction(r.raceId, resetRace)}
                             disabled={acting === r.raceId}
@@ -425,6 +551,26 @@ export default function RaceManagement() {
         </div>
 
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg z-[60]">
+          {toast}
+        </div>
+      )}
+
+      {/* Set Result Modal */}
+      {resultRace && (
+        <SetResultModal
+          race={resultRace}
+          onClose={() => setResultRace(null)}
+          onSuccess={() => {
+            setResultRace(null)
+            showToast('Đã set kết quả')
+            loadCards(); load(page, pageSize)
+          }}
+        />
+      )}
 
       {/* Modal */}
       {modal && (

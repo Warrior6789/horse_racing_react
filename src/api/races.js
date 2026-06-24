@@ -15,6 +15,7 @@ export const uploadRaceImage = (id, file) => {
 }
 export const resetRace = (id) => client.post(`/races/${id}/reset`)
 export const advanceRace = (id) => client.post(`/races/${id}/advance`)
+export const overrideResult = (raceId, results) => client.post(`/races/${raceId}/engine/override-result`, results)
 export const deleteRace = (id) => client.delete(`/races/${id}`)
 export const registerHorseToRace = (raceId, data) => client.post(`/races/${raceId}/register`, data)
 export const getRaceRegistrations = (raceId) => client.get(`/races/${raceId}/registrations`)
