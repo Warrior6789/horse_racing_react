@@ -43,6 +43,9 @@ export default function JockeyWallet() {
   const [depositModal, setDepositModal]   = useState(false)
   const [withdrawModal, setWithdrawModal] = useState(false)
   const [amount, setAmount]               = useState('')
+  const [bankName, setBankName]           = useState('')
+  const [bankAccountNumber, setBankAccountNumber] = useState('')
+  const [accountHolderName, setAccountHolderName] = useState('')
   const [msg, setMsg]                     = useState({ type: '', text: '' })
   const [actionLoading, setActionLoading] = useState(false)
   const [conversionRate, setConversionRate] = useState(null)
@@ -142,15 +145,19 @@ export default function JockeyWallet() {
 
   const handleWithdraw = async () => {
     if (!amount || Number(amount) <= 0) return
+    if (!bankName.trim() || !bankAccountNumber.trim() || !accountHolderName.trim()) {
+      setMsg({ type: 'error', text: 'Vui lòng điền đầy đủ thông tin ngân hàng.' })
+      return
+    }
     setActionLoading(true)
     try {
-      await requestWithdrawal({ amount: Number(amount) })
+      await requestWithdrawal({ amount: Number(amount), bankName: bankName.trim(), bankAccountNumber: bankAccountNumber.trim(), accountHolderName: accountHolderName.trim() })
       setMsg({ type: 'success', text: 'Withdrawal request submitted.' })
       setWithdrawModal(false)
       fetchData(1)
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.message || 'Withdrawal failed.' })
-    } finally { setActionLoading(false); setAmount('') }
+    } finally { setActionLoading(false); setAmount(''); setBankName(''); setBankAccountNumber(''); setAccountHolderName('') }
   }
 
   const isDeposit = tx => (tx.type || tx.transactionType || tx.paymentType || '').toLowerCase().includes('deposit')
@@ -393,6 +400,12 @@ export default function JockeyWallet() {
             </div>
           )}
           {(conversionRate == null || Number(amount) <= 0) && <div className="mb-4" />}
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Tên ngân hàng</label>
+          <input type="text" placeholder="Vietcombank" value={bankName} onChange={e => setBankName(e.target.value)} className={`${inputCls} mb-3`} />
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Số tài khoản</label>
+          <input type="text" placeholder="0123456789" value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} className={`${inputCls} mb-3`} />
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Chủ tài khoản</label>
+          <input type="text" placeholder="NGUYEN VAN A" value={accountHolderName} onChange={e => setAccountHolderName(e.target.value)} className={`${inputCls} mb-4`} />
           {msg.type === 'error' && <p className="text-xs text-red-400 mb-3">{msg.text}</p>}
           <button onClick={handleWithdraw} disabled={actionLoading}
             className="w-full bg-[#1f1d28] border border-gray-700 text-gray-200 font-bold py-3 rounded-xl text-sm hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
