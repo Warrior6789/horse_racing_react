@@ -266,7 +266,7 @@ export default function OwnerWallet() {
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                             status === 'Completed' || status === 'Success'
                               ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
-                              : status === 'Failed'
+                              : status === 'Failed' || status === 'Cancelled'
                               ? 'bg-red-500/5 border-red-500/20 text-red-400'
                               : 'bg-yellow-500/5 border-yellow-500/20 text-yellow-400'
                           }`}>
