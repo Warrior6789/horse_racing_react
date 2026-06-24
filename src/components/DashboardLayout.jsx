@@ -128,21 +128,6 @@ export default function DashboardLayout({ children, title, headerActions }) {
               </NavLink>
             ))}
 
-            {/* Upgrade (non-admin) */}
-            {role !== 'Admin' && (
-              <div className="pt-3 mt-3 border-t border-gray-100">
-                <NavLink
-                  to="/upgrade"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors
-                     ${isActive ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`
-                  }
-                >
-                  <span className="material-symbols-outlined shrink-0" style={{ fontSize: '18px' }}>upgrade</span>
-                  <span>Upgrade Role</span>
-                </NavLink>
-              </div>
-            )}
           </nav>
 
           {/* User card — click to open profile panel */}
