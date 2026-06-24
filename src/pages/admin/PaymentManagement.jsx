@@ -21,7 +21,7 @@ const TX_TYPE = {
 export default function PaymentManagement() {
   const [rows, setRows]         = useState([])
   const [page, setPage]         = useState(1)
-  const [pageSize, setPageSize] = useState(5)
+  const [pageSize, setPageSize] = useState(4)
   const [totalPages, setTotal]  = useState(1)
   const [totalCount, setCount]  = useState(0)
   const [loading, setLoading]   = useState(true)

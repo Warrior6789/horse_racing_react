@@ -10,7 +10,7 @@ import OwnerLayout from '../../components/OwnerLayout'
 import { getOwnerAllRegistrationsPaged } from '../../api/registrations'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 4
 
 /* ─── Helpers ──────────────────────────────────────────────────────── */
 function eventColor(status) {

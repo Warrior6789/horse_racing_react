@@ -152,7 +152,7 @@ export default function RaceManagement() {
   const [cLoading, setCLoading]     = useState(true)
   const [races, setRaces]           = useState([])
   const [page, setPage]             = useState(1)
-  const [pageSize, setPageSize]     = useState(5)
+  const [pageSize, setPageSize]     = useState(4)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading]       = useState(true)

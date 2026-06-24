@@ -97,7 +97,7 @@ function StatusBadge({ status }) {
     : <span className="px-2.5 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-full border border-gray-200/60">Inactive</span>
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 4
 
 function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, formDef, tableHeaders, rowCells }) {
   const [active,    setActive]    = useState(null)

@@ -52,7 +52,7 @@ export default function WithdrawalManagement() {
 
   const load = (p = page) => {
     setLoading(true)
-    getWithdrawalsPaged({ page: p, pageSize: 5 })
+    getWithdrawalsPaged({ page: p, pageSize: 4 })
       .then(r => {
         setItems(r.data.data?.items || [])
         setTotal(r.data.data?.totalPages || 1)

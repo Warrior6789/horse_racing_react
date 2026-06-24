@@ -43,7 +43,7 @@ export default function RegistrationManagement() {
 
   const load = (p = page) => {
     setLoading(true)
-    getRegistrationsPaged({ page: p, pageSize: 5 })
+    getRegistrationsPaged({ page: p, pageSize: 4 })
       .then(r => {
         const list = r.data.data?.items || r.data.data || []
         setItems(list)

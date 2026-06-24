@@ -33,7 +33,7 @@ export default function MyBets() {
   const fetchBets = useCallback((p, filter, { silent = false } = {}) => {
     if (!silent) setLoading(true)
     const status = STATUS_MAP[filter]
-    getMyBetsPaged({ page: p, pageSize: 6, ...(status && { status }) })
+    getMyBetsPaged({ page: p, pageSize: 4, ...(status && { status }) })
       .then(r => {
         const items = r.data.data?.items || []
         setBets(items)

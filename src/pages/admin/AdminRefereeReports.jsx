@@ -57,7 +57,7 @@ export default function AdminRefereeReports() {
 
   const load = (p = page) => {
     setLoading(true)
-    getReports({ page: p, pageSize: 5 })
+    getReports({ page: p, pageSize: 4 })
       .then(r => {
         setItems(r.data.data?.items || [])
         setTotal(r.data.data?.totalPages || 1)

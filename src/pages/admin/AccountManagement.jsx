@@ -143,7 +143,7 @@ function UpgradeRequests({ onCountChange }) {
   const [page, setPage]           = useState(1)
   const [totalPages, setTotal]    = useState(1)
   const [totalCount, setCount]    = useState(0)
-  const pageSize = 5
+  const pageSize = 4
 
   const load = (p = page) => {
     setLoading(true)
@@ -277,7 +277,7 @@ export default function AccountManagement() {
   const [tab, setTab]             = useState('accounts')
   const [accounts, setAccounts]   = useState([])
   const [page, setPage]           = useState(1)
-  const [pageSize, setPageSize]   = useState(5)
+  const [pageSize, setPageSize]   = useState(4)
   const [totalPages, setTotal]    = useState(1)
   const [totalCount, setCount]    = useState(0)
   const [loading, setLoading]     = useState(true)
