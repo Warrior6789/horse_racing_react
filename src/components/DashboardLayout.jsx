@@ -27,8 +27,8 @@ const ROLE_NAV = {
     { to: '/jockey/requests', icon: 'assignment', label: 'Race Requests' },
   ],
   Referee: [
-    { to: '/referee/reports', icon: 'gavel',  label: 'Submit Report' },
-    { to: '/referee/races',   icon: 'sports', label: 'Races' },
+    { to: '/referee/races',   icon: 'sports',        label: 'Races' },
+    { to: '/referee/reports', icon: 'summarize',      label: 'My Reports' },
   ],
   Spectator: [
     { to: '/spectator/dashboard', icon: 'dashboard',               label: 'Overview' },

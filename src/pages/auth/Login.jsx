@@ -28,7 +28,7 @@ export default function Login() {
         Admin:     '/admin/dashboard',
         Owner:     '/owner/dashboard',
         Jockey:    '/jockey/dashboard',
-        Referee:   '/referee/reports',
+        Referee:   '/referee/races',
       }
       navigate(dest[role] || '/spectator/dashboard')
     } catch (err) {
