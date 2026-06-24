@@ -43,6 +43,7 @@ import AdminRefereeReports from './pages/admin/AdminRefereeReports'
 import WithdrawalManagement from './pages/admin/WithdrawalManagement'
 import ConfigManagement from './pages/admin/ConfigManagement'
 import PaymentManagement from './pages/admin/PaymentManagement'
+import RefereeAssignment from './pages/admin/RefereeAssignment'
 
 export default function App() {
   return (
@@ -102,6 +103,7 @@ export default function App() {
           <Route path="/admin/withdrawals" element={<PrivateRoute roles={['Admin']}><WithdrawalManagement /></PrivateRoute>} />
           <Route path="/admin/config" element={<PrivateRoute roles={['Admin']}><ConfigManagement /></PrivateRoute>} />
           <Route path="/admin/payments" element={<PrivateRoute roles={['Admin']}><PaymentManagement /></PrivateRoute>} />
+          <Route path="/admin/referee-assignment" element={<PrivateRoute roles={['Admin']}><RefereeAssignment /></PrivateRoute>} />
 
           <Route path="/unauthorized" element={<div className="flex items-center justify-center h-screen text-secondary text-body-lg">You do not have permission to access this page.</div>} />
           <Route path="*" element={<Navigate to="/login" replace />} />
