@@ -426,15 +426,8 @@ function RaceRow({ race, onAction }) {
               <p className="text-sm font-bold text-stone-200">{race.trackLength ? `${race.trackLength}m` : '—'}</p>
             </div>
             <div>
-              <p className="text-[9px] text-stone-500 font-bold uppercase tracking-wider mb-1">Runners</p>
-              <p className="text-sm font-bold text-stone-200">
-                {(() => {
-                  const count = race.registrationCount ?? race.participantCount ?? race.currentParticipants ?? race.horseCount ?? null
-                  return count != null
-                    ? `${count}${race.maxParticipants ? ` / ${race.maxParticipants}` : ''}`
-                    : race.maxParticipants ? `— / ${race.maxParticipants}` : '—'
-                })()}
-              </p>
+              <p className="text-[9px] text-stone-500 font-bold uppercase tracking-wider mb-1">Max</p>
+              <p className="text-sm font-bold text-stone-200">{race.maxParticipants ?? '—'}</p>
             </div>
             <div>
               <p className="text-[9px] text-stone-500 font-bold uppercase tracking-wider mb-1">Racecourse</p>

@@ -36,7 +36,7 @@ export default function OwnerWallet() {
   const [page, setPage]                 = useState(1)
   const [totalPages, setTotalPages]     = useState(1)
   const [totalCount, setTotalCount]     = useState(0)
-  const PAGE_SIZE = 3
+  const PAGE_SIZE = 4
 
   const [depositModal, setDepositModal]   = useState(false)
   const [withdrawModal, setWithdrawModal] = useState(false)

@@ -1,97 +1,294 @@
 import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
-import { createReport, getReports } from '../../api/refereeReports'
+import { createReport, getMyReports } from '../../api/refereeReports'
 import { getRacesPaged } from '../../api/races'
-import { getRegistrations } from '../../api/registrations'
+import { getRaceRegistrations } from '../../api/races'
 
-const NAV = [
-  { to: '/referee/reports', icon: 'gavel', label: 'Submit Report' },
-  { to: '/upgrade', icon: 'upgrade', label: 'Upgrade Role' },
-]
+const PAGE_SIZE = 4
+
+const STATUS_STYLE = {
+  Pending:  'bg-orange-100 text-orange-700',
+  Approved: 'bg-green-100 text-green-700',
+  Rejected: 'bg-red-100 text-red-700',
+}
+
+function StatusBadge({ status }) {
+  return (
+    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_STYLE[status] || 'bg-gray-100 text-gray-500'}`}>
+      {status}
+    </span>
+  )
+}
 
 export default function ReportSubmission() {
   const [form, setForm] = useState({ raceId: '', registrationId: '', incidentDescription: '', penaltyApplied: '' })
-  const [races, setRaces] = useState([])
+  const [races, setRaces]               = useState([])
   const [registrations, setRegistrations] = useState([])
-  const [myReports, setMyReports] = useState([])
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [regsLoading, setRegsLoading]   = useState(false)
+  const [submitting, setSubmitting]     = useState(false)
+  const [error, setError]               = useState('')
+  const [toast, setToast]               = useState('')
+
+  const [reports, setReports]           = useState([])
+  const [page, setPage]                 = useState(1)
+  const [totalPages, setTotalPages]     = useState(1)
+  const [totalCount, setTotalCount]     = useState(0)
+  const [reportsLoading, setReportsLoading] = useState(true)
+
+  const [pendingCount, setPendingCount] = useState(0)
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   useEffect(() => {
-    getRacesPaged({ page: 1, pageSize: 50, status: 'Completed' }).then(r => setRaces(r.data.data?.items || [])).catch(() => {})
-    getReports({ page: 1, pageSize: 10 }).then(r => setMyReports(r.data.data?.items || [])).catch(() => {})
+    getRacesPaged({ page: 1, pageSize: 50, status: 'Completed' })
+      .then(r => setRaces(r.data.data?.items || []))
+      .catch(() => {})
+    getRacesPaged({ page: 1, pageSize: 1, status: 'Scheduled' })
+      .then(r => setPendingCount(r.data.data?.totalCount || 0))
+      .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    setReportsLoading(true)
+    getMyReports({ page, pageSize: PAGE_SIZE })
+      .then(r => {
+        const d = r.data.data
+        setReports(d?.items || [])
+        setTotalPages(d?.totalPages || 1)
+        setTotalCount(d?.totalCount || 0)
+      })
+      .catch(() => {})
+      .finally(() => setReportsLoading(false))
+  }, [page])
 
   const onRaceChange = async (raceId) => {
     setForm(f => ({ ...f, raceId, registrationId: '' }))
-    if (!raceId) { setRegistrations([]); return }
-    const r = await getRegistrations({ raceId }).catch(() => ({ data: { data: [] } }))
-    setRegistrations(r.data.data || [])
+    setRegistrations([])
+    if (!raceId) return
+    setRegsLoading(true)
+    getRaceRegistrations(raceId)
+      .then(r => {
+        const payload = r.data?.data
+        setRegistrations(Array.isArray(payload) ? payload : payload?.items || [])
+      })
+      .catch(() => {})
+      .finally(() => setRegsLoading(false))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!form.raceId)               { setError('Please select a race.'); return }
+    if (!form.registrationId)       { setError('Please select a horse.'); return }
     if (form.incidentDescription.length < 10) { setError('Incident description must be at least 10 characters.'); return }
-    setError(''); setLoading(true)
+    setError(''); setSubmitting(true)
     try {
-      await createReport({ raceId: form.raceId, registrationId: form.registrationId, incidentDescription: form.incidentDescription, penaltyApplied: form.penaltyApplied || undefined })
+      await createReport({
+        raceId: form.raceId,
+        registrationId: form.registrationId,
+        incidentDescription: form.incidentDescription,
+        penaltyApplied: form.penaltyApplied || undefined,
+      })
       setForm({ raceId: '', registrationId: '', incidentDescription: '', penaltyApplied: '' })
-      alert('Report submitted successfully!')
-      getReports({ page: 1, pageSize: 10 }).then(r => setMyReports(r.data.data?.items || []))
-    } catch (e) { setError(e.response?.data?.message || 'Submission failed.') }
-    finally { setLoading(false) }
+      setRegistrations([])
+      showToast('Report submitted successfully')
+      setPage(1)
+      getMyReports({ page: 1, pageSize: PAGE_SIZE })
+        .then(r => {
+          const d = r.data.data
+          setReports(d?.items || [])
+          setTotalPages(d?.totalPages || 1)
+          setTotalCount(d?.totalCount || 0)
+        })
+        .catch(() => {})
+    } catch (e) {
+      setError(e.response?.data?.message || 'Submission failed.')
+    } finally { setSubmitting(false) }
   }
 
-  const inputCls = 'w-full p-md rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md bg-surface-container-lowest'
-  const STATUS_BADGE = { Pending: 'text-secondary bg-secondary-container', Approved: 'text-green-700 bg-green-100', Rejected: 'text-error bg-error-container' }
+  const inputCls = 'w-full border border-gray-300 rounded-lg py-2.5 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white'
 
   return (
-    <DashboardLayout navItems={NAV} title="Referee Reports">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
-        {/* Submit form */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-xl">
-          <h3 className="text-title-lg text-primary mb-lg">Submit New Report</h3>
-          <form onSubmit={handleSubmit} className="space-y-md">
-            <div className="space-y-xs"><label className="text-label-md text-secondary uppercase tracking-widest">Race *</label>
+    <DashboardLayout title="Referee Reports">
+      <div className="space-y-8">
+
+        {/* Heading */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Submit Report</h2>
+          <p className="text-sm text-gray-500 mt-1">Submit your official report after each race.</p>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Scheduled Races</p>
+              <p className="text-3xl font-bold text-orange-500 mt-2">{String(pendingCount).padStart(2, '0')}</p>
+            </div>
+            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
+              <span className="material-symbols-outlined text-orange-500">schedule</span>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Reports Submitted</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">{String(totalCount).padStart(2, '0')}</p>
+            </div>
+            <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+              <span className="material-symbols-outlined text-green-500">check_circle</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Select Race *</label>
               <select className={inputCls} value={form.raceId} onChange={e => onRaceChange(e.target.value)} required>
-                <option value="">Select race...</option>
-                {races.map(r => <option key={r.raceId} value={r.raceId}>Race #{r.raceNumber} — {r.racecourseName}</option>)}
-              </select></div>
-            <div className="space-y-xs"><label className="text-label-md text-secondary uppercase tracking-widest">Registration / Horse *</label>
-              <select className={inputCls} value={form.registrationId} onChange={e => setForm(f => ({ ...f, registrationId: e.target.value }))} required>
-                <option value="">Select horse...</option>
-                {registrations.map(r => <option key={r.registrationId} value={r.registrationId}>#{r.gateNumber} — {r.horse?.horseName}</option>)}
-              </select></div>
-            <div className="space-y-xs"><label className="text-label-md text-secondary uppercase tracking-widest">Incident Description * (min 10 chars)</label>
-              <textarea rows={4} className={inputCls} placeholder="Describe the incident in detail..." value={form.incidentDescription} onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))} required /></div>
-            <div className="space-y-xs"><label className="text-label-md text-secondary uppercase tracking-widest">Penalty Applied (optional)</label>
-              <input type="text" className={inputCls} placeholder="e.g. Disqualified, Time penalty..." value={form.penaltyApplied} onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))} /></div>
-            {error && <p className="text-sm text-error">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full h-12 bg-primary text-on-primary rounded-lg font-title-lg hover:opacity-90 disabled:opacity-60">
-              {loading ? 'Submitting...' : 'Submit Report'}
-            </button>
+                <option value="">Select a completed race...</option>
+                {races.map(r => (
+                  <option key={r.raceId} value={r.raceId}>
+                    Race #{r.raceNumber}{r.raceName ? ` — ${r.raceName}` : ''} · {r.racecourseName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Select Horse *</label>
+              <select
+                className={inputCls}
+                value={form.registrationId}
+                onChange={e => setForm(f => ({ ...f, registrationId: e.target.value }))}
+                disabled={!form.raceId || regsLoading}
+                required
+              >
+                <option value="">{regsLoading ? 'Loading...' : 'Select a horse...'}</option>
+                {registrations.map(r => (
+                  <option key={r.registrationId} value={r.registrationId}>
+                    #{r.gateNumber} — {r.horse?.horseName || 'Unknown'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Incident Description * <span className="text-gray-400 font-normal">(min 10 chars)</span></label>
+              <textarea
+                rows={4}
+                className={inputCls + ' resize-none'}
+                placeholder="Describe the incident in detail..."
+                value={form.incidentDescription}
+                onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Applied <span className="text-gray-400 font-normal">(optional)</span></label>
+              <input
+                type="text"
+                className={inputCls}
+                placeholder="e.g. Disqualified, Time penalty..."
+                value={form.penaltyApplied}
+                onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-gray-950 hover:bg-gray-800 text-white text-sm font-semibold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>send</span>
+                {submitting ? 'Submitting…' : 'Submit Report'}
+              </button>
+            </div>
           </form>
         </div>
 
-        {/* My reports */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
-          <div className="p-lg border-b border-outline-variant"><h3 className="text-title-lg text-primary">My Reports</h3></div>
-          {myReports.length === 0
-            ? <div className="p-xl text-center text-secondary">No reports submitted yet.</div>
-            : <ul>{myReports.map(rep => (
-              <li key={rep.reportId} className="p-lg border-b border-outline-variant last:border-0">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-body-md font-semibold text-primary">{rep.horse?.horseName || '—'}</p>
-                    <p className="text-label-md text-secondary mt-xs line-clamp-2">{rep.incidentDescription}</p>
-                  </div>
-                  <span className={`text-label-md px-sm py-xs rounded-full shrink-0 ml-md ${STATUS_BADGE[rep.status] || 'text-secondary bg-surface-container'}`}>{rep.status}</span>
+        {/* Previous Reports */}
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">My Previous Reports</h3>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {reportsLoading ? (
+              <div className="flex items-center justify-center h-36">
+                <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-12 text-sm text-gray-400 font-semibold">No reports submitted yet.</div>
+            ) : (
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    {['Race', 'Horse', 'Submitted At', 'Status', 'Action'].map(h => (
+                      <th key={h} className="py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {reports.map(rep => (
+                    <tr key={rep.reportId} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="py-4 px-6 font-medium text-gray-900">
+                        {rep.raceName || `Race #${rep.raceNumber}` || '—'}
+                      </td>
+                      <td className="py-4 px-6 text-gray-600">
+                        {rep.horse?.horseName || rep.horseName || '—'}
+                      </td>
+                      <td className="py-4 px-6 text-gray-500 whitespace-nowrap">
+                        {rep.createdAt || rep.submittedAt
+                          ? new Date(rep.createdAt || rep.submittedAt).toLocaleString()
+                          : '—'}
+                      </td>
+                      <td className="py-4 px-6">
+                        <StatusBadge status={rep.status} />
+                      </td>
+                      <td className="py-4 px-6">
+                        <button
+                          title="View"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+                          onClick={() => alert(rep.incidentDescription || 'No details.')}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>visibility</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-gray-500">
+                <p>Page <span className="text-gray-900 font-bold">{page}</span> of <span className="text-gray-900 font-bold">{totalPages}</span></p>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
-              </li>
-            ))}</ul>
-          }
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-950 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-lg z-50">
+          {toast}
+        </div>
+      )}
     </DashboardLayout>
   )
 }
