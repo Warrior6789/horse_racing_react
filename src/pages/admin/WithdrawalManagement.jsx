@@ -49,7 +49,6 @@ export default function WithdrawalManagement() {
   const [totalCount, setCount]    = useState(0)
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
-  const [notes, setNotes]         = useState({})
 
   const load = (p = page) => {
     setLoading(true)
@@ -67,7 +66,7 @@ export default function WithdrawalManagement() {
 
   const handle = async (id, fn) => {
     setActing(id)
-    try { await fn(id, { adminNote: notes[id] || '' }) } catch {}
+    try { await fn(id) } catch {}
     setActing(null)
     load(page)
   }
@@ -168,13 +167,6 @@ export default function WithdrawalManagement() {
                       <td className="py-5 px-6">
                         {item.status === 'Pending' && (
                           <div className="flex items-center gap-2 justify-end flex-wrap">
-                            <input
-                              type="text"
-                              placeholder="Admin note (optional)"
-                              value={notes[item.withdrawalId] || ''}
-                              onChange={e => setNotes(n => ({ ...n, [item.withdrawalId]: e.target.value }))}
-                              className="px-3 py-1.5 border border-zinc-200 rounded-lg text-xs w-44 focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 outline-none"
-                            />
                             <button
                               onClick={() => handle(item.withdrawalId, rejectWithdrawal)}
                               disabled={acting === item.withdrawalId}
