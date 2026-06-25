@@ -12,13 +12,16 @@ export function AuthProvider({ children }) {
   const refreshUser = useCallback(async () => {
     try {
       const res = await getMe()
+      console.log('[auth/me] response:', res.data)
       const me = res.data?.data || res.data || {}
       setUser(prev => {
         const next = { ...prev, requestedRole: me.requestedRole ?? null }
         localStorage.setItem('user', JSON.stringify(next))
         return next
       })
-    } catch {}
+    } catch (err) {
+      console.error('[auth/me] error:', err?.response?.status, err?.response?.data)
+    }
   }, [])
 
   useEffect(() => {
