@@ -196,13 +196,14 @@ function BetSlipModal({ race, reg, onClose, onSuccess }) {
   )
 }
 
-function RaceDetailScreen({ race, mode, onClose, onBetSuccess }) {
+function RaceDetailScreen({ race, mode, canBetByRole, onClose, onBetSuccess }) {
   const navigate = useNavigate()
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [betReg, setBetReg] = useState(null)
-  const canBet  = mode === 'bet'
+  const canBet  = mode === 'bet' && canBetByRole
   const isLive  = ['Live', 'Finished'].includes(race.status)
+  const raceIsOpen = (race.status || '').toLowerCase() === 'bettingopen'
 
   useEffect(() => {
     getRaceRegistrations(race.raceId)
@@ -263,6 +264,14 @@ function RaceDetailScreen({ race, mode, onClose, onBetSuccess }) {
           </p>
         </div>
       </div>
+
+      {/* Role-based betting restriction notice */}
+      {!canBetByRole && raceIsOpen && (
+        <div className="mx-6 mt-4 bg-amber-900/20 border border-amber-700/40 text-amber-300 text-xs px-4 py-3 rounded-lg flex items-center gap-2">
+          <span className="shrink-0">⚠️</span>
+          <span>Tài khoản của bạn đã được nâng cấp lên role khác. Chỉ tài khoản Spectator mới có thể đặt cược.</span>
+        </div>
+      )}
 
       {/* Horses grid */}
       <div className="p-6">
@@ -346,7 +355,7 @@ function RaceDetailScreen({ race, mode, onClose, onBetSuccess }) {
   )
 }
 
-function RaceRow({ race, onAction }) {
+function RaceRow({ race, canBetByRole = true, onAction }) {
   const [info, setInfo] = useState(() => computeState(race))
   useEffect(() => {
     setInfo(computeState(race))
@@ -438,18 +447,18 @@ function RaceRow({ race, onAction }) {
           <div className="flex flex-col items-end gap-2 w-full xl:w-auto">
             <button
               onClick={() => {
-                const mode = state === 'open' ? 'bet' : state === 'progress' ? 'live' : state === 'finished' ? 'results' : 'details'
+                const mode = state === 'open' && canBetByRole ? 'bet' : state === 'progress' ? 'live' : state === 'finished' ? 'results' : 'details'
                 onAction(race, mode)
               }}
               className={`w-full xl:w-36 py-2.5 rounded-lg text-sm font-bold transition-colors ${
-                state === 'open'
+                state === 'open' && canBetByRole
                   ? 'bg-[#f7e0a3] text-[#110e0b] hover:bg-[#ebd292]'
                   : state === 'progress'
                   ? 'bg-red-600 text-white hover:bg-red-500'
                   : 'bg-[#211d19] text-stone-400 hover:text-stone-200 border border-stone-800'
               }`}
             >
-              {state === 'open' ? 'Place Bet' : state === 'progress' ? 'Watch Live' : state === 'finished' ? 'View Results' : 'View Details'}
+              {state === 'open' && canBetByRole ? 'Place Bet' : state === 'open' ? 'View Details' : state === 'progress' ? 'Watch Live' : state === 'finished' ? 'View Results' : 'View Details'}
             </button>
           </div>
         </div>
@@ -512,6 +521,7 @@ export default function UpcomingRaces() {
   useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'User'
+  const canBetByRole = (!user?.role || user.role === 'Spectator') && !user?.requestedRole
 
   const TAB_API_STATUS = {
     'All': '', 'Scheduled': 'Scheduled', 'Open For Betting': 'BettingOpen',
@@ -587,6 +597,7 @@ export default function UpcomingRaces() {
           key={arenaRace.raceId}
           race={arenaRace}
           mode={arenaMode}
+          canBetByRole={canBetByRole}
           onBetSuccess={() => getBalance().then(r => setBalance(r.data.data?.balance ?? 0)).catch(() => {})}
           onClose={() => setArenaRace(null)}
         />
@@ -651,7 +662,7 @@ export default function UpcomingRaces() {
           <div className="text-center py-16 text-stone-500 text-sm bg-[#161310] rounded-xl border border-stone-800/60">No races found.</div>
         ) : (
           races.map(race => (
-            <RaceRow key={race.raceId} race={race} onAction={(r, m) => {
+            <RaceRow key={race.raceId} race={race} canBetByRole={canBetByRole} onAction={(r, m) => {
               if (m === 'results') { navigate(`/spectator/races/${r.raceId}/results`); return }
               if (m === 'live')    { navigate(`/spectator/races/${r.raceId}/live`);    return }
               setArenaRace(r); setArenaMode(m)

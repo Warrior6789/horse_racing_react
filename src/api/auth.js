@@ -4,6 +4,7 @@ export const login = (data) => client.post('/auth/login', data)
 export const register = (formData) => client.post('/auth/register', formData)
 export const upgrade = (formData) => client.post('/auth/upgrade', formData)
 export const logout = () => client.post('/auth/logout')
+export const getMe = () => client.get('/auth/me')
 
 // Decode JWT payload to extract user info (no library needed)
 export function parseJwt(token) {
