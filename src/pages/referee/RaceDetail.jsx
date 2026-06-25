@@ -1,22 +1,23 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, X, Radio } from 'lucide-react'
-import DashboardLayout from '../../components/DashboardLayout'
-import { getRace, getRaceRegistrations, getRaceResults } from '../../api/races'
+import {
+  Flag, FileText, Settings, HelpCircle, Plus, Bell, History, User,
+  ArrowLeft, AlertTriangle, ShieldAlert, Send, ChevronDown, Radio, X,
+} from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { getRace, getRaceRegistrations } from '../../api/races'
 import { getReports, createReport, updateReport } from '../../api/refereeReports'
 import { useRaceHub } from '../../hooks/useRaceHub'
+import AccountProfile from '../../components/AccountProfile'
 
-const LANE_H   = 44
-const GATE_W   = 28
-const TRACK_START = 4
-const TRACK_END   = 92
-const FINISH_W    = 12
+/* ── Live Track ── */
+const LANE_H = 44, GATE_W = 28, TRACK_START = 4, TRACK_END = 92, FINISH_W = 12
 
 function TrackVisualization({ tracks }) {
   const sorted = [...tracks].sort((a, b) => b.progress - a.progress)
   const totalH = tracks.length * LANE_H
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 select-none bg-[#0e2409]">
+    <div className="rounded-xl overflow-hidden border border-slate-200 select-none bg-[#0e2409]">
       <div className="flex px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-stone-500 bg-[#0a1c07]">
         <div style={{ width: GATE_W }} className="text-center shrink-0">#</div>
         <div className="flex-1 pl-2">Track</div>
@@ -69,23 +70,10 @@ function TrackVisualization({ tracks }) {
   )
 }
 
-const TABS = ['Race Participants', 'Incident Reports']
-
+/* ── Edit Modal ── */
 const PENALTY_OPTIONS = ['Disqualified', 'Relegated', 'Time Penalty', 'Warning', 'Fine', 'Other']
 
-const STATUS_STYLE = {
-  Approved: 'text-emerald-600',
-  Pending:  'text-amber-600',
-  Rejected: 'text-red-500',
-}
-const PENALTY_STYLE = {
-  Disqualified: 'bg-red-100 text-red-700',
-  Relegated:    'bg-red-100 text-red-700',
-  Warning:      'bg-amber-100 text-amber-700',
-  Fine:         'bg-orange-100 text-orange-700',
-}
-
-function EditModal({ report, regs, onClose, onSaved }) {
+function EditModal({ report, onClose, onSaved }) {
   const [form, setForm] = useState({
     incidentDescription: report.incidentDescription || '',
     penaltyApplied: report.penaltyApplied || '',
@@ -96,15 +84,10 @@ function EditModal({ report, regs, onClose, onSaved }) {
   const save = async () => {
     if (form.incidentDescription.length < 10) { setError('Description must be at least 10 characters.'); return }
     setSaving(true); setError('')
-    try {
-      await updateReport(report.reportId, form)
-      onSaved()
-    } catch (e) {
-      setError(e.response?.data?.message || 'Failed to update report.')
-    } finally { setSaving(false) }
+    try { await updateReport(report.reportId, form); onSaved() }
+    catch (e) { setError(e.response?.data?.message || 'Failed to update.') }
+    finally { setSaving(false) }
   }
-
-  const inputCls = 'w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-900 bg-white'
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -115,20 +98,19 @@ function EditModal({ report, regs, onClose, onSaved }) {
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Incident Description *</label>
-          <textarea rows={4} className={inputCls + ' resize-none'}
-            value={form.incidentDescription}
-            onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))} />
+          <textarea rows={4} className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none resize-none"
+            value={form.incidentDescription} onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))} />
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Applied</label>
-          <select className={inputCls} value={form.penaltyApplied}
-            onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}>
+          <select className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none"
+            value={form.penaltyApplied} onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}>
             <option value="">— None —</option>
             {PENALTY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
-        <div className="flex gap-3 pt-1">
+        <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 h-10 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
           <button onClick={save} disabled={saving} className="flex-1 h-10 bg-gray-950 text-white rounded-xl text-sm font-bold hover:bg-gray-800 disabled:opacity-60">
             {saving ? 'Saving…' : 'Save'}
@@ -139,34 +121,29 @@ function EditModal({ report, regs, onClose, onSaved }) {
   )
 }
 
+/* ── Main Page ── */
 export default function RefereeRaceDetail() {
   const { raceId } = useParams()
   const navigate   = useNavigate()
+  const { user }   = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false)
 
-  const [tab, setTab]         = useState('Race Participants')
-  const [race, setRace]       = useState(null)
-  const [regs, setRegs]       = useState([])
-  const [results, setResults] = useState([])
+  const [race,    setRace]    = useState(null)
+  const [regs,    setRegs]    = useState([])
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
-  const [toast, setToast]     = useState('')
+  const [toast,   setToast]   = useState('')
   const [editReport, setEditReport] = useState(null)
 
   const [horses,     setHorses]     = useState([])
   const [liveStatus, setLiveStatus] = useState(null)
 
-  const [form, setForm] = useState({
-    registrationId: '', incidentDescription: '', penaltyApplied: '',
-  })
-  const [formError, setFormError] = useState('')
+  const [form, setForm]       = useState({ registrationId: '', incidentDescription: '', penaltyApplied: '' })
+  const [formError, setFormError]   = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const handleRaceUpdate = useCallback((data) => {
-    if (data.horses) setHorses(data.horses)
-    if (data.status) setLiveStatus(data.status)
-  }, [])
-
-  useRaceHub(raceId, { onRaceUpdate: handleRaceUpdate })
+  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Referee'
+  const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -180,42 +157,25 @@ export default function RefereeRaceDetail() {
   }, [raceId])
 
   useEffect(() => {
-    Promise.all([
-      getRace(raceId),
-      getRaceRegistrations(raceId),
-    ]).then(([raceRes, regsRes]) => {
-      setRace(raceRes.data.data || raceRes.data)
-      const payload = regsRes.data?.data
-      setRegs(Array.isArray(payload) ? payload : payload?.items || [])
-    }).catch(() => {})
-    .finally(() => setLoading(false))
+    Promise.all([getRace(raceId), getRaceRegistrations(raceId)])
+      .then(([raceRes, regsRes]) => {
+        setRace(raceRes.data.data || raceRes.data)
+        const payload = regsRes.data?.data
+        setRegs(Array.isArray(payload) ? payload : payload?.items || [])
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
     loadReports()
   }, [raceId, loadReports])
 
-  useEffect(() => {
-    if (tab === 'Race Participants' && results.length === 0) {
-      getRaceResults(raceId).then(r => setResults(r.data.data || [])).catch(() => {})
-    }
-  }, [tab, raceId])
+  const handleRaceUpdate = useCallback((data) => {
+    if (data.horses) setHorses(data.horses)
+    if (data.status) setLiveStatus(data.status)
+  }, [])
+  useRaceHub(raceId, { onRaceUpdate: handleRaceUpdate })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!form.registrationId)               { setFormError('Please select a participant.'); return }
-    if (form.incidentDescription.length < 10) { setFormError('Description must be at least 10 characters.'); return }
-    setFormError(''); setSubmitting(true)
-    try {
-      await createReport({ raceId, registrationId: form.registrationId, incidentDescription: form.incidentDescription, penaltyApplied: form.penaltyApplied || undefined })
-      setForm({ registrationId: '', incidentDescription: '', penaltyApplied: '' })
-      showToast('Report submitted successfully')
-      loadReports()
-    } catch (e) {
-      setFormError(e.response?.data?.message || 'Submission failed.')
-    } finally { setSubmitting(false) }
-  }
-
-  const raceStatus  = liveStatus || race?.status || 'Scheduled'
-  const statusLabel = { BettingOpen: 'Betting Open', BettingClosed: 'Betting Closed', Live: 'In Progress', Completed: 'Completed', Finished: 'Finished' }[raceStatus] || raceStatus
-  const isLive = raceStatus === 'Live'
+  const raceStatus = liveStatus || race?.status || 'Scheduled'
+  const isLive     = raceStatus === 'Live'
 
   const findLive = (reg) => horses.find(h =>
     h.id === reg.horse?.id || h.id === reg.horse?.horseId ||
@@ -225,164 +185,216 @@ export default function RefereeRaceDetail() {
     ? regs.map((reg, i) => ({ ...reg, progress: findLive(reg)?.progress ?? 0, isFinished: findLive(reg)?.isFinished ?? false, lane: i }))
     : horses.map((h, i) => ({ registrationId: h.id, gateNumber: i + 1, horse: { horseName: `Horse ${i + 1}` }, progress: h.progress ?? 0, isFinished: h.isFinished ?? false, lane: i }))
 
-  if (loading) return (
-    <DashboardLayout title="Race Detail">
-      <div className="flex items-center justify-center h-64">
-        <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
-      </div>
-    </DashboardLayout>
-  )
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.registrationId)                { setFormError('Please select a participant.'); return }
+    if (form.incidentDescription.length < 10) { setFormError('Description must be at least 10 characters.'); return }
+    setFormError(''); setSubmitting(true)
+    try {
+      await createReport({ raceId, registrationId: form.registrationId, incidentDescription: form.incidentDescription, penaltyApplied: form.penaltyApplied || undefined })
+      setForm({ registrationId: '', incidentDescription: '', penaltyApplied: '' })
+      showToast('Report submitted successfully')
+      loadReports()
+    } catch (e) { setFormError(e.response?.data?.message || 'Submission failed.') }
+    finally { setSubmitting(false) }
+  }
+
+  const STATUS_BADGE = {
+    Approved: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    Pending:  'bg-rose-50 text-rose-600 border-rose-200',
+    Rejected: 'bg-slate-100 text-slate-500 border-slate-200',
+  }
+
+  const startStr = race?.startTime
+    ? new Date(race.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '—'
 
   return (
-    <DashboardLayout title="Race Detail">
-      <div className="space-y-6">
+    <div className="flex h-screen w-full bg-[#f4f6fa] text-slate-800 font-sans overflow-hidden">
 
-        {/* Breadcrumb */}
-        <button onClick={() => navigate('/referee/races')}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors">
-          <ChevronLeft size={14} /> Races
-        </button>
-
-        {/* Race Details Card */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-10">
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Race</p>
-              <p className="text-lg font-bold text-gray-900">#{race?.raceNumber}{race?.raceName ? ` — ${race.raceName}` : ''}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Distance</p>
-              <p className="text-lg font-bold text-gray-900">{race?.trackLength ? `${race.trackLength}m` : '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Start Time</p>
-              <p className="font-semibold text-gray-900">{race?.startTime ? new Date(race.startTime).toLocaleString() : '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Racecourse</p>
-              <p className="font-semibold text-gray-900">{race?.racecourseName || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</p>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold
-                ${['Live', 'BettingOpen'].includes(raceStatus) ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
-                {['Live', 'BettingOpen'].includes(raceStatus) && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
-                {statusLabel}
-              </span>
-            </div>
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-[#1a1c2e] text-white flex flex-col justify-between p-4 shrink-0">
+        <div>
+          <div className="mb-6 px-2 py-1">
+            <h1 className="font-bold text-lg tracking-tight">EquineOfficial</h1>
+            <p className="text-[11px] text-slate-400 font-medium tracking-wide">Regulatory Division</p>
           </div>
-        </div>
-
-        {/* Live track visualization */}
-        {isLive && tracks.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Radio size={14} className="text-red-500 animate-pulse" />
-              <h3 className="text-sm font-bold text-gray-900">Live Race Feed</h3>
-            </div>
-            <TrackVisualization tracks={tracks} />
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="border-b border-gray-200 flex gap-8">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
-                tab === t ? 'text-gray-900 border-gray-900' : 'text-gray-500 border-transparent hover:text-gray-700'
-              }`}>
-              {t}
+          <nav className="space-y-1 mb-6">
+            <button onClick={() => navigate('/referee/races')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800 text-emerald-400 font-semibold text-xs uppercase tracking-wider transition-colors">
+              <Flag size={16} /><span>Races</span>
             </button>
-          ))}
+            <button onClick={() => navigate('/referee/reports')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 font-semibold text-xs uppercase tracking-wider transition-colors">
+              <FileText size={16} /><span>My Reports</span>
+            </button>
+          </nav>
         </div>
-
-        {/* Tab: Race Participants */}
-        {tab === 'Race Participants' && (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            {regs.length === 0 ? (
-              <div className="text-center py-12 text-sm text-gray-400 font-semibold">No participants registered.</div>
-            ) : (
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    {['Gate #', 'Horse', 'Jockey', 'Status'].map(h => <th key={h} className="py-3 px-6">{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {regs.map(reg => (
-                    <tr key={reg.registrationId} className="hover:bg-gray-50/50">
-                      <td className="py-4 px-6 text-gray-600">{reg.gateNumber ?? '—'}</td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded bg-gray-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                            {reg.horse?.horseName?.[0]?.toUpperCase() || '?'}
-                          </div>
-                          <span className="font-semibold text-gray-900">{reg.horse?.horseName || '—'}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{reg.jockeyName || reg.jockey?.fullName || '—'}</td>
-                      <td className="py-4 px-6">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold
-                          ${reg.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                          {reg.status || '—'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+        <div className="space-y-4">
+          <div className="space-y-1 border-b border-slate-800 pb-4">
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
+              <Settings size={16} /><span>Settings</span>
+            </button>
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
+              <HelpCircle size={16} /><span>Support</span>
+            </button>
           </div>
-        )}
+          <button onClick={() => setProfileOpen(true)}
+            className="w-full bg-[#24273e] p-3 rounded-xl flex items-center gap-3 border border-slate-800/60 hover:border-slate-700 transition-colors text-left">
+            <div className="w-9 h-9 bg-slate-600 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+              {user?.avatarUrl
+                ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                : <span className="text-xs font-bold text-slate-200">{initials}</span>}
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-slate-200 truncate">{displayName}</h4>
+              <p className="text-[10px] text-slate-400 truncate">{user?.email || ''}</p>
+            </div>
+          </button>
+        </div>
+      </aside>
 
-        {/* Tab: Incident Reports */}
-        {tab === 'Incident Reports' && (
-          <div className="space-y-6">
+      {/* MAIN */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-            {/* Reports table */}
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 px-8 py-3 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-4 text-xs font-bold tracking-wide uppercase text-slate-400">
+            <span className="text-slate-800">Race Detail</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><Bell size={16} /></button>
+            <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><History size={16} /></button>
+            <div className="h-4 w-px bg-slate-200 mx-1" />
+            <button onClick={() => setProfileOpen(true)}
+              className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors">
+              <span>{displayName}</span><User size={14} className="text-slate-500" />
+            </button>
+          </div>
+        </header>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* Back */}
+          <button onClick={() => navigate('/referee/races')}
+            className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-800 transition-colors">
+            <ArrowLeft size={12} className="stroke-[3]" /> Back to Races
+          </button>
+
+          {/* Race Hero Banner */}
+          <div className="bg-slate-900 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="h-44 w-full relative">
+              {race?.imageUrl
+                ? <img src={race.imageUrl} alt={race.raceName} className="w-full h-full object-cover opacity-55" />
+                : <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900" />}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 p-6 flex flex-col justify-end space-y-2 text-white">
+                <div className="flex items-center gap-2">
+                  <span className="bg-emerald-500 text-slate-950 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                    Official Track
+                  </span>
+                  <span className="bg-slate-800/80 border border-slate-700 text-slate-300 font-mono text-[9px] font-bold px-2 py-0.5 rounded">
+                    RACE #{race?.raceNumber}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  {loading ? '—' : (race?.raceName || `Race #${race?.raceNumber}`)}
+                </h2>
+              </div>
+              {isLive && (
+                <span className="absolute top-4 right-4 bg-white text-slate-800 text-[10px] font-bold px-3 py-1 rounded-full shadow flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> LIVE
+                </span>
+              )}
+            </div>
+            <div className="bg-white p-5 border-t border-slate-100 flex justify-between items-center flex-wrap gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-2 text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Racecourse</span>
+                  <span className="font-bold text-slate-800 text-sm">{race?.racecourseName || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Status</span>
+                  <span className="font-bold text-slate-800 text-sm">{raceStatus}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Start Time</span>
+                  <span className="font-bold text-slate-800 text-sm">{startStr}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Track Length</span>
+                  <span className="font-bold text-slate-800 text-sm">{race?.trackLength ? `${race.trackLength}m` : '—'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Live Track */}
+          {isLive && tracks.length > 0 && (
             <div>
-              <h3 className="text-base font-bold text-gray-900 mb-3">Incident Reports Log</h3>
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Radio size={14} className="text-red-500 animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-900">Live Race Feed</h3>
+              </div>
+              <TrackVisualization tracks={tracks} />
+            </div>
+          )}
+
+          {/* Reports + Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+            {/* Reports Table */}
+            <div className="lg:col-span-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-800">
+                  <AlertTriangle size={18} className="text-slate-700" />
+                  <h3 className="font-bold text-base tracking-tight">Incident Reports</h3>
+                </div>
+                <span className="bg-slate-200/70 text-slate-600 font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
+                  {reports.length} Total
+                </span>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 {reports.length === 0 ? (
-                  <div className="text-center py-10 text-sm text-gray-400 font-semibold">No incident reports yet.</div>
+                  <div className="text-center py-12 text-sm text-slate-400 font-semibold">No incident reports yet.</div>
                 ) : (
-                  <table className="w-full text-left border-collapse text-sm">
+                  <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                        {['Horse', 'Incident Summary', 'Penalty', 'Status', 'Created At', ''].map(h => (
-                          <th key={h} className="py-3 px-5">{h}</th>
-                        ))}
+                      <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 border-b border-slate-100">
+                        <th className="py-2.5 px-4 w-44">Horse</th>
+                        <th className="py-2.5 px-4">Description</th>
+                        <th className="py-2.5 px-4 w-32">Status</th>
+                        <th className="py-2.5 px-4 w-28">Date</th>
+                        <th className="py-2.5 px-4 w-16" />
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-slate-100 text-xs">
                       {reports.map(rep => (
-                        <tr key={rep.reportId} className="hover:bg-gray-50/50">
-                          <td className="py-4 px-5 font-semibold text-gray-900">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded bg-gray-100 border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
+                        <tr key={rep.reportId} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <span className="bg-slate-100 border border-slate-200 text-slate-600 font-mono font-bold px-1.5 py-0.5 rounded text-[10px]">
                                 G{rep.gateNumber ?? '?'}
                               </span>
-                              {rep.horseName || '—'}
+                              <span className="font-bold text-slate-800 truncate">{rep.horseName || '—'}</span>
                             </div>
                           </td>
-                          <td className="py-4 px-5 text-gray-600 max-w-[200px]">
-                            <p className="line-clamp-1">{rep.incidentDescription || '—'}</p>
+                          <td className="py-4 px-4 text-slate-500 font-medium max-w-[200px]">
+                            <p className="truncate">{rep.incidentDescription || '—'}</p>
                           </td>
-                          <td className="py-4 px-5">
-                            {rep.penaltyApplied
-                              ? <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${PENALTY_STYLE[rep.penaltyApplied] || 'bg-gray-100 text-gray-600'}`}>{rep.penaltyApplied}</span>
-                              : <span className="text-gray-400">—</span>}
+                          <td className="py-4 px-4">
+                            <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold inline-block text-center min-w-[76px] ${STATUS_BADGE[rep.status] || 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                              {rep.status || '—'}
+                            </span>
                           </td>
-                          <td className={`py-4 px-5 text-sm font-semibold ${STATUS_STYLE[rep.status] || 'text-gray-500'}`}>
-                            {rep.status || '—'}
+                          <td className="py-4 px-4 text-slate-500 font-mono font-medium">
+                            {rep.createdAt ? new Date(rep.createdAt).toLocaleDateString() : '—'}
                           </td>
-                          <td className="py-4 px-5 text-xs text-gray-500 whitespace-nowrap">
-                            {rep.createdAt ? new Date(rep.createdAt).toLocaleString() : '—'}
-                          </td>
-                          <td className="py-4 px-5">
+                          <td className="py-4 px-4">
                             {rep.status === 'Pending' && (
                               <button onClick={() => setEditReport(rep)}
-                                className="px-2.5 py-1 border border-gray-200 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors">
+                                className="px-2.5 py-1 border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold hover:bg-slate-50 transition-colors">
                                 Edit
                               </button>
                             )}
@@ -395,114 +407,86 @@ export default function RefereeRaceDetail() {
               </div>
             </div>
 
-            {/* Submit form + Protocols */}
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
-
-              {/* Form */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-5">
-                  <span className="material-symbols-outlined text-gray-800">warning</span>
-                  <h3 className="text-base font-bold text-gray-900">Submit Incident Report</h3>
+            {/* File New Report Form */}
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                <div className="p-1.5 bg-slate-900 text-white rounded-lg">
+                  <ShieldAlert size={16} />
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Participant *</label>
-                      <select
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-900 bg-white"
-                        value={form.registrationId}
-                        onChange={e => setForm(f => ({ ...f, registrationId: e.target.value }))}
-                        required
-                      >
-                        <option value="">Select horse...</option>
-                        {regs.map(r => (
-                          <option key={r.registrationId} value={r.registrationId}>
-                            Gate {r.gateNumber} — {r.horse?.horseName || 'Unknown'}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Applied</label>
-                      <select
-                        className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-900 bg-white"
-                        value={form.penaltyApplied}
-                        onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}
-                      >
-                        <option value="">— None —</option>
-                        {PENALTY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Incident Description * <span className="text-gray-400 font-normal">(min 10 chars)</span>
-                    </label>
-                    <textarea
-                      rows={4}
-                      className={`w-full border rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-1 resize-none
-                        ${formError && form.incidentDescription.length < 10
-                          ? 'border-red-400 focus:ring-red-500'
-                          : 'border-gray-300 focus:ring-gray-900'}`}
-                      placeholder="Describe the incident in detail..."
-                      value={form.incidentDescription}
-                      onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))}
-                    />
-                    {formError && form.incidentDescription.length < 10 && (
-                      <p className="text-xs text-red-500 mt-1">{formError}</p>
-                    )}
-                  </div>
-                  {formError && form.incidentDescription.length >= 10 && (
-                    <p className="text-xs text-red-500">{formError}</p>
-                  )}
-                  <div className="flex justify-end gap-3 pt-2">
-                    <button type="button" onClick={() => setForm({ registrationId: '', incidentDescription: '', penaltyApplied: '' })}
-                      className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
-                      Clear
-                    </button>
-                    <button type="submit" disabled={submitting}
-                      className="px-5 py-2.5 bg-gray-950 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60">
-                      {submitting ? 'Submitting…' : 'Submit Report'}
-                    </button>
-                  </div>
-                </form>
+                <h3 className="font-bold text-sm text-slate-800">File New Report</h3>
               </div>
 
-              {/* Protocols sidebar */}
-              <div className="bg-[#1A1F2B] rounded-xl p-6 text-white shadow-sm flex flex-col">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-emerald-300 rounded-lg flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-gray-900" style={{ fontSize: '20px' }}>shield</span>
-                  </div>
-                  <h3 className="text-base font-bold">Referee Protocols</h3>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Select Participating Horse
+                </label>
+                <div className="relative">
+                  <select
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 appearance-none focus:outline-none focus:border-slate-300"
+                    value={form.registrationId}
+                    onChange={e => setForm(f => ({ ...f, registrationId: e.target.value }))}
+                  >
+                    <option value="">Choose horse from race list...</option>
+                    {regs.map(r => (
+                      <option key={r.registrationId} value={r.registrationId}>
+                        Gate {r.gateNumber} — {r.horse?.horseName || 'Unknown'}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
-                <p className="text-sm text-gray-300 mb-5 leading-relaxed">
-                  All incident reports must be filed within 15 minutes of race completion. Ensure the description clearly states the timestamp and impacted participants.
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Incident Description <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Detail the specific nature of the incident, including time, location on track, and parties involved..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-300 resize-none leading-relaxed"
+                  value={form.incidentDescription}
+                  onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Penalty Applied (Optional)
+                </label>
+                <div className="relative">
+                  <select
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 appearance-none focus:outline-none focus:border-slate-300"
+                    value={form.penaltyApplied}
+                    onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}
+                  >
+                    <option value="">— None —</option>
+                    {PENALTY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {formError && <p className="text-[10px] text-rose-500 font-semibold">{formError}</p>}
+
+              <div className="space-y-2 pt-2">
+                <button type="submit" disabled={submitting}
+                  className="w-full bg-black hover:bg-slate-900 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-60">
+                  <Send size={12} /> {submitting ? 'Submitting…' : 'Submit Official Report'}
+                </button>
+                <p className="text-[9px] text-slate-400 text-center italic leading-normal px-2">
+                  By submitting, you certify that this report is an accurate and official record.
                 </p>
-                <ul className="space-y-3 text-sm text-gray-300 flex-1">
-                  {[
-                    'Verify photo finish data before issuing disqualifications.',
-                    'Stewards must provide a secondary signature for relegations.',
-                    'All penalties are subject to track appeal within 24 hours.',
-                  ].map(rule => (
-                    <li key={rule} className="flex items-start gap-2">
-                      <span className="material-symbols-outlined text-emerald-300 shrink-0" style={{ fontSize: '16px' }}>check_circle</span>
-                      {rule}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            </div>
+            </form>
           </div>
-        )}
-
-      </div>
+        </div>
+      </main>
 
       {/* Edit Modal */}
       {editReport && (
         <EditModal
           report={editReport}
-          regs={regs}
           onClose={() => setEditReport(null)}
           onSaved={() => { setEditReport(null); showToast('Report updated'); loadReports() }}
         />
@@ -514,6 +498,8 @@ export default function RefereeRaceDetail() {
           {toast}
         </div>
       )}
-    </DashboardLayout>
+
+      {profileOpen && <AccountProfile variant="light" onClose={() => setProfileOpen(false)} />}
+    </div>
   )
 }

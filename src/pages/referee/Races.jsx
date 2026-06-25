@@ -159,7 +159,7 @@ export default function RefereeRaces() {
             <div className="flex items-center gap-2">
               <select
                 value={status}
-                onChange={e => { setStatus(e.target.value); setPage(1) }}
+                onChange={e => setStatus(e.target.value)}
                 className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors focus:outline-none"
               >
                 <option value="">All Status</option>
