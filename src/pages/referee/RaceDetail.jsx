@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Flag, Settings, HelpCircle, Bell, History, User,
-  ArrowLeft, AlertTriangle, ShieldAlert, Send, ChevronDown, Radio, X,
+  ArrowLeft, AlertTriangle, ShieldAlert, Send, ChevronDown, X,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getRace, getRaceRegistrations } from '../../api/races'
@@ -279,31 +279,47 @@ export default function RefereeRaceDetail() {
           </button>
 
           {/* Race Hero Banner */}
-          <div className="bg-slate-900 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="h-44 w-full relative">
-              {race?.imageUrl
-                ? <img src={race.imageUrl} alt={race.raceName} className="w-full h-full object-cover opacity-55" />
-                : <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900" />}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent" />
-              <div className="absolute inset-0 p-6 flex flex-col justify-end space-y-2 text-white">
-                <div className="flex items-center gap-2">
-                  <span className="bg-emerald-500 text-slate-950 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                    Official Track
-                  </span>
-                  <span className="bg-slate-800/80 border border-slate-700 text-slate-300 font-mono text-[9px] font-bold px-2 py-0.5 rounded">
-                    RACE #{race?.raceNumber}
+          <div className="rounded-2xl border shadow-sm overflow-hidden" style={{ background: isLive ? '#0e1a0c' : undefined, borderColor: isLive ? 'rgb(6 78 59 / 0.4)' : undefined }}>
+            {isLive ? (
+              /* Live: replace image with track viz */
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-mono font-bold text-slate-400 tracking-wider">RACE #{race?.raceNumber}</span>
+                    <h2 className="text-xl font-bold text-white tracking-tight">
+                      {loading ? '—' : (race?.raceName || `Race #${race?.raceNumber}`)}
+                    </h2>
+                  </div>
+                  <span className="flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-3 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
                   </span>
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight">
-                  {loading ? '—' : (race?.raceName || `Race #${race?.raceNumber}`)}
-                </h2>
+                <div className="rounded-xl overflow-hidden border border-white/5">
+                  <TrackVisualization tracks={tracks} />
+                </div>
               </div>
-              {isLive && (
-                <span className="absolute top-4 right-4 bg-white text-slate-800 text-[10px] font-bold px-3 py-1 rounded-full shadow flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> LIVE
-                </span>
-              )}
-            </div>
+            ) : (
+              /* Non-live: show image banner */
+              <div className="bg-slate-900 h-44 w-full relative">
+                {race?.imageUrl
+                  ? <img src={race.imageUrl} alt={race.raceName} className="w-full h-full object-cover opacity-55" />
+                  : <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900" />}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent" />
+                <div className="absolute inset-0 p-6 flex flex-col justify-end space-y-2 text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-emerald-500 text-slate-950 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                      Official Track
+                    </span>
+                    <span className="bg-slate-800/80 border border-slate-700 text-slate-300 font-mono text-[9px] font-bold px-2 py-0.5 rounded">
+                      RACE #{race?.raceNumber}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    {loading ? '—' : (race?.raceName || `Race #${race?.raceNumber}`)}
+                  </h2>
+                </div>
+              </div>
+            )}
             <div className="bg-white p-5 border-t border-slate-100 flex justify-between items-center flex-wrap gap-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-2 text-xs">
                 <div>
@@ -325,17 +341,6 @@ export default function RefereeRaceDetail() {
               </div>
             </div>
           </div>
-
-          {/* Live Track */}
-          {isLive && tracks.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Radio size={14} className="text-red-500 animate-pulse" />
-                <h3 className="text-sm font-bold text-slate-900">Live Race Feed</h3>
-              </div>
-              <TrackVisualization tracks={tracks} />
-            </div>
-          )}
 
           {/* Reports + Form */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
