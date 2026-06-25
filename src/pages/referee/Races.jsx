@@ -1,15 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Flag, FileText, Settings, HelpCircle, Plus, Search, Bell,
   History, User, SlidersHorizontal, Calendar, MapPin, Clock,
-  ChevronRight, BarChart3, ChevronLeft,
+  ChevronRight, BarChart3,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getMyRefereeRaces } from '../../api/races'
 import AccountProfile from '../../components/AccountProfile'
-
-const PAGE_SIZE = 6
 
 const STATUS_STYLE = {
   Live:          'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -31,47 +29,31 @@ export default function RefereeRaces() {
   const { user } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const [races, setRaces]           = useState([])
-  const [page, setPage]             = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-  const [loading, setLoading]       = useState(true)
-  const [liveCount, setLiveCount]   = useState(0)
-  const [search, setSearch]         = useState('')
-  const [inputVal, setInputVal]     = useState('')
-  const [status, setStatus]         = useState('')
+  const [allRaces, setAllRaces] = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [search, setSearch]     = useState('')
+  const [inputVal, setInputVal] = useState('')
+  const [status, setStatus]     = useState('')
+
+  const races = allRaces.filter(r => {
+    const matchStatus = !status || r.status === status
+    const matchSearch = !search || [r.raceName, r.racecourseName, String(r.raceNumber)]
+      .some(v => v?.toLowerCase().includes(search.toLowerCase()))
+    return matchStatus && matchSearch
+  })
+  const liveCount  = allRaces.filter(r => r.status === 'Live').length
+  const totalCount = allRaces.length
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Referee'
   const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
-  const load = useCallback(() => {
+  useEffect(() => {
     setLoading(true)
-    const params = { page, pageSize: PAGE_SIZE }
-    if (status) params.status  = status
-    if (search) params.keyword = search
-    getMyRefereeRaces(params)
-      .then(r => {
-        setRaces(r.data.data?.items || [])
-        setTotalPages(r.data.data?.totalPages || 1)
-        setTotalCount(r.data.data?.totalCount  || 0)
-      })
+    getMyRefereeRaces()
+      .then(r => setAllRaces(r.data.data || []))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [page, status, search])
-
-  useEffect(() => { load() }, [load])
-
-  useEffect(() => {
-    getMyRefereeRaces({ page: 1, pageSize: 1, status: 'Live' })
-      .then(r => setLiveCount(r.data.data?.totalCount || 0))
-      .catch(() => {})
   }, [])
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    setPage(1)
-    setSearch(inputVal)
-  }
 
   const STATUS_OPTIONS = ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed', 'Finished', 'Cancelled']
 
@@ -134,16 +116,16 @@ export default function RefereeRaces() {
 
         {/* Header */}
         <header className="bg-white border-b border-slate-200 px-8 py-3 flex justify-between items-center shrink-0">
-          <form onSubmit={handleSearch} className="relative w-64">
+          <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               type="text"
-              value={inputVal}
-              onChange={e => setInputVal(e.target.value)}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Search races..."
               className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-300"
             />
-          </form>
+          </div>
 
           <div className="flex items-center gap-4">
             <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
@@ -178,7 +160,7 @@ export default function RefereeRaces() {
               <select
                 value={status}
                 onChange={e => { setStatus(e.target.value); setPage(1) }}
-                className="flex items-center gap-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors focus:outline-none"
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors focus:outline-none"
               >
                 <option value="">All Status</option>
                 {STATUS_OPTIONS.filter(Boolean).map(s => (
@@ -186,7 +168,7 @@ export default function RefereeRaces() {
                 ))}
               </select>
               <button
-                onClick={() => { setStatus(''); setSearch(''); setInputVal(''); setPage(1) }}
+                onClick={() => { setStatus(''); setSearch('') }}
                 className="flex items-center gap-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors"
               >
                 <SlidersHorizontal size={12} /> Reset
@@ -278,26 +260,6 @@ export default function RefereeRaces() {
                   </div>
                 )
               })}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">
-                Page <strong>{page}</strong> of <strong>{totalPages}</strong>
-                <span className="text-slate-400 ml-1">({totalCount} total)</span>
-              </span>
-              <div className="flex gap-1">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40 transition-colors">
-                  <ChevronLeft size={14} />
-                </button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40 transition-colors">
-                  <ChevronRight size={14} />
-                </button>
-              </div>
             </div>
           )}
 

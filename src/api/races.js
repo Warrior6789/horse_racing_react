@@ -16,7 +16,7 @@ export const uploadRaceImage = (id, file) => {
 export const resetRace = (id) => client.post(`/races/${id}/reset`)
 export const advanceRace = (id) => client.post(`/races/${id}/advance`)
 export const overrideResult = (raceId, results) => client.post(`/races/${raceId}/engine/override-result`, results)
-export const getMyRefereeRaces = (params) => client.get('/races/referee/my', { params })
+export const getMyRefereeRaces = () => client.get('/races/referee/my')
 export const getRaceReferee    = (raceId) => client.get(`/races/${raceId}/referee`)
 export const assignReferee     = (raceId, refereeId) => client.put(`/races/${raceId}/referee`, { refereeId })
 export const unassignReferee   = (raceId) => client.delete(`/races/${raceId}/referee`)
