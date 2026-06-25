@@ -503,7 +503,7 @@ function Pagination({ page, totalPages, onPage }) {
 }
 
 export default function UpcomingRaces() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, authSynced } = useAuth()
   const navigate = useNavigate()
   const [races, setRaces]         = useState([])
   const [page, setPage]           = useState(1)
@@ -523,7 +523,7 @@ export default function UpcomingRaces() {
   useEffect(() => { refreshUser() }, [])
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'User'
-  const canBetByRole = (!user?.role || user.role === 'Spectator') && !user?.requestedRole
+  const canBetByRole = authSynced && (!user?.role || user.role === 'Spectator') && !user?.requestedRole
 
   const TAB_API_STATUS = {
     'All': '', 'Scheduled': 'Scheduled', 'Open For Betting': 'BettingOpen',

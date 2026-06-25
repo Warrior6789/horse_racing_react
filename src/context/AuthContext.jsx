@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
     try { return JSON.parse(localStorage.getItem('user')) } catch { return null }
   })
   const [token, setToken] = useState(() => localStorage.getItem('token'))
+  const [authSynced, setAuthSynced] = useState(false)
 
   const refreshUser = useCallback(async () => {
     try {
@@ -24,10 +25,12 @@ export function AuthProvider({ children }) {
         return next
       })
     } catch {}
+    finally { setAuthSynced(true) }
   }, [])
 
   useEffect(() => {
     if (token) refreshUser()
+    else setAuthSynced(true)
   }, [token])
 
   const login = (tokenValue, userData) => {
@@ -54,7 +57,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, refreshUser, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, refreshUser, authSynced, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   )
