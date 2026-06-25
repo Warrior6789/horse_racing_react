@@ -13,8 +13,13 @@ export function AuthProvider({ children }) {
     try {
       const res = await getMe()
       const me = res.data?.data || res.data || {}
+      const mappedRole = me.role === 'HorseOwner' ? 'Owner' : (me.role || null)
       setUser(prev => {
-        const next = { ...prev, requestedRole: me.requestedRole ?? null }
+        const next = {
+          ...prev,
+          requestedRole: me.requestedRole ?? null,
+          ...(mappedRole && { role: mappedRole }),
+        }
         localStorage.setItem('user', JSON.stringify(next))
         return next
       })

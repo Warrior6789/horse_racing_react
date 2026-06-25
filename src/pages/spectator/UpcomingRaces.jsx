@@ -503,7 +503,7 @@ function Pagination({ page, totalPages, onPage }) {
 }
 
 export default function UpcomingRaces() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [races, setRaces]         = useState([])
   const [page, setPage]           = useState(1)
@@ -519,6 +519,8 @@ export default function UpcomingRaces() {
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
   useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
+
+  useEffect(() => { refreshUser() }, [])
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'User'
   const canBetByRole = (!user?.role || user.role === 'Spectator') && !user?.requestedRole
