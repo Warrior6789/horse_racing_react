@@ -24,7 +24,7 @@ const navLinkCls = ({ isActive }) =>
   }`
 
 export default function RoleUpgrade() {
-  const { user, updateUser } = useAuth()
+  const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
 
@@ -99,7 +99,7 @@ export default function RoleUpgrade() {
       }
       if (docFile) fd.append('CertificateImage', docFile)
       await upgrade(fd)
-      updateUser({ hasPendingUpgrade: true })
+      await refreshUser()
       setDone(true)
     } catch (err) {
       const status = err.response?.status

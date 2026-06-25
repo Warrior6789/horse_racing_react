@@ -521,7 +521,7 @@ export default function UpcomingRaces() {
   useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'User'
-  const canBetByRole = (!user?.role || user.role === 'Spectator') && !user?.hasPendingUpgrade
+  const canBetByRole = (!user?.role || user.role === 'Spectator') && !user?.requestedRole
 
   const TAB_API_STATUS = {
     'All': '', 'Scheduled': 'Scheduled', 'Open For Betting': 'BettingOpen',
