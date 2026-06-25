@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Trophy, TrendingUp, Wallet } from 'lucide-react'
+import { ChevronLeft, Trophy, TrendingUp, Wallet, AlertTriangle, ShieldCheck } from 'lucide-react'
 import SpectatorLayout from '../components/SpectatorLayout'
 import { getRace, getRaceResults, getRaceRegistrations } from '../api/races'
 import { getMyBetsPaged } from '../api/bets'
+import { getReports } from '../api/refereeReports'
 
 /* ─── Podium ─────────────────────────────────────────────────────── */
 function Podium({ top3 }) {
@@ -55,6 +56,7 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
   const [results, setResults] = useState([])
   const [regs,    setRegs]    = useState([])
   const [bets,    setBets]    = useState([])
+  const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -63,13 +65,21 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
       getRaceResults(raceId).catch(() => null),
       getRaceRegistrations(raceId).catch(() => null),
       getMyBetsPaged({ page: 1, pageSize: 50 }).catch(() => null),
-    ]).then(([raceRes, resultsRes, regsRes, betsRes]) => {
+      getReports({ raceId, page: 1, pageSize: 50 }).catch(() => null),
+    ]).then(([raceRes, resultsRes, regsRes, betsRes, reportsRes]) => {
       setRace(raceRes.data.data || raceRes.data)
-      if (resultsRes) setResults(resultsRes.data.data || [])
-      if (regsRes)    setRegs(regsRes.data.data || [])
-      if (betsRes)    setBets(betsRes.data.data?.items || [])
+      if (resultsRes)  setResults(resultsRes.data.data || [])
+      if (regsRes)     setRegs(regsRes.data.data || [])
+      if (betsRes)     setBets(betsRes.data.data?.items || [])
+      if (reportsRes) {
+        const payload = reportsRes.data?.data
+        setReports(Array.isArray(payload) ? payload : payload?.items || [])
+      }
     }).catch(() => {}).finally(() => setLoading(false))
   }, [raceId])
+
+  const hasPending = reports.some(r => r.status === 'Pending')
+  const hasReports = reports.length > 0
 
   const standings = [...results].sort(
     (a, b) => (a.finalPosition ?? a.rank ?? a.position ?? 99)
@@ -115,6 +125,29 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
             Finished
           </span>
         </div>
+
+        {/* Stewards' Review Banner */}
+        {hasPending ? (
+          <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+            <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-black text-amber-400 uppercase tracking-wider">Under Stewards' Review</p>
+              <p className="text-[11px] text-amber-400/70 mt-0.5">
+                These results are provisional. An official inquiry is in progress — final standings may change.
+              </p>
+            </div>
+          </div>
+        ) : hasReports ? (
+          <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3">
+            <ShieldCheck size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-black text-emerald-400 uppercase tracking-wider">Results Official</p>
+              <p className="text-[11px] text-emerald-400/70 mt-0.5">
+                Stewards' inquiry is complete. These standings are final and official.
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {/* Podium */}
         {top3.length > 0 && (
