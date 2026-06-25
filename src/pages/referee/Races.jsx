@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Flag, FileText, Settings, HelpCircle, Plus, Search, Bell,
-  History, User, SlidersHorizontal, Calendar, MapPin, Clock,
+  Flag, Settings, HelpCircle, Search, Bell,
+  History, User, SlidersHorizontal, MapPin, Clock,
   ChevronRight, BarChart3,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -74,12 +74,6 @@ export default function RefereeRaces() {
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800 text-emerald-400 font-semibold text-xs uppercase tracking-wider transition-colors"
             >
               <Flag size={16} /><span>Races</span>
-            </button>
-            <button
-              onClick={() => navigate('/referee/reports')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 font-semibold text-xs uppercase tracking-wider transition-colors"
-            >
-              <FileText size={16} /><span>My Reports</span>
             </button>
           </nav>
         </div>
