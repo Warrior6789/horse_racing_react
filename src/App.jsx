@@ -17,6 +17,7 @@ import RaceResult from './pages/RaceResult'
 
 import OwnerLayout from './components/OwnerLayout'
 import JockeyLayout from './components/JockeyLayout'
+import DashboardLayout from './components/DashboardLayout'
 
 import OwnerDashboard from './pages/owner/Dashboard'
 import MyHorses from './pages/owner/MyHorses'
@@ -93,9 +94,11 @@ export default function App() {
           <Route path="/jockey/races/:raceId/results" element={<PrivateRoute roles={['Jockey', 'Admin']}><RaceResult Layout={JockeyLayout} backUrl="/jockey/schedule" /></PrivateRoute>} />
 
           {/* Referee */}
-          <Route path="/referee/reports"              element={<PrivateRoute roles={['Referee', 'Admin']}><ReportSubmission /></PrivateRoute>} />
-          <Route path="/referee/races"                element={<PrivateRoute roles={['Referee', 'Admin']}><RefereeRaces /></PrivateRoute>} />
-          <Route path="/referee/races/:raceId"        element={<PrivateRoute roles={['Referee', 'Admin']}><RefereeRaceDetail /></PrivateRoute>} />
+          <Route path="/referee/reports"                   element={<PrivateRoute roles={['Referee', 'Admin']}><ReportSubmission /></PrivateRoute>} />
+          <Route path="/referee/races"                     element={<PrivateRoute roles={['Referee', 'Admin']}><RefereeRaces /></PrivateRoute>} />
+          <Route path="/referee/races/:raceId"             element={<PrivateRoute roles={['Referee', 'Admin']}><RefereeRaceDetail /></PrivateRoute>} />
+          <Route path="/referee/races/:raceId/live"        element={<PrivateRoute roles={['Referee', 'Admin']}><LiveRace Layout={DashboardLayout} backUrl="/referee/races" /></PrivateRoute>} />
+          <Route path="/referee/races/:raceId/results"     element={<PrivateRoute roles={['Referee', 'Admin']}><RaceResult Layout={DashboardLayout} backUrl="/referee/races" /></PrivateRoute>} />
 
           {/* Admin */}
           <Route path="/admin/dashboard" element={<PrivateRoute roles={['Admin']}><AdminDashboard /></PrivateRoute>} />

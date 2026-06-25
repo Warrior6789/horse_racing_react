@@ -156,12 +156,23 @@ export default function RefereeRaces() {
                       <td className="py-4 px-5"><StatusBadge status={r.status} /></td>
                       <td className="py-4 px-5 text-sm text-gray-600 font-medium">{r.racecourseName || '—'}</td>
                       <td className="py-4 px-5">
-                        <button
-                          onClick={() => navigate(`/referee/races/${r.raceId}`)}
-                          className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
-                        >
-                          View
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {r.status === 'Live' && (
+                            <button
+                              onClick={() => navigate(`/referee/races/${r.raceId}/live`)}
+                              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                              Watch Live
+                            </button>
+                          )}
+                          <button
+                            onClick={() => navigate(`/referee/races/${r.raceId}`)}
+                            className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
+                          >
+                            View
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

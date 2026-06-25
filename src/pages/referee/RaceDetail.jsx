@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, X } from 'lucide-react'
+import { ChevronLeft, X, Radio } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRace, getRaceRegistrations, getRaceResults } from '../../api/races'
 import { getReports, createReport, updateReport } from '../../api/refereeReports'
@@ -162,6 +162,14 @@ export default function RefereeRaceDetail() {
 
         {/* Race Details Card */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
+          {raceStatus === 'Live' && (
+            <button
+              onClick={() => navigate(`/referee/races/${raceId}/live`)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition-colors"
+            >
+              <Radio size={14} className="animate-pulse" /> Watch Live
+            </button>
+          )}
           <div className="flex flex-wrap gap-10">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Race</p>
