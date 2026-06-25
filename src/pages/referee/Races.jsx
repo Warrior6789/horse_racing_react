@@ -6,7 +6,7 @@ import {
   ChevronRight, BarChart3, ChevronLeft,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { getRacesPaged } from '../../api/races'
+import { getMyRefereeRaces } from '../../api/races'
 import AccountProfile from '../../components/AccountProfile'
 
 const PAGE_SIZE = 6
@@ -49,7 +49,7 @@ export default function RefereeRaces() {
     const params = { page, pageSize: PAGE_SIZE }
     if (status) params.status  = status
     if (search) params.keyword = search
-    getRacesPaged(params)
+    getMyRefereeRaces(params)
       .then(r => {
         setRaces(r.data.data?.items || [])
         setTotalPages(r.data.data?.totalPages || 1)
@@ -62,7 +62,7 @@ export default function RefereeRaces() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    getRacesPaged({ page: 1, pageSize: 1, status: 'Live' })
+    getMyRefereeRaces({ page: 1, pageSize: 1, status: 'Live' })
       .then(r => setLiveCount(r.data.data?.totalCount || 0))
       .catch(() => {})
   }, [])
