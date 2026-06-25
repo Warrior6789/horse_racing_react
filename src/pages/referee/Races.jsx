@@ -1,52 +1,54 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import DashboardLayout from '../../components/DashboardLayout'
+import {
+  Flag, FileText, Settings, HelpCircle, Plus, Search, Bell,
+  History, User, SlidersHorizontal, Calendar, MapPin, Clock,
+  ChevronRight, BarChart3, ChevronLeft,
+} from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 import { getRacesPaged } from '../../api/races'
+import AccountProfile from '../../components/AccountProfile'
 
-const PAGE_SIZE = 4
+const PAGE_SIZE = 6
 
-const STATUS_OPTIONS = ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed', 'Finished', 'Cancelled']
-const STATUS_LABEL   = { BettingOpen: 'Betting Open', BettingClosed: 'Betting Closed' }
+const STATUS_STYLE = {
+  Live:          'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  BettingOpen:   'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  BettingClosed: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  Scheduled:     'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  Completed:     'bg-gray-500/20 text-gray-300 border-gray-500/30',
+  Finished:      'bg-gray-500/20 text-gray-300 border-gray-500/30',
+  Cancelled:     'bg-red-500/20 text-red-400 border-red-500/30',
+}
 
-const StatusBadge = ({ status }) => {
-  const map = {
-    Live:          'bg-emerald-100 text-emerald-800',
-    BettingOpen:   'bg-emerald-100 text-emerald-800',
-    BettingClosed: 'bg-orange-100 text-orange-700',
-    Scheduled:     'bg-gray-100 text-gray-600',
-    Completed:     'bg-gray-900 text-white',
-    Finished:      'bg-gray-900 text-white',
-    Cancelled:     'bg-red-100 text-red-700',
-  }
-  const dot = ['Live', 'BettingOpen'].includes(status)
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${map[status] || 'bg-gray-100 text-gray-500'}`}>
-      {dot && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
-      {STATUS_LABEL[status] || status}
-    </span>
-  )
+const STATUS_LABEL = {
+  BettingOpen: 'Betting Open', BettingClosed: 'Betting Closed',
+  Live: 'In Progress',
 }
 
 export default function RefereeRaces() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const [races, setRaces]           = useState([])
   const [page, setPage]             = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading]       = useState(true)
-  const [activeCount, setActiveCount] = useState(0)
+  const [liveCount, setLiveCount]   = useState(0)
+  const [search, setSearch]         = useState('')
+  const [inputVal, setInputVal]     = useState('')
+  const [status, setStatus]         = useState('')
 
-  const [search, setSearch]   = useState('')
-  const [status, setStatus]   = useState('')
-  const [inputVal, setInputVal] = useState('')
+  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Referee'
+  const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   const load = useCallback(() => {
     setLoading(true)
     const params = { page, pageSize: PAGE_SIZE }
-    if (status)  params.status  = status
-    if (search)  params.keyword = search
+    if (status) params.status  = status
+    if (search) params.keyword = search
     getRacesPaged(params)
       .then(r => {
         setRaces(r.data.data?.items || [])
@@ -60,8 +62,8 @@ export default function RefereeRaces() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    getRacesPaged({ page: 1, pageSize: 100, status: 'Live' })
-      .then(r => setActiveCount(r.data.data?.totalCount || 0))
+    getRacesPaged({ page: 1, pageSize: 1, status: 'Live' })
+      .then(r => setLiveCount(r.data.data?.totalCount || 0))
       .catch(() => {})
   }, [])
 
@@ -71,159 +73,278 @@ export default function RefereeRaces() {
     setSearch(inputVal)
   }
 
-  const handleStatusChange = (e) => {
-    setPage(1)
-    setStatus(e.target.value)
-  }
+  const STATUS_OPTIONS = ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed', 'Finished', 'Cancelled']
 
   return (
-    <DashboardLayout title="Race Monitoring">
-      <div className="space-y-6">
+    <div className="flex h-screen w-full bg-[#f4f6fa] text-slate-800 font-sans overflow-hidden">
 
-        {/* Page header */}
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-[#1a1c2e] text-white flex flex-col justify-between p-4 shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Race Monitoring</h2>
-          <p className="text-sm text-gray-500 mt-1">Real-time oversight of official equestrian events.</p>
+          <div className="mb-6 px-2 py-1">
+            <h1 className="font-bold text-lg tracking-tight">EquineOfficial</h1>
+            <p className="text-[11px] text-slate-400 font-medium tracking-wide">Regulatory Division</p>
+          </div>
+
+          <nav className="space-y-1">
+            <button
+              onClick={() => navigate('/referee/races')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800 text-emerald-400 font-semibold text-xs uppercase tracking-wider transition-colors"
+            >
+              <Flag size={16} /><span>Races</span>
+            </button>
+            <button
+              onClick={() => navigate('/referee/reports')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 font-semibold text-xs uppercase tracking-wider transition-colors"
+            >
+              <FileText size={16} /><span>My Reports</span>
+            </button>
+          </nav>
         </div>
 
-        {/* Table card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="space-y-4">
+          <div className="space-y-1 border-b border-slate-800 pb-4">
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
+              <Settings size={16} /><span>Settings</span>
+            </button>
+            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
+              <HelpCircle size={16} /><span>Support</span>
+            </button>
+          </div>
 
-          {/* Filter bar */}
-          <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-wrap items-center gap-3">
-            {/* Status filter */}
-            <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm gap-2">
-              <span className="material-symbols-outlined text-gray-500" style={{ fontSize: '18px' }}>filter_list</span>
-              <span className="font-semibold text-gray-500 text-xs uppercase tracking-wide">Status:</span>
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="w-full bg-[#24273e] p-3 rounded-xl flex items-center gap-3 border border-slate-800/60 hover:border-slate-700 transition-colors text-left"
+          >
+            <div className="w-9 h-9 bg-slate-600 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+              {user?.avatarUrl
+                ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                : <span className="text-xs font-bold text-slate-200">{initials}</span>}
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-slate-200 truncate">{displayName}</h4>
+              <p className="text-[10px] text-slate-400 truncate">{user?.email || ''}</p>
+            </div>
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 px-8 py-3 flex justify-between items-center shrink-0">
+          <form onSubmit={handleSearch} className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+            <input
+              type="text"
+              value={inputVal}
+              onChange={e => setInputVal(e.target.value)}
+              placeholder="Search races..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-300"
+            />
+          </form>
+
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+              <Bell size={16} />
+            </button>
+            <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
+              <History size={16} />
+            </button>
+            <div className="h-4 w-px bg-slate-200 mx-1" />
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <span>{displayName}</span>
+              <User size={14} className="text-slate-500" />
+            </button>
+          </div>
+        </header>
+
+        {/* Body */}
+        <div className="p-8 space-y-6 flex-1">
+
+          {/* Title + Filters */}
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">My Assigned Races</h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Review schedules, monitor track conditions, and submit official reports.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
               <select
                 value={status}
-                onChange={handleStatusChange}
-                className="bg-transparent outline-none text-sm font-semibold text-gray-800 cursor-pointer"
+                onChange={e => { setStatus(e.target.value); setPage(1) }}
+                className="flex items-center gap-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors focus:outline-none"
               >
-                <option value="">All</option>
+                <option value="">All Status</option>
                 {STATUS_OPTIONS.filter(Boolean).map(s => (
                   <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>
                 ))}
               </select>
+              <button
+                onClick={() => { setStatus(''); setSearch(''); setInputVal(''); setPage(1) }}
+                className="flex items-center gap-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <SlidersHorizontal size={12} /> Reset
+              </button>
             </div>
-
-            {/* Search */}
-            <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" style={{ fontSize: '18px' }}>search</span>
-              <input
-                type="text"
-                value={inputVal}
-                onChange={e => setInputVal(e.target.value)}
-                placeholder="Search race name, racecourse or ID..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-300 focus:border-transparent shadow-sm"
-              />
-            </form>
           </div>
 
-          {/* Table */}
+          {/* Race Cards Grid */}
           {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-slate-200 h-72 animate-pulse" />
+              ))}
             </div>
           ) : races.length === 0 ? (
-            <div className="text-center py-16 text-sm font-semibold text-gray-400">No races found.</div>
+            <div className="text-center py-20 text-sm font-semibold text-slate-400 bg-white rounded-2xl border border-slate-200">
+              No races found.
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-gray-50/80 border-b border-gray-200">
-                    {['Race #', 'Name', 'Start Time', 'Track Length', 'Status', 'Racecourse', 'Actions'].map(h => (
-                      <th key={h} className="py-4 px-5 text-[11px] font-bold text-gray-500 uppercase tracking-wider">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {races.map(r => (
-                    <tr key={r.raceId} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-5 text-sm font-semibold text-gray-700">#{r.raceNumber}</td>
-                      <td className="py-4 px-5 text-sm font-bold text-gray-900 max-w-[200px] truncate">{r.raceName || '—'}</td>
-                      <td className="py-4 px-5 text-xs text-gray-600 whitespace-nowrap">
-                        {r.startTime ? (
-                          <>
-                            <div className="font-semibold text-gray-900">{new Date(r.startTime).toLocaleDateString()}</div>
-                            <div className="text-gray-500">{new Date(r.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                          </>
-                        ) : '—'}
-                      </td>
-                      <td className="py-4 px-5 text-sm text-gray-600 font-medium">
-                        {r.trackLength ? `${r.trackLength}m` : '—'}
-                      </td>
-                      <td className="py-4 px-5"><StatusBadge status={r.status} /></td>
-                      <td className="py-4 px-5 text-sm text-gray-600 font-medium">{r.racecourseName || '—'}</td>
-                      <td className="py-4 px-5">
-                        <div className="flex items-center gap-2">
-                          {r.status === 'Live' && (
-                            <button
-                              onClick={() => navigate(`/referee/races/${r.raceId}/live`)}
-                              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                              Watch Live
-                            </button>
-                          )}
-                          <button
-                            onClick={() => navigate(`/referee/races/${r.raceId}`)}
-                            className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
-                          >
-                            View
-                          </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {races.map(race => {
+                const st    = race.status || 'Scheduled'
+                const label = STATUS_LABEL[st] || st
+                const style = STATUS_STYLE[st] || STATUS_STYLE.Scheduled
+                const start = race.startTime ? new Date(race.startTime) : null
+                const dateStr = start
+                  ? `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : '—'
+                return (
+                  <div key={race.raceId} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
+                    <div>
+                      <div className="h-40 w-full relative bg-slate-900">
+                        {race.imageUrl
+                          ? <img src={race.imageUrl} alt={race.raceName} className="w-full h-full object-cover opacity-80" />
+                          : <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                              <Flag size={36} className="text-slate-600" />
+                            </div>
+                        }
+                        <span className={`absolute top-3 left-3 text-[9px] font-bold px-2 py-0.5 rounded-full border backdrop-blur-sm ${style}`}>
+                          • {label}
+                        </span>
+                        {st === 'Live' && (
+                          <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        )}
+                      </div>
+
+                      <div className="p-5 space-y-3">
+                        <div>
+                          <span className="text-[10px] font-mono font-bold text-slate-400 block tracking-wider">
+                            RACE #{race.raceNumber}
+                          </span>
+                          <h4 className="text-base font-bold text-slate-800 mt-0.5 truncate">
+                            {race.raceName || `Race #${race.raceNumber}`}
+                          </h4>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+                        <div className="space-y-1.5 text-xs font-medium text-slate-500">
+                          <div className="flex items-center gap-2">
+                            <MapPin size={14} className="text-slate-400 shrink-0" />
+                            <span className="truncate">{race.racecourseName || '—'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock size={14} className="text-slate-400 shrink-0" />
+                            <span>{dateStr}</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Track Length</span>
+                            <span className="font-bold text-slate-700">{race.trackLength ? `${race.trackLength}m` : '—'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Max Participants</span>
+                            <span className="font-bold text-slate-700">{race.maxParticipants ?? '—'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-5 pb-5">
+                      <button
+                        onClick={() => navigate(`/referee/races/${race.raceId}`)}
+                        className="w-full bg-[#1e2238] hover:bg-[#2b304f] text-white text-xs font-bold py-2.5 rounded-xl transition-colors shadow-sm"
+                      >
+                        {st === 'Live' ? '⚡ Monitor Live' : 'View & Report'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
 
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50 flex items-center justify-between">
-            <span className="text-sm text-gray-600">
-              Page <span className="font-bold text-gray-900">{page}</span> of <span className="font-bold text-gray-900">{totalPages}</span>
-              <span className="text-gray-400 ml-1">({totalCount} total)</span>
-            </span>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center border border-gray-200 bg-white text-gray-400 rounded-md hover:bg-gray-50 disabled:opacity-40 transition-colors">
-                <ChevronLeft size={14} />
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
-                <button key={n} onClick={() => setPage(n)}
-                  className={`w-8 h-8 flex items-center justify-center border rounded-md text-sm font-medium transition-colors
-                    ${page === n ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}>
-                  {n}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 font-medium">
+                Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+                <span className="text-slate-400 ml-1">({totalCount} total)</span>
+              </span>
+              <div className="flex gap-1">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  className="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40 transition-colors">
+                  <ChevronLeft size={14} />
                 </button>
-              ))}
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="w-8 h-8 flex items-center justify-center border border-gray-200 bg-white text-gray-600 rounded-md hover:bg-gray-50 disabled:opacity-40 transition-colors">
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Metric card — Active Races only */}
-        <div className="max-w-xs">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-700" style={{ fontSize: '24px' }}>sports</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40 transition-colors">
+                  <ChevronRight size={14} />
+                </button>
               </div>
-              <span className="text-sm font-bold text-emerald-600">Live</span>
             </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-1">Active Races</p>
-              <h3 className="text-4xl font-bold text-gray-900 leading-none">{String(activeCount).padStart(2, '0')}</h3>
+          )}
+
+          {/* Footer blocks */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="md:col-span-2 bg-[#e0e4f7] rounded-2xl p-6 flex justify-between items-center relative overflow-hidden border border-indigo-100">
+              <div className="space-y-2 max-w-md z-10">
+                <h3 className="text-base font-bold text-slate-900">Track Safety Protocol Updated</h3>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  Referees must review the updated wet-weather surface guidelines before the weekend events.
+                </p>
+                <button className="mt-2 bg-black hover:bg-slate-900 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors">
+                  Review Protocol <ChevronRight size={14} />
+                </button>
+              </div>
+              <div className="absolute right-0 top-0 bottom-0 w-32 bg-indigo-200/40 transform skew-x-12 translate-x-10 pointer-events-none" />
+              <div className="absolute right-12 top-0 bottom-0 w-8 bg-indigo-200/20 transform skew-x-12 translate-x-10 pointer-events-none" />
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-1.5 bg-slate-50 border border-slate-100 rounded-lg text-emerald-500">
+                  <BarChart3 size={16} />
+                </div>
+                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Live Now</h3>
+              </div>
+              <div className="space-y-3.5">
+                <div className="flex justify-between items-end text-xs">
+                  <span className="font-semibold text-slate-500">Active Races</span>
+                  <span className="font-bold text-slate-800 text-sm">{String(liveCount).padStart(2, '0')}</span>
+                </div>
+                <div className="flex justify-between items-end text-xs">
+                  <span className="font-semibold text-slate-500">Total Races</span>
+                  <span className="font-bold text-slate-800 text-sm">{totalCount}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-      </div>
-    </DashboardLayout>
+        <footer className="px-8 py-3 border-t border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest flex justify-between items-center shrink-0">
+          <span>© 2024 International Equine Officiating Body</span>
+          <span>Server Status: <span className="text-emerald-500">Operational</span></span>
+        </footer>
+      </main>
+
+      {profileOpen && <AccountProfile variant="light" onClose={() => setProfileOpen(false)} />}
+    </div>
   )
 }
