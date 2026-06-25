@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Flag, Settings, HelpCircle, Search, Bell,
@@ -7,7 +7,101 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getMyRefereeRaces } from '../../api/races'
+import { useRaceHub } from '../../hooks/useRaceHub'
 import AccountProfile from '../../components/AccountProfile'
+
+/* ── Mini Track Visualization ── */
+const LANE_H = 28, GATE_W = 22, TRACK_START = 4, TRACK_END = 92
+
+function MiniTrack({ horses }) {
+  const sorted = [...horses].sort((a, b) => b.progress - a.progress)
+  const totalH = horses.length * LANE_H
+  if (!horses.length) return (
+    <div className="flex items-center justify-center h-full text-[10px] text-slate-500 font-semibold">
+      Waiting for race data…
+    </div>
+  )
+  return (
+    <div className="relative select-none" style={{ height: totalH }}>
+      {horses.map((_, i) => (
+        <div key={i} className="absolute left-0 right-0" style={{
+          top: i * LANE_H, height: LANE_H,
+          background: i % 2 === 0 ? '#14310f' : '#112c0d',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+        }} />
+      ))}
+      {/* gate column */}
+      <div className="absolute top-0 bottom-0 bg-black/30 border-r border-white/10" style={{ width: GATE_W }}>
+        {horses.map((h, i) => (
+          <div key={i} className="flex items-center justify-center text-[9px] font-black text-slate-400" style={{ height: LANE_H }}>
+            {h.gateNumber ?? i + 1}
+          </div>
+        ))}
+      </div>
+      {/* track area */}
+      <div className="absolute top-0 bottom-0" style={{ left: GATE_W, right: 0 }}>
+        <div className="absolute top-0 bottom-0 w-px bg-white/20" style={{ left: `${TRACK_START}%` }} />
+        {/* finish line */}
+        <div className="absolute top-0 bottom-0 overflow-hidden" style={{ left: `${TRACK_END}%`, width: 10 }}>
+          {Array.from({ length: horses.length * 3 }).map((_, i) => (
+            <div key={i} style={{ height: LANE_H / 3 }} className={i % 2 === 0 ? 'bg-white/80' : 'bg-black/70'} />
+          ))}
+        </div>
+        {/* horses */}
+        {horses.map((h, i) => {
+          const rank = sorted.findIndex(s => (s.id || s.registrationId) === (h.id || h.registrationId))
+          const posX = TRACK_START + h.progress * (TRACK_END - TRACK_START)
+          return (
+            <div key={h.id || i} className="absolute flex items-center transition-all duration-150"
+              style={{ top: i * LANE_H + LANE_H / 2 - 8, left: `${posX}%` }}>
+              <div className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[7px] font-black shadow
+                ${h.isFinished ? 'bg-slate-500 text-white'
+                  : rank === 0 ? 'bg-[#f7e0a3] text-black'
+                  : rank === 1 ? 'bg-slate-300 text-black'
+                  : rank === 2 ? 'bg-amber-700 text-white'
+                  : 'bg-slate-700 text-slate-300'}`}>
+                {rank + 1}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function LiveRaceCard({ race, onNavigate }) {
+  const [horses, setHorses] = useState([])
+  const handleUpdate = useCallback((data) => {
+    if (data.horses) setHorses(data.horses)
+  }, [])
+  useRaceHub(race.raceId, { onRaceUpdate: handleUpdate })
+
+  return (
+    <div className="bg-[#0e1a0c] rounded-2xl border border-emerald-900/40 shadow-lg overflow-hidden flex flex-col">
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+        <div>
+          <span className="text-[9px] font-mono font-bold text-slate-400 tracking-wider">RACE #{race.raceNumber}</span>
+          <h4 className="text-sm font-bold text-white truncate">{race.raceName || `Race #${race.raceNumber}`}</h4>
+        </div>
+        <span className="flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
+        </span>
+      </div>
+      <div className="bg-[#0a1407] mx-3 mb-3 rounded-xl overflow-hidden border border-white/5" style={{ minHeight: 140 }}>
+        <MiniTrack horses={horses} />
+      </div>
+      <div className="px-3 pb-3">
+        <button
+          onClick={() => onNavigate(race.raceId)}
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl transition-colors shadow-sm"
+        >
+          ⚡ Monitor Live
+        </button>
+      </div>
+    </div>
+  )
+}
 
 const STATUS_STYLE = {
   Live:          'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -185,6 +279,10 @@ export default function RefereeRaces() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {races.map(race => {
                 const st    = race.status || 'Scheduled'
+                if (st === 'Live') return (
+                  <LiveRaceCard key={race.raceId} race={race} onNavigate={id => navigate(`/referee/races/${id}`)} />
+                )
+
                 const label = STATUS_LABEL[st] || st
                 const style = STATUS_STYLE[st] || STATUS_STYLE.Scheduled
                 const start = race.startTime ? new Date(race.startTime) : null
@@ -204,9 +302,6 @@ export default function RefereeRaces() {
                         <span className={`absolute top-3 left-3 text-[9px] font-bold px-2 py-0.5 rounded-full border backdrop-blur-sm ${style}`}>
                           • {label}
                         </span>
-                        {st === 'Live' && (
-                          <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        )}
                       </div>
 
                       <div className="p-5 space-y-3">
@@ -248,7 +343,7 @@ export default function RefereeRaces() {
                         onClick={() => navigate(`/referee/races/${race.raceId}`)}
                         className="w-full bg-[#1e2238] hover:bg-[#2b304f] text-white text-xs font-bold py-2.5 rounded-xl transition-colors shadow-sm"
                       >
-                        {st === 'Live' ? '⚡ Monitor Live' : 'View & Report'}
+                        View & Report
                       </button>
                     </div>
                   </div>
