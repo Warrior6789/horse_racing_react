@@ -4,6 +4,70 @@ import { ChevronLeft, X, Radio } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRace, getRaceRegistrations, getRaceResults } from '../../api/races'
 import { getReports, createReport, updateReport } from '../../api/refereeReports'
+import { useRaceHub } from '../../hooks/useRaceHub'
+
+const LANE_H   = 44
+const GATE_W   = 28
+const TRACK_START = 4
+const TRACK_END   = 92
+const FINISH_W    = 12
+
+function TrackVisualization({ tracks }) {
+  const sorted = [...tracks].sort((a, b) => b.progress - a.progress)
+  const totalH = tracks.length * LANE_H
+  return (
+    <div className="rounded-xl overflow-hidden border border-gray-200 select-none bg-[#0e2409]">
+      <div className="flex px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-stone-500 bg-[#0a1c07]">
+        <div style={{ width: GATE_W }} className="text-center shrink-0">#</div>
+        <div className="flex-1 pl-2">Track</div>
+      </div>
+      <div className="relative" style={{ height: totalH }}>
+        {tracks.map((_, i) => (
+          <div key={i} className="absolute left-0 right-0" style={{
+            top: i * LANE_H, height: LANE_H,
+            background: i % 2 === 0 ? '#14310f' : '#112c0d',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+          }} />
+        ))}
+        <div className="absolute top-0 bottom-0 bg-black/30 border-r border-stone-700/40" style={{ width: GATE_W }}>
+          {tracks.map((h, i) => (
+            <div key={i} className="flex items-center justify-center text-[10px] font-black text-stone-400" style={{ height: LANE_H }}>
+              {h.gateNumber ?? i + 1}
+            </div>
+          ))}
+        </div>
+        <div className="absolute top-0 bottom-0" style={{ left: GATE_W, right: 0 }}>
+          <div className="absolute top-0 bottom-0 w-px bg-white/25" style={{ left: `${TRACK_START}%` }} />
+          <div className="absolute top-0 bottom-0 overflow-hidden" style={{ left: `${TRACK_END}%`, width: FINISH_W }}>
+            {Array.from({ length: tracks.length * 4 }).map((_, i) => (
+              <div key={i} style={{ height: LANE_H / 4 }} className={i % 2 === 0 ? 'bg-white/80' : 'bg-black/70'} />
+            ))}
+          </div>
+          {tracks.map((h) => {
+            const rank = sorted.findIndex(s => s.registrationId === h.registrationId)
+            const posX = TRACK_START + h.progress * (TRACK_END - TRACK_START)
+            return (
+              <div key={h.registrationId} className="absolute flex items-center gap-1 transition-all duration-150"
+                style={{ top: h.lane * LANE_H + LANE_H / 2 - 11, left: `${posX}%` }}>
+                <div className={`w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[9px] font-black shadow
+                  ${h.isFinished ? 'bg-stone-500 text-white'
+                    : rank === 0 ? 'bg-[#f7e0a3] text-black'
+                    : rank === 1 ? 'bg-stone-300 text-black'
+                    : rank === 2 ? 'bg-amber-700 text-white'
+                    : 'bg-stone-700 text-stone-300'}`}>
+                  {rank + 1}
+                </div>
+                <span className="text-[8px] font-bold text-white bg-black/70 px-1 py-0.5 rounded whitespace-nowrap hidden sm:block">
+                  {h.horse?.horseName || `#${h.gateNumber}`}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const TABS = ['Race Participants', 'Incident Reports']
 
@@ -88,11 +152,21 @@ export default function RefereeRaceDetail() {
   const [toast, setToast]     = useState('')
   const [editReport, setEditReport] = useState(null)
 
+  const [horses,     setHorses]     = useState([])
+  const [liveStatus, setLiveStatus] = useState(null)
+
   const [form, setForm] = useState({
     registrationId: '', incidentDescription: '', penaltyApplied: '',
   })
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const handleRaceUpdate = useCallback((data) => {
+    if (data.horses) setHorses(data.horses)
+    if (data.status) setLiveStatus(data.status)
+  }, [])
+
+  useRaceHub(raceId, { onRaceUpdate: handleRaceUpdate })
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -139,8 +213,17 @@ export default function RefereeRaceDetail() {
     } finally { setSubmitting(false) }
   }
 
-  const raceStatus  = race?.status || 'Scheduled'
+  const raceStatus  = liveStatus || race?.status || 'Scheduled'
   const statusLabel = { BettingOpen: 'Betting Open', BettingClosed: 'Betting Closed', Live: 'In Progress', Completed: 'Completed', Finished: 'Finished' }[raceStatus] || raceStatus
+  const isLive = raceStatus === 'Live'
+
+  const findLive = (reg) => horses.find(h =>
+    h.id === reg.horse?.id || h.id === reg.horse?.horseId ||
+    h.horseId === reg.horse?.id || h.registrationId === reg.registrationId
+  )
+  const tracks = regs.length > 0
+    ? regs.map((reg, i) => ({ ...reg, progress: findLive(reg)?.progress ?? 0, isFinished: findLive(reg)?.isFinished ?? false, lane: i }))
+    : horses.map((h, i) => ({ registrationId: h.id, gateNumber: i + 1, horse: { horseName: `Horse ${i + 1}` }, progress: h.progress ?? 0, isFinished: h.isFinished ?? false, lane: i }))
 
   if (loading) return (
     <DashboardLayout title="Race Detail">
@@ -162,14 +245,6 @@ export default function RefereeRaceDetail() {
 
         {/* Race Details Card */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
-          {raceStatus === 'Live' && (
-            <button
-              onClick={() => navigate(`/referee/races/${raceId}/live`)}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition-colors"
-            >
-              <Radio size={14} className="animate-pulse" /> Watch Live
-            </button>
-          )}
           <div className="flex flex-wrap gap-10">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Race</p>
@@ -197,6 +272,17 @@ export default function RefereeRaceDetail() {
             </div>
           </div>
         </div>
+
+        {/* Live track visualization */}
+        {isLive && tracks.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Radio size={14} className="text-red-500 animate-pulse" />
+              <h3 className="text-sm font-bold text-gray-900">Live Race Feed</h3>
+            </div>
+            <TrackVisualization tracks={tracks} />
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="border-b border-gray-200 flex gap-8">
