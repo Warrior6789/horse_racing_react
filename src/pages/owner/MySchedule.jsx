@@ -443,7 +443,7 @@ export default function MySchedule() {
           <StatCard title="Total Entries"     value={schedule.length} sub={`${pending} unconfirmed`} />
           <StatCard title="Pending Jockey"    value={pending} sub="Awaiting jockey assignment" accent />
           <StatCard title="Next Race"         value={nextRaceName} sub={nextRaceTime} leftBorder />
-          <StatCard title="Confirmed Jockeys" value={`${confirmed}/${schedule.length}`} sub="Jockeys assigned" />
+          <StatCard title="Confirmed Jockeys" value={confirmed} sub="Jockeys assigned" />
         </div>
 
         {/* ── Table view ───────────────────────────────────────────── */}
