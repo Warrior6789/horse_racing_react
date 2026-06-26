@@ -48,20 +48,27 @@ function KpiCard({ title, value, icon, iconColor, bgIcon }) {
 }
 
 export default function AdminRefereeReports() {
-  const [items, setItems]       = useState([])
-  const [page, setPage]         = useState(1)
-  const [totalPages, setTotal]  = useState(1)
-  const [totalCount, setCount]  = useState(0)
-  const [loading, setLoading]   = useState(true)
-  const [acting, setActing]     = useState(null)
+  const [items, setItems]         = useState([])
+  const [page, setPage]           = useState(1)
+  const [totalPages, setTotal]    = useState(1)
+  const [totalCount, setCount]    = useState(0)
+  const [pending, setPending]     = useState(0)
+  const [approved, setApproved]   = useState(0)
+  const [rejected, setRejected]   = useState(0)
+  const [loading, setLoading]     = useState(true)
+  const [acting, setActing]       = useState(null)
 
   const load = (p = page) => {
     setLoading(true)
     getReports({ page: p, pageSize: 4 })
       .then(r => {
-        setItems(r.data.data?.items || [])
-        setTotal(r.data.data?.totalPages || 1)
-        setCount(r.data.data?.totalCount || 0)
+        const d = r.data.data || {}
+        setItems(d.items || [])
+        setTotal(d.totalPages || 1)
+        setCount(d.totalCount || 0)
+        setPending(d.pendingCount || 0)
+        setApproved(d.approvedCount || 0)
+        setRejected(d.rejectedCount || 0)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -75,10 +82,6 @@ export default function AdminRefereeReports() {
     setActing(null)
     load(page)
   }
-
-  const pending  = items.filter(i => i.status === 'Pending').length
-  const approved = items.filter(i => i.status === 'Approved').length
-  const rejected = items.filter(i => i.status === 'Rejected').length
 
   return (
     <DashboardLayout title="Referee Reports">
