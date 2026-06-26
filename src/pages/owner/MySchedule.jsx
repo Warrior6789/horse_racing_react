@@ -152,7 +152,7 @@ function CalendarView({ items, horses, venues }) {
                   className="w-full bg-[#0d1017] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:outline-none appearance-none font-medium"
                 >
                   <option value="all">All Locations</option>
-                  {venues.map(v => <option key={v} value={v}>{v}</option>)}
+                  {venues.map(v => <option key={v.racecourseId ?? v.racecourseName} value={v.racecourseName}>{v.racecourseName}</option>)}
                 </select>
                 <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
@@ -190,9 +190,13 @@ function CalendarView({ items, horses, venues }) {
             <>
               <div className="relative h-28 rounded-xl overflow-hidden mb-4 border border-gray-700 bg-gray-900 flex items-center justify-center">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d1017] via-black/40 to-transparent z-10" />
-                {nextRace.race?.racecourse?.imageUrl || nextRace.horse?.imageUrl
-                  ? <img src={nextRace.race?.racecourse?.imageUrl || nextRace.horse?.imageUrl} alt="" className="w-full h-full object-cover" />
-                  : <CalendarDays size={32} className="text-gray-700" />}
+                {(() => {
+                  const venueImg = venues.find(v => v.racecourseName === nextRace.race?.racecourseName)?.imageUrl
+                  const img = venueImg || nextRace.horse?.imageUrl
+                  return img
+                    ? <img src={img} alt="" className="w-full h-full object-cover" />
+                    : <CalendarDays size={32} className="text-gray-700" />
+                })()}
                 <div className="absolute bottom-3 left-3 z-20">
                   <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wider mb-0.5">
                     {nextRace.race?.racecourseName || 'Racecourse'}
@@ -344,7 +348,7 @@ export default function MySchedule() {
 
   useEffect(() => {
     getRacecourses()
-      .then(r => setAllVenues((r.data.data || []).map(c => c.racecourseName).filter(Boolean)))
+      .then(r => setAllVenues(r.data.data || []))
       .catch(() => {})
   }, [])
 
