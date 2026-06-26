@@ -178,7 +178,9 @@ function CalendarView({ items, horses, venues }) {
               <div className="relative h-28 rounded-xl overflow-hidden mb-4 border border-gray-700 bg-gray-900 flex items-center justify-center">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d1017] via-black/40 to-transparent z-10" />
                 {(() => {
-                  const venueImg = venues.find(v => v.racecourseName === nextRace.race?.racecourseName)?.imageUrl
+                  const venueName = nextRace.race?.racecourseName ?? nextRace.race?.racecourse?.racecourseName
+                  const venueImg = venues.find(v => v.racecourseName === venueName)?.imageUrl
+                    || nextRace.race?.racecourse?.imageUrl
                   const img = venueImg || nextRace.horse?.imageUrl
                   return img
                     ? <img src={img} alt="" className="w-full h-full object-cover" />
