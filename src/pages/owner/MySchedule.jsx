@@ -129,22 +129,6 @@ function CalendarView({ items, horses, venues }) {
           <h3 className="text-[#facc15] text-[10px] font-black uppercase tracking-widest mb-5">Quick Filters</h3>
           <div className="space-y-4">
 
-            {/* Horse Registry */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-400">Horse Registry</label>
-              <div className="relative">
-                <select
-                  value={filterHorse}
-                  onChange={e => setFilterHorse(e.target.value)}
-                  className="w-full bg-[#0d1017] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:outline-none appearance-none font-medium"
-                >
-                  <option value="all">All Active Horses</option>
-                  {horses.map(h => <option key={h.id} value={String(h.id)}>{h.name}</option>)}
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-              </div>
-            </div>
-
             {/* Racecourse */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400">Racecourse</label>
