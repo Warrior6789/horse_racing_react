@@ -146,7 +146,7 @@ export default function RefereeAssignment() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {races.map(race => {
+                  {races.filter(r => r.status !== 'Finished').map(race => {
                     const statusCls = STATUS_STYLE[race.status] || STATUS_STYLE.Scheduled
                     const statusLabel = STATUS_LABEL[race.status] || race.status
                     const currentRef = assigned[race.raceId]

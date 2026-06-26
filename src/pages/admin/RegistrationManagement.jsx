@@ -43,8 +43,11 @@ function KpiCard({ title, value, icon, iconColor, bgIcon }) {
   )
 }
 
+const FINISHED_STATUSES = ['Finished', 'Cancelled']
+
 /* ── Race List View ───────────────────────────────────────────────── */
 function RaceListView({ onSelect }) {
+  const [tab, setTab]           = useState('active')
   const [races, setRaces]       = useState([])
   const [page, setPage]         = useState(1)
   const [totalPages, setTotal]  = useState(1)
@@ -52,20 +55,42 @@ function RaceListView({ onSelect }) {
 
   useEffect(() => {
     setLoading(true)
-    getRacesPaged({ page, pageSize: 8 })
+    const params = { page, pageSize: 8, ...(tab === 'finished' && { status: 'Finished' }) }
+    getRacesPaged(params)
       .then(r => {
-        setRaces(r.data.data?.items || [])
+        const items = r.data.data?.items || []
+        const filtered = tab === 'active' ? items.filter(r => !FINISHED_STATUSES.includes(r.status)) : items
+        setRaces(filtered)
         setTotal(r.data.data?.totalPages || 1)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [page])
+  }, [page, tab])
+
+  const handleTabChange = (t) => { setTab(t); setPage(1) }
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Registration Management</h1>
         <p className="text-sm text-gray-500 mt-1">Select a race to view and manage its registrations.</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-200">
+        {[{ key: 'active', label: 'Active Races' }, { key: 'finished', label: 'Finished / Cancelled' }].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => handleTabChange(key)}
+            className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+              tab === key
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
