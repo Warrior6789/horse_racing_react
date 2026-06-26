@@ -253,10 +253,16 @@ function CalendarView({ items, horses, venues }) {
                       {races.slice(0, 2).map((r, ri) => {
                         const ec = eventColor(r.status)
                         const c  = colorMap[ec]
+                        const timeStr = r.race?.startTime
+                          ? new Date(r.race.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : null
                         return (
                           <div key={ri} className={`${c.bg} border-l-2 ${c.border} rounded-r py-1 px-2`}>
+                            {timeStr && (
+                              <p className="text-[9px] font-bold text-[#facc15]/70 mb-0.5">{timeStr}</p>
+                            )}
                             <p className={`text-[10px] font-bold ${c.text} truncate`}>
-                              {ec === 'scratched' ? r.horse?.horseName || '—' : r.horse?.horseName || '—'}
+                              {r.horse?.horseName || r.horseName || '—'}
                             </p>
                             <p className={`text-[9px] ${c.sub} truncate mt-0.5`}>
                               {ec === 'scratched' ? 'Scratched' : r.race?.raceName || `Race #${r.race?.raceNumber}`}
