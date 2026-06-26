@@ -73,7 +73,8 @@ function CalendarView({ items, horses, venues }) {
     const m = {}
     filtered.forEach(item => {
       if (!item.race?.startTime) return
-      const key = item.race.startTime.slice(0, 10)
+      const d = new Date(item.race.startTime)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       if (!m[key]) m[key] = []
       m[key].push(item)
     })
@@ -324,15 +325,19 @@ export default function MySchedule() {
   const horses = useMemo(() => {
     const seen = new Map()
     schedule.forEach(s => {
-      const h = s.horse
-      if (h?.horseId && !seen.has(h.horseId)) seen.set(h.horseId, h.horseName || `Horse #${h.horseId}`)
+      const id   = s.horse?.horseId   ?? s.horseId
+      const name = s.horse?.horseName ?? s.horseName
+      if (id && !seen.has(id)) seen.set(id, name || `Horse #${id}`)
     })
     return [...seen.entries()].map(([id, name]) => ({ id, name }))
   }, [schedule])
 
   const venues = useMemo(() => {
     const s = new Set()
-    schedule.forEach(item => { const v = item.race?.racecourseName; if (v) s.add(v) })
+    schedule.forEach(item => {
+      const v = item.race?.racecourseName ?? item.race?.racecourse?.racecourseName ?? item.racecourseName
+      if (v) s.add(v)
+    })
     return [...s]
   }, [schedule])
 
