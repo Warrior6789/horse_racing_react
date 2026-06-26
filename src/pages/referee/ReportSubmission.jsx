@@ -22,7 +22,7 @@ function StatusBadge({ status }) {
 }
 
 export default function ReportSubmission() {
-  const [form, setForm] = useState({ raceId: '', registrationId: '', incidentDescription: '', penaltyApplied: '' })
+  const [form, setForm] = useState({ raceId: '', registrationId: '', incidentDescription: '', penaltyApplied: '', penaltyType: '', fineAmount: '' })
   const [races, setRaces]               = useState([])
   const [registrations, setRegistrations] = useState([])
   const [regsLoading, setRegsLoading]   = useState(false)
@@ -81,6 +81,8 @@ export default function ReportSubmission() {
     if (!form.raceId)               { setError('Please select a race.'); return }
     if (!form.registrationId)       { setError('Please select a horse.'); return }
     if (form.incidentDescription.length < 10) { setError('Incident description must be at least 10 characters.'); return }
+    if (!form.penaltyType)          { setError('Please select a penalty type.'); return }
+    if (form.penaltyType === 'Fine' && !form.fineAmount) { setError('Please enter a fine amount.'); return }
     setError(''); setSubmitting(true)
     try {
       await createReport({
@@ -88,8 +90,10 @@ export default function ReportSubmission() {
         registrationId: form.registrationId,
         incidentDescription: form.incidentDescription,
         penaltyApplied: form.penaltyApplied || undefined,
+        penaltyType: form.penaltyType,
+        fineAmount: form.penaltyType === 'Fine' ? Number(form.fineAmount) : null,
       })
-      setForm({ raceId: '', registrationId: '', incidentDescription: '', penaltyApplied: '' })
+      setForm({ raceId: '', registrationId: '', incidentDescription: '', penaltyApplied: '', penaltyType: '', fineAmount: '' })
       setRegistrations([])
       showToast('Report submitted successfully')
       setPage(1)
@@ -187,11 +191,41 @@ export default function ReportSubmission() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Applied <span className="text-gray-400 font-normal">(optional)</span></label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Type *</label>
+              <select
+                className={inputCls}
+                value={form.penaltyType}
+                onChange={e => setForm(f => ({ ...f, penaltyType: e.target.value, fineAmount: '' }))}
+                required
+              >
+                <option value="">Select penalty type...</option>
+                <option value="Warning">Warning — cảnh cáo, không ảnh hưởng kết quả</option>
+                <option value="Fine">Fine — phạt tiền owner</option>
+                <option value="Disqualification">Disqualification — loại ngựa khỏi kết quả</option>
+              </select>
+            </div>
+
+            {form.penaltyType === 'Fine' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Fine Amount (VND) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={inputCls}
+                  placeholder="e.g. 500000"
+                  value={form.fineAmount}
+                  onChange={e => setForm(f => ({ ...f, fineAmount: e.target.value }))}
+                  required
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Notes <span className="text-gray-400 font-normal">(optional)</span></label>
               <input
                 type="text"
                 className={inputCls}
-                placeholder="e.g. Disqualified, Time penalty..."
+                placeholder="Any additional notes..."
                 value={form.penaltyApplied}
                 onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}
               />

@@ -22,18 +22,24 @@ function StatusBadge({ status }) {
   )
 }
 
-function PenaltyBadge({ penalty }) {
-  if (!penalty) return <span className="text-gray-400 font-medium">—</span>
-  const upper = penalty.toUpperCase()
+function PenaltyBadge({ penaltyType, fineAmount }) {
+  if (!penaltyType) return <span className="text-gray-400 font-medium">—</span>
   const styles =
-    upper.includes('FINE')         ? 'bg-blue-50 text-blue-600 ring-blue-500/20' :
-    upper.includes('WARNING')      ? 'bg-indigo-50 text-indigo-600 ring-indigo-500/20' :
-    upper.includes('INVESTIGATION')? 'bg-purple-50 text-purple-600 ring-purple-500/20' :
-                                     'bg-gray-50 text-gray-600 ring-gray-500/20'
+    penaltyType === 'Fine'            ? 'bg-blue-50 text-blue-600 ring-blue-500/20' :
+    penaltyType === 'Warning'         ? 'bg-indigo-50 text-indigo-600 ring-indigo-500/20' :
+    penaltyType === 'Disqualification'? 'bg-red-50 text-red-600 ring-red-500/20' :
+                                        'bg-gray-50 text-gray-600 ring-gray-500/20'
   return (
-    <span className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ring-1 ring-inset uppercase ${styles}`}>
-      {penalty}
-    </span>
+    <div className="flex flex-col gap-1">
+      <span className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ring-1 ring-inset uppercase ${styles}`}>
+        {penaltyType}
+      </span>
+      {penaltyType === 'Fine' && fineAmount != null && (
+        <span className="text-[10px] text-blue-500 font-semibold">
+          {Number(fineAmount).toLocaleString('vi-VN')} VND
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -150,7 +156,7 @@ export default function AdminRefereeReports() {
 
                       {/* Penalty */}
                       <td className="py-5 px-5 whitespace-nowrap">
-                        <PenaltyBadge penalty={row.penaltyApplied} />
+                        <PenaltyBadge penaltyType={row.penaltyType} fineAmount={row.fineAmount} />
                       </td>
 
                       {/* Submitted */}
