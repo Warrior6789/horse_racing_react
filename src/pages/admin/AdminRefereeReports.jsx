@@ -3,8 +3,10 @@ import { ShieldAlert, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight
 import DashboardLayout from '../../components/DashboardLayout'
 import { getReports, approveReport, rejectReport } from '../../api/refereeReports'
 
-function initials(email = '') {
-  return email.split('@')[0].slice(0, 2).toUpperCase() || '??'
+function initials(name = '') {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase() || '??'
 }
 
 function StatusBadge({ status }) {
@@ -127,16 +129,16 @@ export default function AdminRefereeReports() {
                       <td className="py-5 px-5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gray-950 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                            {initials(row.referee?.email)}
+                            {initials(row.refereeName)}
                           </div>
-                          <span className="font-medium text-gray-700 text-xs break-all">{row.referee?.email || '—'}</span>
+                          <span className="font-medium text-gray-700 text-xs break-all">{row.refereeName || '—'}</span>
                         </div>
                       </td>
 
                       {/* Race & Horse */}
                       <td className="py-5 px-5 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 text-xs">Race #{row.race?.raceNumber}</div>
-                        <div className="text-gray-500 text-xs mt-0.5">{row.horse?.horseName || '—'}</div>
+                        <div className="font-bold text-gray-900 text-xs">Race #{row.raceNumber}</div>
+                        <div className="text-gray-500 text-xs mt-0.5">{row.horseName || '—'}</div>
                       </td>
 
                       {/* Incident */}
