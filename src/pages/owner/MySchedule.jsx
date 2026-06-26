@@ -257,9 +257,21 @@ function CalendarView({ items, horses, venues }) {
                     `}
                   >
                     <div className="flex justify-between items-start">
-                      <span className={`text-sm font-bold ${!cell.cur ? 'text-gray-600' : isToday ? 'text-[#facc15]' : 'text-gray-300'}`}>
-                        {cell.day}
-                      </span>
+                      <div>
+                        <span className={`text-sm font-bold ${!cell.cur ? 'text-gray-600' : isToday ? 'text-[#facc15]' : 'text-gray-300'}`}>
+                          {cell.day}
+                        </span>
+                        {cell.cur && races.length > 0 && (
+                          <div className="flex gap-0.5 mt-1">
+                            {races.slice(0, 3).map((r, ri) => {
+                              const ec = eventColor(r.status)
+                              const dotCls = ec === 'confirmed' ? 'bg-[#facc15]' : ec === 'scratched' ? 'bg-red-500/60' : 'bg-[#60a5fa]'
+                              return <span key={ri} className={`w-1.5 h-1.5 rounded-full ${dotCls}`} />
+                            })}
+                            {races.length > 3 && <span className="w-1 h-1 rounded-full bg-gray-500 self-center" />}
+                          </div>
+                        )}
+                      </div>
                       {isToday && <span className="w-1.5 h-1.5 rounded-full bg-[#facc15] mt-1" />}
                     </div>
                     <div className="mt-1 space-y-1">
