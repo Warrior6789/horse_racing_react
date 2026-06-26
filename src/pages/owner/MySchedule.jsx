@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getOwnerAllRegistrationsPaged } from '../../api/registrations'
+import { getRacecourses } from '../../api/racecourses'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const PAGE_SIZE = 4
@@ -331,6 +332,7 @@ function CalendarView({ items, horses, venues }) {
 export default function MySchedule() {
   const navigate = useNavigate()
   const [schedule, setSchedule] = useState([])
+  const [allVenues, setAllVenues] = useState([])
   const [loading, setLoading]   = useState(true)
   const [page, setPage]         = useState(1)
   const [view, setView]         = useState('table')
@@ -340,6 +342,12 @@ export default function MySchedule() {
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
   useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
+
+  useEffect(() => {
+    getRacecourses()
+      .then(r => setAllVenues((r.data.data || []).map(c => c.racecourseName).filter(Boolean)))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     getOwnerAllRegistrationsPaged({ page: 1, pageSize: 500 })
@@ -361,14 +369,6 @@ export default function MySchedule() {
     return [...seen.entries()].map(([id, name]) => ({ id, name }))
   }, [schedule])
 
-  const venues = useMemo(() => {
-    const s = new Set()
-    schedule.forEach(item => {
-      const v = item.race?.racecourseName ?? item.race?.racecourse?.racecourseName ?? item.racecourseName
-      if (v) s.add(v)
-    })
-    return [...s]
-  }, [schedule])
 
   const filtered = useMemo(() => {
     if (horseFilter === 'all') return schedule
@@ -403,7 +403,7 @@ export default function MySchedule() {
           <div>
             <h1 className="text-3xl font-bold text-[#facc15] mb-2 tracking-tight">My Race Schedule</h1>
             <p className="text-gray-400 text-sm font-medium">
-              Monitoring {schedule.length} upcoming race entries across {venues.length} location{venues.length !== 1 ? 's' : ''}.
+              Monitoring {schedule.length} upcoming race entries across {allVenues.length} location{allVenues.length !== 1 ? 's' : ''}.
             </p>
           </div>
 
@@ -630,7 +630,7 @@ export default function MySchedule() {
 
         {/* ── Calendar view ─────────────────────────────────────────── */}
         {view === 'calendar' && !loading && (
-          <CalendarView items={schedule} horses={horses} venues={venues} />
+          <CalendarView items={schedule} horses={horses} venues={allVenues} />
         )}
 
       </div>
