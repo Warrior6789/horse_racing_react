@@ -447,9 +447,7 @@ export default function RaceRegistration() {
     setJockeyLoading(true)
     try {
       const res = await getJockeysPaged({ pageSize: 100 })
-      const list = res.data.data?.items || res.data.data || []
-      console.log('[Jockeys]', list[0])
-      setJockeys(list)
+      setJockeys(res.data.data?.items || res.data.data || [])
     } catch {}
     setJockeyLoading(false)
   }
