@@ -77,7 +77,10 @@ function CalendarView({ items, horses, venues }) {
   // filter items
   const filtered = useMemo(() => items.filter(item => {
     if (filterHorse !== 'all' && String(item.horse?.horseId) !== filterHorse) return false
-    if (filterVenue !== 'all' && item.race?.racecourseName !== filterVenue) return false
+    if (filterVenue !== 'all') {
+      const v = item.race?.racecourseName ?? item.race?.racecourse?.racecourseName ?? item.racecourseName
+      if (v !== filterVenue) return false
+    }
     const ec = eventColor(item.status)
     if (!filterStatus[ec]) return false
     return true
