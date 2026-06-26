@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { getMyBetsPaged } from '../api/bets'
 import { getBalance } from '../api/payments'
 import { getMyProfile, updateProfile, updateProfileImage } from '../api/userProfiles'
+import { updateJockeyImage } from '../api/jockeyProfiles'
 
 const ROLE_LABEL = {
   Spectator: 'SPECTATOR',
@@ -138,7 +139,13 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
         const fd = new FormData()
         fd.append('file', avatarFile)
         try {
-          await updateProfileImage(fd)
+          if (user?.role === 'Jockey') {
+            const jockeyFd = new FormData()
+            jockeyFd.append('image', avatarFile)
+            await updateJockeyImage(jockeyFd)
+          } else {
+            await updateProfileImage(fd)
+          }
           setProfile(p => ({ ...p, imageUrl: avatarPreview }))
         } catch (imgErr) {
           const d = imgErr.response?.data
