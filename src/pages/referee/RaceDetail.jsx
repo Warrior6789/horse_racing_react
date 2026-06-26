@@ -71,7 +71,7 @@ function TrackVisualization({ tracks }) {
 }
 
 /* ── Edit Modal ── */
-const PENALTY_OPTIONS = ['Disqualified', 'Relegated', 'Time Penalty', 'Warning', 'Fine', 'Other']
+const PENALTY_OPTIONS = ['Warning', 'Fine', 'Disqualification']
 
 function EditModal({ report, onClose, onSaved }) {
   const [form, setForm] = useState({

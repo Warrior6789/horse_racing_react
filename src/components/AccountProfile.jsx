@@ -111,7 +111,7 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
       })
       .catch(() => {})
 
-    if (role !== 'Admin') {
+    if (role !== 'Admin' && role !== 'Referee') {
       getBalance().then(r => setStats(s => ({ ...s, balance: r.data.data?.balance ?? 0 }))).catch(() => {})
       if (role === 'Spectator') {
         getMyBetsPaged({ page: 1, pageSize: 1 }).then(r => setStats(s => ({ ...s, totalBets: r.data.data?.totalCount ?? 0 }))).catch(() => {})
@@ -311,8 +311,8 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
                 )}
               </div>
 
-              {/* Stats — ẩn với Admin */}
-              {role !== 'Admin' && (
+              {/* Stats — ẩn với Admin và Referee */}
+              {role !== 'Admin' && role !== 'Referee' && (
                 <div className={`grid gap-3 ${role === 'Spectator' ? 'grid-cols-2' : 'grid-cols-1'}`}>
                   {role === 'Spectator' && (
                     <div className={`border rounded-xl p-4 ${t.statCard}`}>
