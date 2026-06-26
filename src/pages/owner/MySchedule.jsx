@@ -119,100 +119,54 @@ function CalendarView({ items, horses, venues }) {
   const toggleStatus = (key) => setFilterStatus(p => ({ ...p, [key]: !p[key] }))
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="space-y-4">
 
-      {/* ── Left Sidebar ─────────────────────────────────────────── */}
-      <div className="lg:col-span-1 space-y-4">
+      {/* ── Quick Filters bar ──────────────────────────────────────── */}
+      <div className="bg-[#151a28] rounded-2xl px-5 py-4 border border-gray-800/80 flex flex-wrap items-center gap-6">
+        <h3 className="text-[#facc15] text-[10px] font-black uppercase tracking-widest shrink-0">Quick Filters</h3>
 
-        {/* Quick Filters */}
-        <div className="bg-[#151a28] rounded-2xl p-5 border border-gray-800/80">
-          <h3 className="text-[#facc15] text-[10px] font-black uppercase tracking-widest mb-5">Quick Filters</h3>
-          <div className="space-y-4">
-
-            {/* Racecourse */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-400">Racecourse</label>
-              <div className="relative">
-                <select
-                  value={filterVenue}
-                  onChange={e => setFilterVenue(e.target.value)}
-                  className="w-full bg-[#0d1017] border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:outline-none appearance-none font-medium"
-                >
-                  <option value="all">All Locations</option>
-                  {venues.map(v => <option key={v.racecourseId ?? v.racecourseName} value={v.racecourseName}>{v.racecourseName}</option>)}
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Status checkboxes */}
-            <div className="pt-2 space-y-3">
-              <label className="text-xs font-bold text-gray-400 block mb-2">Status Type</label>
-              {[
-                { key: 'confirmed', label: 'Confirmed' },
-                { key: 'pending',   label: 'Pending'   },
-              ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-3 cursor-pointer group" onClick={() => toggleStatus(key)}>
-                  <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition-colors ${filterStatus[key] ? 'bg-[#facc15]' : 'border border-gray-600 bg-transparent'}`}>
-                    {filterStatus[key] && (
-                      <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-sm font-bold transition-colors ${filterStatus[key] ? 'text-gray-200 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-400'}`}>{label}</span>
-                </label>
-              ))}
-            </div>
+        {/* Racecourse */}
+        <div className="flex items-center gap-2 shrink-0">
+          <label className="text-xs font-bold text-gray-400 whitespace-nowrap">Racecourse</label>
+          <div className="relative">
+            <select
+              value={filterVenue}
+              onChange={e => setFilterVenue(e.target.value)}
+              className="bg-[#0d1017] border border-gray-700 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-200 focus:outline-none appearance-none font-medium"
+            >
+              <option value="all">All Locations</option>
+              {venues.map(v => <option key={v.racecourseId ?? v.racecourseName} value={v.racecourseName}>{v.racecourseName}</option>)}
+            </select>
+            <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
         </div>
 
-        {/* Next Major Event */}
-        <div className="bg-[#151a28] rounded-2xl p-5 border border-gray-800/80">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-[#facc15] text-[10px] font-black uppercase tracking-widest">Next Major Event</h3>
-            <Sparkles size={14} className="text-gray-500" />
-          </div>
-          {nextRace ? (
-            <>
-              <div className="relative h-28 rounded-xl overflow-hidden mb-4 border border-gray-700 bg-gray-900 flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0d1017] via-black/40 to-transparent z-10" />
-                {(() => {
-                  const venueName = nextRace.race?.racecourseName ?? nextRace.race?.racecourse?.racecourseName
-                  const venueImg = venues.find(v => v.racecourseName === venueName)?.imageUrl
-                    || nextRace.race?.racecourse?.imageUrl
-                  const img = venueImg || nextRace.horse?.imageUrl
-                  return img
-                    ? <img src={img} alt="" className="w-full h-full object-cover" />
-                    : <CalendarDays size={32} className="text-gray-700" />
-                })()}
-                <div className="absolute bottom-3 left-3 z-20">
-                  <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wider mb-0.5">
-                    {nextRace.race?.racecourseName || 'Racecourse'}
-                  </p>
-                  <h4 className="text-white font-bold text-base leading-tight">
-                    {nextRace.race?.raceName || `Race #${nextRace.race?.raceNumber}`}
-                  </h4>
-                </div>
+        {/* Status checkboxes */}
+        <div className="flex items-center gap-4">
+          <label className="text-xs font-bold text-gray-400 whitespace-nowrap">Status</label>
+          {[
+            { key: 'confirmed', label: 'Confirmed' },
+            { key: 'pending',   label: 'Pending'   },
+          ].map(({ key, label }) => (
+            <label key={key} className="flex items-center gap-2 cursor-pointer group" onClick={() => toggleStatus(key)}>
+              <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition-colors ${filterStatus[key] ? 'bg-[#facc15]' : 'border border-gray-600 bg-transparent'}`}>
+                {filterStatus[key] && (
+                  <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
               </div>
-              <p className="text-sm text-gray-400 leading-relaxed font-medium">
-                Scheduled for{' '}
-                <span className="text-gray-200 font-bold">
-                  {rawDate(nextRace.race.startTime)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-                </span>.{' '}
-                Horse{' '}
-                <span className="text-[#facc15] font-bold">{nextRace.horse?.horseName || '—'}</span>{' '}
-                is registered.
-              </p>
-            </>
-          ) : (
-            <p className="text-gray-600 text-sm">No upcoming events.</p>
-          )}
+              <span className={`text-sm font-bold transition-colors ${filterStatus[key] ? 'text-gray-200' : 'text-gray-500 group-hover:text-gray-400'}`}>{label}</span>
+            </label>
+          ))}
         </div>
       </div>
 
-      {/* ── Calendar Grid ─────────────────────────────────────────── */}
-      <div className="lg:col-span-3 bg-[#151a28] rounded-2xl p-6 border border-gray-800/80 flex flex-col">
+      {/* ── Calendar + Next Major Event ────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+
+        {/* ── Calendar Grid ───────────────────────────────────────── */}
+        <div className="lg:col-span-3 bg-[#151a28] rounded-2xl p-6 border border-gray-800/80 flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-white">{monthLabel}</h2>
@@ -298,8 +252,53 @@ function CalendarView({ items, horses, venues }) {
         </div>
       </div>
 
+        {/* ── Next Major Event ──────────────────────────────────── */}
+        <div className="lg:col-span-1 bg-[#151a28] rounded-2xl p-5 border border-gray-800/80">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-[#facc15] text-[10px] font-black uppercase tracking-widest">Next Major Event</h3>
+            <Sparkles size={14} className="text-gray-500" />
+          </div>
+          {nextRace ? (
+            <>
+              <div className="relative h-36 rounded-xl overflow-hidden mb-4 border border-gray-700 bg-gray-900 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0d1017] via-black/40 to-transparent z-10" />
+                {(() => {
+                  const venueName = nextRace.race?.racecourseName ?? nextRace.race?.racecourse?.racecourseName
+                  const venueImg = venues.find(v => v.racecourseName === venueName)?.imageUrl
+                    || nextRace.race?.racecourse?.imageUrl
+                  const img = venueImg || nextRace.horse?.imageUrl
+                  return img
+                    ? <img src={img} alt="" className="w-full h-full object-cover" />
+                    : <CalendarDays size={32} className="text-gray-700" />
+                })()}
+                <div className="absolute bottom-3 left-3 z-20">
+                  <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wider mb-0.5">
+                    {nextRace.race?.racecourseName || nextRace.race?.racecourse?.racecourseName || 'Racecourse'}
+                  </p>
+                  <h4 className="text-white font-bold text-base leading-tight">
+                    {nextRace.race?.raceName || `Race #${nextRace.race?.raceNumber}`}
+                  </h4>
+                </div>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed font-medium">
+                Scheduled for{' '}
+                <span className="text-gray-200 font-bold">
+                  {rawDate(nextRace.race.startTime)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                </span>.{' '}
+                Horse{' '}
+                <span className="text-[#facc15] font-bold">{nextRace.horse?.horseName || '—'}</span>{' '}
+                is registered.
+              </p>
+            </>
+          ) : (
+            <p className="text-gray-600 text-sm">No upcoming events.</p>
+          )}
+        </div>
+
+      </div>{/* end calendar+event grid */}
+
       {/* Legend */}
-      <div className="lg:col-span-4 flex flex-col md:flex-row justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-center">
         <div className="flex flex-wrap items-center gap-6">
           {[
             { color: 'bg-[#facc15]', label: 'Confirmed Entry' },
@@ -315,6 +314,7 @@ function CalendarView({ items, horses, venues }) {
           * Times shown in Horse's Local Time Zone
         </p>
       </div>
+
     </div>
   )
 }
