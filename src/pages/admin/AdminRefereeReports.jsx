@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ShieldAlert, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getReports, approveReport, rejectReport } from '../../api/refereeReports'
+import { useRaceHub } from '../../hooks/useRaceHub'
 
 function initials(name = '') {
   const parts = name.trim().split(/\s+/)
@@ -66,7 +67,7 @@ export default function AdminRefereeReports() {
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
 
-  const load = (p = page) => {
+  const load = useCallback((p = page) => {
     setLoading(true)
     getReports({ page: p, pageSize: 4 })
       .then(r => {
@@ -80,9 +81,11 @@ export default function AdminRefereeReports() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }
+  }, [page])
 
   useEffect(() => { load(page) }, [page])
+
+  useRaceHub(null, { onReportUpdated: () => load(page) })
 
   const handle = async (id, fn) => {
     setActing(id)

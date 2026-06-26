@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { createReport, getMyReports } from '../../api/refereeReports'
-import { getRacesPaged } from '../../api/races'
-import { getRaceRegistrations } from '../../api/races'
+import { getMyRefereeRaces, getRaceRegistrations } from '../../api/races'
 
 const PAGE_SIZE = 4
 
@@ -41,11 +40,12 @@ export default function ReportSubmission() {
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   useEffect(() => {
-    getRacesPaged({ page: 1, pageSize: 50, status: 'Completed' })
-      .then(r => setRaces(r.data.data?.items || []))
-      .catch(() => {})
-    getRacesPaged({ page: 1, pageSize: 1, status: 'Scheduled' })
-      .then(r => setPendingCount(r.data.data?.totalCount || 0))
+    getMyRefereeRaces()
+      .then(r => {
+        const all = r.data.data || []
+        setRaces(all.filter(race => race.status === 'Completed'))
+        setPendingCount(all.filter(race => race.status === 'Scheduled').length)
+      })
       .catch(() => {})
   }, [])
 

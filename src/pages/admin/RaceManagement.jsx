@@ -151,6 +151,7 @@ export default function RaceManagement() {
   const [cards, setCards]           = useState([])
   const [cLoading, setCLoading]     = useState(true)
   const [races, setRaces]           = useState([])
+  const [tab, setTab]               = useState('active')
   const [page, setPage]             = useState(1)
   const [pageSize, setPageSize]     = useState(4)
   const [totalPages, setTotalPages] = useState(1)
@@ -179,11 +180,14 @@ export default function RaceManagement() {
       .finally(() => { if (!silent) setCLoading(false) })
   }
 
-  const load = (p = page, ps = pageSize, { silent = false } = {}) => {
+  const load = (p = page, ps = pageSize, { silent = false, t = tab } = {}) => {
     if (!silent) setLoading(true)
-    getRacesPaged({ page: p, pageSize: ps })
+    const statusParam = t === 'finished' ? 'Finished' : undefined
+    getRacesPaged({ page: p, pageSize: ps, ...(statusParam && { status: statusParam }) })
       .then(r => {
-        setRaces(r.data.data?.items || [])
+        const items = r.data.data?.items || []
+        const filtered = t === 'active' ? items.filter(r => !['Finished', 'Cancelled'].includes(r.status)) : items
+        setRaces(filtered)
         setTotalPages(r.data.data?.totalPages || 1)
         setTotalCount(r.data.data?.totalCount || 0)
       })
@@ -198,7 +202,7 @@ export default function RaceManagement() {
     loadCards()
   }, [])
 
-  useEffect(() => { load(page, pageSize) }, [page, pageSize])
+  useEffect(() => { load(page, pageSize, { t: tab }) }, [page, pageSize, tab])
 
   const handleRacesUpdated = useCallback(() => {
     loadCards({ silent: true })
@@ -428,19 +432,33 @@ export default function RaceManagement() {
 
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-5 bg-gray-950 rounded-full" />
-              <h2 className="text-sm font-bold text-gray-900">All Races</h2>
-              <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
+          <div className="px-6 pt-4 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-5 bg-gray-950 rounded-full" />
+                <h2 className="text-sm font-bold text-gray-900">All Races</h2>
+                <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
+              <select
+                value={pageSize}
+                onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
+              >
+                {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
+              </select>
             </div>
-            <select
-              value={pageSize}
-              onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
-              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
-            >
-              {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
-            </select>
+            <div className="flex gap-1">
+              {[{ key: 'active', label: 'Active' }, { key: 'finished', label: 'Finished / Cancelled' }].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => { setTab(key); setPage(1) }}
+                  className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors -mb-px ${
+                    tab === key ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? (
