@@ -13,6 +13,20 @@ import { useRaceHub } from '../../hooks/useRaceHub'
 const PAGE_SIZE = 4
 
 /* ─── Helpers ──────────────────────────────────────────────────────── */
+// BE stores admin-entered local time in the UTC slot (no real UTC conversion).
+// Parse raw string to avoid double-shifting by 7h (UTC+7).
+function rawDate(st) {
+  if (!st) return null
+  const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
+  return new Date(y, mo - 1, d)
+}
+function rawTimeStr(st) {
+  if (!st || st.length < 16) return null
+  const h = parseInt(st.substring(11, 13), 10)
+  const m = st.substring(14, 16)
+  return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
+}
+
 function eventColor(status) {
   if (!status) return 'pending'
   const s = status.toLowerCase()
@@ -73,8 +87,7 @@ function CalendarView({ items, horses, venues }) {
     const m = {}
     filtered.forEach(item => {
       if (!item.race?.startTime) return
-      const d = new Date(item.race.startTime)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const key = item.race.startTime.slice(0, 10)
       if (!m[key]) m[key] = []
       m[key].push(item)
     })
@@ -192,7 +205,7 @@ function CalendarView({ items, horses, venues }) {
               <p className="text-sm text-gray-400 leading-relaxed font-medium">
                 Scheduled for{' '}
                 <span className="text-gray-200 font-bold">
-                  {new Date(nextRace.race.startTime).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                  {rawDate(nextRace.race.startTime)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
                 </span>.{' '}
                 Horse{' '}
                 <span className="text-[#facc15] font-bold">{nextRace.horse?.horseName || '—'}</span>{' '}
@@ -253,9 +266,7 @@ function CalendarView({ items, horses, venues }) {
                       {races.slice(0, 2).map((r, ri) => {
                         const ec = eventColor(r.status)
                         const c  = colorMap[ec]
-                        const timeStr = r.race?.startTime
-                          ? new Date(r.race.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : null
+                        const timeStr = rawTimeStr(r.race?.startTime)
                         return (
                           <div key={ri} className={`${c.bg} border-l-2 ${c.border} rounded-r py-1 px-2`}>
                             {timeStr && (
@@ -364,7 +375,7 @@ export default function MySchedule() {
 
   const nextRaceName = nextRace ? `Race #${nextRace.race?.raceNumber}` : '—'
   const nextRaceTime = nextRace?.race?.startTime
-    ? new Date(nextRace.race.startTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    ? `${rawDate(nextRace.race.startTime)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${rawTimeStr(nextRace.race.startTime) || ''}`
     : '—'
 
   const venueCounts = {}
@@ -486,8 +497,8 @@ export default function MySchedule() {
                             <td className="px-6 py-4">
                               {r.startTime ? (
                                 <>
-                                  <p className="font-bold text-white text-sm">{new Date(r.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                  <p className="text-[10px] text-gray-500 font-medium mt-0.5">{new Date(r.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                  <p className="font-bold text-white text-sm">{rawDate(r.startTime)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                  <p className="text-[10px] text-gray-500 font-medium mt-0.5">{rawTimeStr(r.startTime)}</p>
                                 </>
                               ) : <span className="text-gray-600">—</span>}
                             </td>
