@@ -452,6 +452,7 @@ export default function RaceRegistration() {
 
   const handleSubmit = async () => {
     if (!selectedHorse) { setError('Please select a horse.'); return }
+    if (!gateNumber)    { setError('Please enter a gate number.'); return }
     if (!agreed)        { setError('Please agree to the racing regulations.'); return }
     setError(''); setSaving(true)
     try {
@@ -663,7 +664,7 @@ export default function RaceRegistration() {
               {/* Gate Number */}
               <div className="mt-4">
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                  Gate Number <span className="text-gray-600">(optional)</span>
+                  Gate Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number" min="1" placeholder="e.g. 3"
