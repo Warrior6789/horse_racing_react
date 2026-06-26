@@ -384,7 +384,7 @@ export default function RaceManagement() {
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '14px' }}>schedule</span>
-                      {r.startTime ? new Date(r.startTime).toLocaleString() : '—'}
+                      {r.startTime ? r.startTime.slice(0, 16).replace('T', ' ') : '—'}
                     </div>
                   </div>
                   <div className="flex gap-2 pt-1 border-t border-gray-100">
@@ -473,7 +473,7 @@ export default function RaceManagement() {
                       </td>
 
                       <td className="py-4 px-4 text-xs text-gray-500 whitespace-nowrap">
-                        {r.startTime ? new Date(r.startTime).toLocaleString() : '—'}
+                        {r.startTime ? r.startTime.slice(0, 16).replace('T', ' ') : '—'}
                       </td>
 
                       <td className="py-4 px-4 text-xs text-gray-500 font-medium text-center">
