@@ -315,7 +315,6 @@ function CalendarView({ items, horses, venues }) {
           {[
             { color: 'bg-[#facc15]', label: 'Confirmed Entry' },
             { color: 'bg-[#60a5fa]', label: 'Pending Declaration' },
-            { color: 'bg-red-400',   label: 'Scratched / Withdrawn' },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
