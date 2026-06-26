@@ -128,15 +128,20 @@ export default function RefereeRaces() {
   const [search, setSearch]     = useState('')
   const [inputVal, setInputVal] = useState('')
   const [status, setStatus]     = useState('')
+  const [tab, setTab]           = useState('active')
 
-  const races = allRaces.filter(r => {
+  const FINISHED_STATUSES = ['Finished', 'Cancelled']
+  const tabRaces = allRaces.filter(r =>
+    tab === 'active' ? !FINISHED_STATUSES.includes(r.status) : FINISHED_STATUSES.includes(r.status)
+  )
+  const races = tabRaces.filter(r => {
     const matchStatus = !status || r.status === status
     const matchSearch = !search || [r.raceName, r.racecourseName, String(r.raceNumber)]
       .some(v => v?.toLowerCase().includes(search.toLowerCase()))
     return matchStatus && matchSearch
   })
   const liveCount  = allRaces.filter(r => r.status === 'Live').length
-  const totalCount = allRaces.length
+  const totalCount = tabRaces.length
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Referee'
   const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -153,7 +158,9 @@ export default function RefereeRaces() {
 
   useRaceHub(null, { onRacesUpdated: fetchRaces })
 
-  const STATUS_OPTIONS = ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed', 'Finished', 'Cancelled']
+  const STATUS_OPTIONS = tab === 'active'
+    ? ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed']
+    : ['', 'Finished', 'Cancelled']
 
   return (
     <div className="flex h-screen w-full bg-[#f4f6fa] text-slate-800 font-sans overflow-hidden">
@@ -239,6 +246,23 @@ export default function RefereeRaces() {
 
         {/* Body */}
         <div className="p-8 space-y-6 flex-1">
+
+          {/* Tabs */}
+          <div className="flex gap-1 border-b border-slate-200">
+            {[{ key: 'active', label: 'Active' }, { key: 'finished', label: 'Finished / Cancelled' }].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => { setTab(key); setStatus('') }}
+                className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+                  tab === key
+                    ? 'border-slate-800 text-slate-900'
+                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
           {/* Title + Filters */}
           <div className="flex justify-between items-start">
