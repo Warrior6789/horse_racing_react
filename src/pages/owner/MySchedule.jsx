@@ -190,8 +190,8 @@ function CalendarView({ items, horses, venues }) {
             <>
               <div className="relative h-28 rounded-xl overflow-hidden mb-4 border border-gray-700 bg-gray-900 flex items-center justify-center">
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d1017] via-black/40 to-transparent z-10" />
-                {nextRace.race?.racecourse?.imageUrl
-                  ? <img src={nextRace.race.racecourse.imageUrl} alt="" className="w-full h-full object-cover" />
+                {nextRace.race?.racecourse?.imageUrl || nextRace.horse?.imageUrl
+                  ? <img src={nextRace.race?.racecourse?.imageUrl || nextRace.horse?.imageUrl} alt="" className="w-full h-full object-cover" />
                   : <CalendarDays size={32} className="text-gray-700" />}
                 <div className="absolute bottom-3 left-3 z-20">
                   <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wider mb-0.5">
