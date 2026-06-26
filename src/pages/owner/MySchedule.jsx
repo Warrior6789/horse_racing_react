@@ -66,7 +66,7 @@ function CalendarView({ items, horses, venues }) {
   const [cur, setCur] = useState({ year: today.getFullYear(), month: today.getMonth() })
   const [filterHorse,  setFilterHorse]  = useState('all')
   const [filterVenue,  setFilterVenue]  = useState('all')
-  const [filterStatus, setFilterStatus] = useState({ confirmed: true, pending: true, scratched: false })
+  const [filterStatus, setFilterStatus] = useState({ confirmed: true, pending: true })
 
   const goToday = () => setCur({ year: today.getFullYear(), month: today.getMonth() })
   const prev = () => setCur(c => { const d = new Date(c.year, c.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() } })
@@ -164,7 +164,6 @@ function CalendarView({ items, horses, venues }) {
               {[
                 { key: 'confirmed', label: 'Confirmed' },
                 { key: 'pending',   label: 'Pending'   },
-                { key: 'scratched', label: 'Scratched' },
               ].map(({ key, label }) => (
                 <label key={key} className="flex items-center gap-3 cursor-pointer group" onClick={() => toggleStatus(key)}>
                   <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition-colors ${filterStatus[key] ? 'bg-[#facc15]' : 'border border-gray-600 bg-transparent'}`}>
