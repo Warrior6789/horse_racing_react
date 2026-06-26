@@ -438,6 +438,7 @@ export default function RaceManagement() {
                 <div className="w-1 h-5 bg-gray-950 rounded-full" />
                 <h2 className="text-sm font-bold text-gray-900">All Races</h2>
                 <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
+              </div>
               <select
                 value={pageSize}
                 onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}

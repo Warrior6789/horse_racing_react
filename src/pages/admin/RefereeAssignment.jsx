@@ -28,6 +28,7 @@ export default function RefereeAssignment() {
   const [search, setSearch]         = useState('')
   const [searchInput, setSearchInput] = useState('')
 
+  const [tab, setTab]               = useState('active')
   const [referees, setReferees]     = useState([])
   const [assigned, setAssigned]     = useState({})   // { raceId: refereeId | null }
   const [selected, setSelected]     = useState({})   // { raceId: refereeId }
@@ -44,11 +45,13 @@ export default function RefereeAssignment() {
   }, [])
 
   // Load races
-  const loadRaces = useCallback((p = page, q = search) => {
+  const loadRaces = useCallback((p = page, q = search, t = tab) => {
     setLoading(true)
-    getRacesPaged({ page: p, pageSize: PAGE_SIZE, ...(q && { search: q }) })
+    const statusParam = t === 'finished' ? 'Finished' : undefined
+    getRacesPaged({ page: p, pageSize: PAGE_SIZE, ...(q && { search: q }), ...(statusParam && { status: statusParam }) })
       .then(async r => {
-        const items = r.data.data?.items || []
+        const all = r.data.data?.items || []
+        const items = t === 'active' ? all.filter(r => !['Finished', 'Cancelled'].includes(r.status)) : all
         setRaces(items)
         setTotalPages(r.data.data?.totalPages || 1)
         setTotalCount(r.data.data?.totalCount || 0)
@@ -68,15 +71,18 @@ export default function RefereeAssignment() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [page, search])
+  }, [page, search, tab])
 
-  useEffect(() => { loadRaces(page, search) }, [page, search])
+  useEffect(() => { loadRaces(page, search, tab) }, [page, search, tab])
 
   const handleSearch = (e) => {
     e.preventDefault()
     setPage(1)
     setSearch(searchInput)
+    loadRaces(1, searchInput, tab)
   }
+
+  const handleTabChange = (t) => { setTab(t); setPage(1); setSearch(''); setSearchInput('') }
 
   const handleAssign = async (raceId) => {
     const refereeId = selected[raceId]
@@ -127,6 +133,21 @@ export default function RefereeAssignment() {
           </form>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
+          {[{ key: 'active', label: 'Active Races' }, { key: 'finished', label: 'Finished / Cancelled' }].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleTabChange(key)}
+              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+                tab === key ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {loading ? (
@@ -146,11 +167,12 @@ export default function RefereeAssignment() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {races.filter(r => r.status !== 'Finished').map(race => {
+                  {races.map(race => {
                     const statusCls = STATUS_STYLE[race.status] || STATUS_STYLE.Scheduled
                     const statusLabel = STATUS_LABEL[race.status] || race.status
                     const currentRef = assigned[race.raceId]
                     const currentRefName = referees.find(r => r.id === currentRef || r.accountId === currentRef)?.fullName
+                    const isFinished = tab === 'finished'
 
                     return (
                       <tr key={race.raceId} className="hover:bg-gray-50/40 transition-colors">
@@ -175,44 +197,50 @@ export default function RefereeAssignment() {
                         </td>
 
                         <td className="py-4 px-5">
-                          <div className="flex flex-col gap-1">
-                            <select
-                              value={selected[race.raceId] ?? ''}
-                              onChange={e => setSelected(prev => ({ ...prev, [race.raceId]: e.target.value }))}
-                              className="border border-gray-200 text-gray-700 text-xs rounded-lg py-1.5 px-2.5 bg-white focus:outline-none focus:border-gray-400 max-w-[180px]"
-                            >
-                              <option value="">— Select Referee —</option>
-                              {referees.map(ref => (
-                                <option key={ref.id || ref.accountId} value={ref.id || ref.accountId}>
-                                  {ref.fullName || ref.email}
-                                </option>
-                              ))}
-                            </select>
-                            {currentRef && currentRefName && (
-                              <p className="text-[10px] text-gray-400">Current: {currentRefName}</p>
-                            )}
-                          </div>
+                          {isFinished ? (
+                            <span className="text-sm font-semibold text-gray-700">{currentRefName || <span className="text-gray-400">— Unassigned —</span>}</span>
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              <select
+                                value={selected[race.raceId] ?? ''}
+                                onChange={e => setSelected(prev => ({ ...prev, [race.raceId]: e.target.value }))}
+                                className="border border-gray-200 text-gray-700 text-xs rounded-lg py-1.5 px-2.5 bg-white focus:outline-none focus:border-gray-400 max-w-[180px]"
+                              >
+                                <option value="">— Select Referee —</option>
+                                {referees.map(ref => (
+                                  <option key={ref.id || ref.accountId} value={ref.id || ref.accountId}>
+                                    {ref.fullName || ref.email}
+                                  </option>
+                                ))}
+                              </select>
+                              {currentRef && currentRefName && (
+                                <p className="text-[10px] text-gray-400">Current: {currentRefName}</p>
+                              )}
+                            </div>
+                          )}
                         </td>
 
                         <td className="py-4 px-5">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleAssign(race.raceId)}
-                              disabled={acting === race.raceId || !selected[race.raceId] || !isChanged(race.raceId)}
-                              className="px-3 py-1.5 bg-gray-950 text-white rounded-lg text-xs font-bold hover:bg-gray-800 transition-colors disabled:opacity-40"
-                            >
-                              {acting === race.raceId ? '…' : 'Assign'}
-                            </button>
-                            {currentRef && (
+                          {!isFinished && (
+                            <div className="flex items-center gap-2">
                               <button
-                                onClick={() => handleUnassign(race.raceId)}
-                                disabled={acting === race.raceId}
-                                className="px-3 py-1.5 border border-red-100 text-red-500 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors disabled:opacity-40"
+                                onClick={() => handleAssign(race.raceId)}
+                                disabled={acting === race.raceId || !selected[race.raceId] || !isChanged(race.raceId)}
+                                className="px-3 py-1.5 bg-gray-950 text-white rounded-lg text-xs font-bold hover:bg-gray-800 transition-colors disabled:opacity-40"
                               >
-                                Remove
+                                {acting === race.raceId ? '…' : 'Assign'}
                               </button>
-                            )}
-                          </div>
+                              {currentRef && (
+                                <button
+                                  onClick={() => handleUnassign(race.raceId)}
+                                  disabled={acting === race.raceId}
+                                  className="px-3 py-1.5 border border-red-100 text-red-500 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors disabled:opacity-40"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </td>
                       </tr>
                     )
