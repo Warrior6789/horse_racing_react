@@ -319,8 +319,8 @@ function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect
                     {/* Portrait */}
                     <div className="relative h-44 bg-[#1a1f2e]">
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0f141f] via-transparent to-transparent z-10" />
-                      {j.imageUrl
-                        ? <img src={j.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" onError={e => { e.target.style.display='none' }} />
+                      {(j.imageUrl || j.account?.avatarUrl)
+                        ? <img src={j.imageUrl || j.account?.avatarUrl} alt="" className="absolute inset-0 w-full h-full object-cover" onError={e => { e.target.style.display='none' }} />
                         : <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-20 h-20 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20 flex items-center justify-center text-2xl font-black text-[#facc15]">
                               {(j.fullName || j.userName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
@@ -446,7 +446,7 @@ export default function RaceRegistration() {
     if (jockeys.length > 0) return
     setJockeyLoading(true)
     try {
-      const res = await getJockeysPaged({ pageSize: 40 })
+      const res = await getJockeysPaged({ pageSize: 100 })
       setJockeys(res.data.data?.items || res.data.data || [])
     } catch {}
     setJockeyLoading(false)
@@ -736,8 +736,8 @@ export default function RaceRegistration() {
                             <div className="bg-[#0f1117] border border-gray-700/60 rounded-lg p-4 flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-800 border border-[#facc15]/30 shrink-0 flex items-center justify-center">
-                                  {activeJockey.imageUrl
-                                    ? <img src={activeJockey.imageUrl} alt={jockeyName} className="w-full h-full object-cover" onError={e => { e.target.style.display='none' }} />
+                                  {(activeJockey.imageUrl || activeJockey.account?.avatarUrl)
+                                    ? <img src={activeJockey.imageUrl || activeJockey.account?.avatarUrl} alt={jockeyName} className="w-full h-full object-cover" onError={e => { e.target.style.display='none' }} />
                                     : <span className="text-sm font-black text-[#facc15]">{jockeyName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>}
                                 </div>
                                 <div className="min-w-0">
