@@ -108,12 +108,24 @@ export default function DashboardLayout({ children, title, headerActions }) {
               <p className="text-sm text-gray-500 font-medium mt-0.5">{subtitle}</p>
             </div>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
+            {headerActions}
             <button className="relative p-1 text-gray-400 hover:text-gray-600 transition-colors">
               <Bell size={22} strokeWidth={2} />
               <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-600 border-2 border-white rounded-full" />
             </button>
-            {headerActions}
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-100 border-2 border-gray-200">
+                {user?.avatarUrl
+                  ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover block" />
+                  : <span className="text-gray-700 font-bold text-xs">{initials}</span>
+                }
+              </div>
+              <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${badgeCls}`}>{role}</span>
+            </button>
           </div>
         </header>
       </div>
@@ -151,30 +163,6 @@ export default function DashboardLayout({ children, title, headerActions }) {
             ))}
           </nav>
 
-          {/* User card */}
-          <button
-            onClick={() => setProfileOpen(true)}
-            className={`flex items-center gap-3 px-3 py-3.5 border-t border-gray-100 hover:bg-gray-50 transition-colors w-full text-left ${collapsed ? 'justify-center' : ''}`}
-            title={collapsed ? displayName : undefined}
-          >
-            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-100 border-2 border-gray-200">
-              {user?.avatarUrl
-                ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover block" />
-                : <span className="text-gray-700 font-bold text-sm">{initials}</span>
-              }
-            </div>
-            {!collapsed && (
-              <>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{displayName}</p>
-                  <span className={`text-[10px] px-1.5 py-[2px] rounded font-semibold inline-block mt-0.5 ${badgeCls}`}>
-                    {role}
-                  </span>
-                </div>
-                <span className="material-symbols-outlined text-gray-300 shrink-0" style={{ fontSize: '16px' }}>chevron_right</span>
-              </>
-            )}
-          </button>
         </aside>
 
         {/* ── MAIN CONTENT ── */}
