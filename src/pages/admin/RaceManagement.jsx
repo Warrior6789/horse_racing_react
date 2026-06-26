@@ -430,36 +430,36 @@ export default function RaceManagement() {
           </div>
         )}
 
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
+          {[{ key: 'active', label: 'Active' }, { key: 'finished', label: 'Finished / Cancelled' }].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => { setTab(key); setPage(1) }}
+              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+                tab === key ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 pt-4 border-b border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-5 bg-gray-950 rounded-full" />
-                <h2 className="text-sm font-bold text-gray-900">All Races</h2>
-                <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
-              </div>
-              <select
-                value={pageSize}
-                onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
-              >
-                {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
-              </select>
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-gray-950 rounded-full" />
+              <h2 className="text-sm font-bold text-gray-900">All Races</h2>
+              <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
             </div>
-            <div className="flex gap-1">
-              {[{ key: 'active', label: 'Active' }, { key: 'finished', label: 'Finished / Cancelled' }].map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => { setTab(key); setPage(1) }}
-                  className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors -mb-px ${
-                    tab === key ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <select
+              value={pageSize}
+              onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
+            >
+              {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
+            </select>
           </div>
 
           {loading ? (
