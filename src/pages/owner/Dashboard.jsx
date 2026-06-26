@@ -19,7 +19,7 @@ function StatCard({ icon: Icon, title, value, subtitle, badge, badgeCls, onClick
   return (
     <div
       onClick={onClick}
-      className={`bg-[#1a1c23] p-6 rounded-xl border border-gray-800 flex flex-col justify-between aspect-square relative overflow-hidden ${onClick ? 'cursor-pointer hover:border-gray-600 transition-colors' : ''}`}
+      className={`bg-[#1a1c23] p-4 rounded-xl border border-gray-800 flex flex-col gap-3 relative overflow-hidden ${onClick ? 'cursor-pointer hover:border-gray-600 transition-colors' : ''}`}
     >
       {badge && (
         <span className={`absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>
@@ -30,7 +30,7 @@ function StatCard({ icon: Icon, title, value, subtitle, badge, badgeCls, onClick
       <div>
         <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
         <div className="flex items-baseline gap-2">
-          <h3 className={`text-3xl font-bold ${subtitle ? 'text-yellow-500' : 'text-white'}`}>{value}</h3>
+          <h3 className={`text-2xl font-bold ${subtitle ? 'text-yellow-500' : 'text-white'}`}>{value}</h3>
           {subtitle && <span className="text-yellow-500 text-sm font-bold">{subtitle}</span>}
         </div>
       </div>
