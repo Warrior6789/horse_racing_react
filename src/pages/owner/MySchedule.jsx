@@ -61,10 +61,9 @@ function StatCard({ title, value, sub, accent, leftBorder }) {
 }
 
 /* ─── Calendar View ────────────────────────────────────────────────── */
-function CalendarView({ items, horses, venues }) {
+function CalendarView({ items, venues }) {
   const today = new Date()
   const [cur, setCur] = useState({ year: today.getFullYear(), month: today.getMonth() })
-  const [filterHorse,  setFilterHorse]  = useState('all')
   const [filterVenue,  setFilterVenue]  = useState('all')
   const [filterStatus, setFilterStatus] = useState({ confirmed: true, pending: true })
 
@@ -76,15 +75,14 @@ function CalendarView({ items, horses, venues }) {
 
   // filter items
   const filtered = useMemo(() => items.filter(item => {
-    if (filterHorse !== 'all' && String(item.horse?.horseId) !== filterHorse) return false
     if (filterVenue !== 'all') {
-      const v = item.race?.racecourseName ?? item.race?.racecourse?.racecourseName ?? item.racecourseName
-      if (v !== filterVenue) return false
+      const v = (item.race?.racecourseName ?? item.race?.racecourse?.racecourseName ?? item.racecourseName ?? '').trim()
+      if (v.toLowerCase() !== filterVenue.toLowerCase()) return false
     }
     const ec = eventColor(item.status)
     if (!filterStatus[ec]) return false
     return true
-  }), [items, filterHorse, filterVenue, filterStatus])
+  }), [items, filterVenue, filterStatus])
 
   // group by day
   const byDay = useMemo(() => {
@@ -621,7 +619,7 @@ export default function MySchedule() {
 
         {/* ── Calendar view ─────────────────────────────────────────── */}
         {view === 'calendar' && !loading && (
-          <CalendarView items={schedule} horses={horses} venues={allVenues} />
+          <CalendarView items={schedule} venues={allVenues} />
         )}
 
       </div>
