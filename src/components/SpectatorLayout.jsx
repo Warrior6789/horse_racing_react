@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, Flag, Layers, Wallet, TrendingUp } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import { Home, Flag, Layers, Wallet, TrendingUp, Bell } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import AccountProfile from './AccountProfile'
 
@@ -44,28 +44,31 @@ export default function SpectatorLayout({ children }) {
           </nav>
         </div>
 
-        {/* User card — click to open profile panel */}
-        <button
-          onClick={() => setProfileOpen(true)}
-          className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#1f1b15] border border-transparent hover:border-stone-800 transition-all w-full text-left mt-4"
-        >
-          <div className="w-9 h-9 rounded-full border border-[#f7e0a3]/30 overflow-hidden shrink-0 flex items-center justify-center bg-[#24211a]">
-            {user?.avatarUrl
-              ? <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover block" />
-              : <span className="text-xs font-black text-[#f7e0a3]/70">{initials}</span>
-            }
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-stone-100 truncate">{displayName}</p>
-            <p className="text-[11px] text-stone-500 truncate">{user?.email || ''}</p>
-          </div>
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-        </button>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="shrink-0 flex items-center justify-end px-8 py-4 bg-[#110e0b] border-b border-stone-900 gap-4">
+          <button className="text-stone-400 hover:text-white relative transition-colors">
+            <Bell size={20} />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#110e0b]" />
+          </button>
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-8 h-8 rounded-full border border-[#f7e0a3]/30 overflow-hidden shrink-0 flex items-center justify-center bg-[#24211a]">
+              {user?.avatarUrl
+                ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover block" />
+                : <span className="text-xs font-black text-[#f7e0a3]/70">{initials}</span>
+              }
+            </div>
+            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-gray-100 text-gray-600">Spectator</span>
+          </button>
+        </header>
+        <main className="flex-1 p-8 overflow-y-auto">
+          {children}
+        </main>
+      </div>
 
       {profileOpen && <AccountProfile onClose={() => setProfileOpen(false)} />}
     </div>
