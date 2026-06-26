@@ -1,5 +1,17 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom'
+
+function rawDate(st) {
+  if (!st) return null
+  const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
+  return new Date(y, mo - 1, d)
+}
+function rawTimeStr(st) {
+  if (!st || st.length < 16) return null
+  const h = parseInt(st.substring(11, 13), 10)
+  const m = st.substring(14, 16)
+  return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
+}
 import {
   ChevronRight, Calendar, MapPin, Route, Wallet,
   PawPrint, User, UserPlus, Search, X, Disc, MessageSquare, CheckCircle2
@@ -468,9 +480,8 @@ export default function RaceRegistration() {
   }
 
   /* ── race info helpers ── */
-  const start     = race?.startTime ? new Date(race.startTime) : null
-  const dateLabel = start ? start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'
-  const timeLabel = start ? start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Local' : '—'
+  const dateLabel = race?.startTime ? rawDate(race.startTime).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'
+  const timeLabel = race?.startTime ? (rawTimeStr(race.startTime) || '—') : '—'
   const location  = race?.racecourseName || '—'
   const address   = race?.location || null
   const trackType = race?.racecourse?.surfaceType || race?.racecourse?.trackType || ''
