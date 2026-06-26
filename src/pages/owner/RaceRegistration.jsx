@@ -319,13 +319,15 @@ function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect
                     {/* Portrait */}
                     <div className="relative h-44 bg-[#1a1f2e]">
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0f141f] via-transparent to-transparent z-10" />
-                      {(j.imageUrl || j.certificateImageUrl || j.account?.avatarUrl)
-                        ? <img src={j.imageUrl || j.certificateImageUrl || j.account?.avatarUrl} alt="" className="absolute inset-0 w-full h-full object-cover" onError={e => { e.target.style.display='none' }} />
-                        : <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-20 h-20 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20 flex items-center justify-center text-2xl font-black text-[#facc15]">
-                              {(j.fullName || j.userName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                            </div>
-                          </div>}
+                      {/* initials layer — always rendered, covered by img if img loads */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20 flex items-center justify-center text-2xl font-black text-[#facc15]">
+                          {(j.fullName || j.userName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                      </div>
+                      {(j.imageUrl || j.certificateImageUrl || j.account?.avatarUrl) && (
+                        <img src={j.imageUrl || j.certificateImageUrl || j.account?.avatarUrl} alt="" className="absolute inset-0 w-full h-full object-cover" onError={e => e.target.remove()} />
+                      )}
                       {tier !== 'Rising' && (
                         <div className={`absolute top-3 right-3 z-20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border bg-black/40 backdrop-blur-sm ${ts.text} ${ts.border}`}>
                           {tier}
