@@ -1,7 +1,7 @@
 import client from './client'
 
 // Admin endpoints
-export const getRegistrationsPaged = (params) => client.get('/registrations/paged-all', { params })
+export const getRegistrationsPaged = (params) => client.get('/registrations/paged', { params })
 export const adminAcceptRegistration = (id) => client.put(`/registrations/${id}/admin-accept`)
 export const adminRejectRegistration = (id) => client.put(`/registrations/${id}/admin-reject`)
 export const scratchRegistration = (id) => client.put(`/registrations/${id}/scratch`)
@@ -9,8 +9,8 @@ export const scratchRegistration = (id) => client.put(`/registrations/${id}/scra
 // Owner endpoints
 export const getMyRegistrations      = ()       => client.get('/registrations/owner/my-requests')
 export const getMyRegistrationsPaged = (params) => client.get('/registrations/owner/my-requests/paged', { params })
-export const getOwnerAllRegistrations      = ()       => client.get('/registrations/owner/all')
-export const getOwnerAllRegistrationsPaged = (params) => client.get('/registrations/owner/all/paged', { params })
+export const getOwnerAllRegistrations      = ()       => client.get('/registrations/owner')
+export const getOwnerAllRegistrationsPaged = (params) => client.get('/registrations/owner/paged', { params })
 
 // Jockey endpoints
 export const getJockeyMyRequests      = ()       => client.get('/registrations/my-requests')
