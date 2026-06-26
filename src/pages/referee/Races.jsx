@@ -141,13 +141,17 @@ export default function RefereeRaces() {
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Referee'
   const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
-  useEffect(() => {
+  const fetchRaces = useCallback(() => {
     setLoading(true)
     getMyRefereeRaces()
       .then(r => setAllRaces(r.data.data || []))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { fetchRaces() }, [fetchRaces])
+
+  useRaceHub(null, { onRacesUpdated: fetchRaces })
 
   const STATUS_OPTIONS = ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed', 'Finished', 'Cancelled']
 
