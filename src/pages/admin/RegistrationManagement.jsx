@@ -80,7 +80,7 @@ function RaceListView({ onSelect }) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                  {['Race', 'Racecourse', 'Start Time', 'Status', ''].map(h => (
+                  {['Race #', 'Race Name', 'Racecourse', 'Start Time', 'Status', 'Action'].map(h => (
                     <th key={h} className="py-4 px-6">{h}</th>
                   ))}
                 </tr>
@@ -88,9 +88,10 @@ function RaceListView({ onSelect }) {
               <tbody className="divide-y divide-gray-100 text-sm">
                 {races.map(race => (
                   <tr key={race.raceId} className="hover:bg-gray-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-gray-900">
-                      Race #{race.raceNumber}{race.raceName ? ` — ${race.raceName}` : ''}
+                    <td className="py-4 px-6 font-bold text-gray-900 whitespace-nowrap">
+                      Race #{race.raceNumber}
                     </td>
+                    <td className="py-4 px-6 text-gray-700 text-sm">{race.raceName || '—'}</td>
                     <td className="py-4 px-6 text-gray-500 text-xs">{race.racecourseName || '—'}</td>
                     <td className="py-4 px-6 text-gray-500 text-xs whitespace-nowrap">
                       {race.startTime ? new Date(race.startTime).toLocaleString() : '—'}
