@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
 
-export function useRaceHub(raceId, { onPoolUpdate, onRaceUpdate, onRacesUpdated, onPaymentsUpdated, onWithdrawalsUpdated, onUpgradeRequestsUpdated, onRegistrationsUpdated, onBalanceUpdated } = {}) {
+export function useRaceHub(raceId, { onPoolUpdate, onRaceUpdate, onRacesUpdated, onPaymentsUpdated, onWithdrawalsUpdated, onUpgradeRequestsUpdated, onRegistrationsUpdated, onBalanceUpdated, onReportUpdated } = {}) {
   const hubRef    = useRef(null)
   const [connected, setConnected] = useState(false)
 
@@ -49,6 +49,10 @@ export function useRaceHub(raceId, { onPoolUpdate, onRaceUpdate, onRacesUpdated,
 
     hub.on('BalanceUpdated', (data) => {
       onBalanceUpdated?.(data)
+    })
+
+    hub.on('ReportUpdated', (data) => {
+      onReportUpdated?.(data)
     })
 
     hub.start()

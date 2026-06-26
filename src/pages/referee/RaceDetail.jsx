@@ -172,7 +172,12 @@ export default function RefereeRaceDetail() {
     if (data.horses) setHorses(data.horses)
     if (data.status) setLiveStatus(data.status)
   }, [])
-  useRaceHub(raceId, { onRaceUpdate: handleRaceUpdate })
+
+  const handleReportUpdated = useCallback(({ reportId, status }) => {
+    setReports(prev => prev.map(r => r.reportId === reportId ? { ...r, status } : r))
+  }, [])
+
+  useRaceHub(raceId, { onRaceUpdate: handleRaceUpdate, onReportUpdated: handleReportUpdated })
 
   const raceStatus = liveStatus || race?.status || 'Scheduled'
   const isLive     = raceStatus === 'Live'
