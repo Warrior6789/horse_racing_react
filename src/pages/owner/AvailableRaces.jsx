@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { MapPin, Sprout, Mountain, Ruler, CalendarCheck, ChevronDown, Search, Calendar, Users } from 'lucide-react'
+import { MapPin, Sprout, Mountain, Ruler, CalendarCheck, ChevronDown, ChevronLeft, ChevronRight, Search, Calendar, Users } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getUpcomingRaces, getRaceRegistrations } from '../../api/races'
 import { getOwnerAllRegistrations } from '../../api/registrations'
@@ -165,6 +165,8 @@ export default function AvailableRaces() {
   const [sortOpen,     setSortOpen]     = useState(false)
   const [showSuccess,  setShowSuccess]  = useState(!!location.state?.success)
   const [refreshKey,   setRefreshKey]   = useState(0)
+  const [page,         setPage]         = useState(1)
+  const PAGE_SIZE = 5
   const preselectedHorseId = location.state?.preselectedHorseId
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
@@ -195,6 +197,7 @@ export default function AvailableRaces() {
   }, [refreshKey])
 
   const filtered = useMemo(() => {
+    setPage(1)
     let list = [...races]
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -289,29 +292,62 @@ export default function AvailableRaces() {
             </div>
             <p className="text-gray-500 text-sm font-medium">No races found for the selected filters.</p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {filtered.map(race => (
-              <RaceCard
-                key={race.raceId}
-                race={race}
-                regCount={regCountMap[race.raceId] ?? null}
-                isRegistered={myRegisteredIds.has(race.raceId)}
-                search={search}
-                onRegister={id => navigate(`/owner/races/${id}/register`, { state: { preselectedHorseId } })}
-              />
-            ))}
-          </div>
-        )}
+        ) : (() => {
+          const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+          const safePage   = Math.min(page, totalPages)
+          const pageItems  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+          return (
+            <>
+              <div className="space-y-4">
+                {pageItems.map(race => (
+                  <RaceCard
+                    key={race.raceId}
+                    race={race}
+                    regCount={regCountMap[race.raceId] ?? null}
+                    isRegistered={myRegisteredIds.has(race.raceId)}
+                    search={search}
+                    onRegister={id => navigate(`/owner/races/${id}/register`, { state: { preselectedHorseId } })}
+                  />
+                ))}
+              </div>
 
-        {!loading && filtered.length > 0 && (
-          <div className="mt-12 flex flex-col items-center justify-center text-center opacity-60">
-            <div className="bg-[#161a23] p-3 rounded-2xl mb-3 border border-gray-800">
-              <CalendarCheck size={28} className="text-gray-500" />
-            </div>
-            <p className="text-sm font-medium text-gray-500">End of results for the selected filters.</p>
-          </div>
-        )}
+              {totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between">
+                  <p className="text-gray-500 text-xs">
+                    {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length} races
+                  </p>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={safePage === 1}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${
+                          p === safePage ? 'bg-[#facc15] text-black' : 'border border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-white'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={safePage === totalPages}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        })()}
       </div>
 
       {sortOpen && <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />}
