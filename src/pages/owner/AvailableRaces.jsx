@@ -85,12 +85,12 @@ function RaceCard({ race, regCount, onRegister, isRegistered, search }) {
           <div className="flex items-center gap-4 text-xs font-bold text-gray-400 flex-wrap">
             <div className="flex items-center gap-1.5">
               <MapPin size={13} className="text-gray-500 shrink-0" />
-              <span className="truncate max-w-[180px]">{venue}</span>
+              <span className="truncate max-w-[180px]"><Highlight text={venue} query={search} /></span>
             </div>
             {address && (
               <div className="flex items-center gap-1.5">
                 <MapPin size={13} className="text-[#facc15]/60 shrink-0" />
-                <span className="truncate max-w-[180px] text-gray-500">{address}</span>
+                <span className="truncate max-w-[180px] text-gray-500"><Highlight text={address} query={search} /></span>
               </div>
             )}
             <div className="flex items-center gap-1.5">
