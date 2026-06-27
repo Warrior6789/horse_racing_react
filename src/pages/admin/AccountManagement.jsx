@@ -15,6 +15,20 @@ function initials(email = '') {
   return email.split('@')[0].slice(0, 2).toUpperCase()
 }
 
+function Highlight({ text, query }) {
+  const str = String(text ?? '')
+  if (!query) return <>{str}</>
+  const idx = str.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{str}</>
+  return (
+    <>
+      {str.slice(0, idx)}
+      <span className="text-[#facc15] font-bold">{str.slice(idx, idx + query.length)}</span>
+      {str.slice(idx + query.length)}
+    </>
+  )
+}
+
 function StatusCell({ status }) {
   if (status === 'Active') return (
     <span className="flex items-center text-xs font-semibold text-gray-700">
@@ -479,7 +493,7 @@ export default function AccountManagement() {
                               <div className="w-9 h-9 rounded-full bg-gray-800 text-white font-bold text-xs flex items-center justify-center shrink-0 tracking-wider">
                                 {initials(acc.email)}
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{acc.email}</span>
+                              <span className="font-medium text-gray-900 text-sm"><Highlight text={acc.email} query={search} /></span>
                             </div>
                           </td>
                           <td className="py-4 px-6">

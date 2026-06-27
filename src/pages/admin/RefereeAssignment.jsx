@@ -19,6 +19,20 @@ const STATUS_LABEL = {
 
 const PAGE_SIZE = 4
 
+function Highlight({ text, query }) {
+  const str = String(text ?? '')
+  if (!query) return <>{str}</>
+  const idx = str.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{str}</>
+  return (
+    <>
+      {str.slice(0, idx)}
+      <span className="text-[#facc15] font-bold">{str.slice(idx, idx + query.length)}</span>
+      {str.slice(idx + query.length)}
+    </>
+  )
+}
+
 export default function RefereeAssignment() {
   const [races, setRaces]           = useState([])
   const [page, setPage]             = useState(1)
@@ -178,8 +192,8 @@ export default function RefereeAssignment() {
                       <tr key={race.raceId} className="hover:bg-gray-50/40 transition-colors">
 
                         <td className="py-4 px-5">
-                          <p className="font-bold text-gray-900">#{race.raceNumber}</p>
-                          {race.raceName && <p className="text-[11px] text-gray-400 mt-0.5 max-w-[140px] truncate">{race.raceName}</p>}
+                          <p className="font-bold text-gray-900">#<Highlight text={race.raceNumber} query={search} /></p>
+                          {race.raceName && <p className="text-[11px] text-gray-400 mt-0.5 max-w-[140px] truncate"><Highlight text={race.raceName} query={search} /></p>}
                         </td>
 
                         <td className="py-4 px-5 text-gray-600 text-xs font-medium">
