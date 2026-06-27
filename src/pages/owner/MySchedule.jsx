@@ -344,14 +344,22 @@ export default function MySchedule() {
         return r.data.data?.items || r.data.data || []
       }).catch(() => []),
     ]).then(([regs, horseList]) => {
-      const imageMap = {}
-      horseList.forEach(h => { imageMap[h.horseId ?? h.id] = h.imageUrl })
+      const horseMap = {}
+      horseList.forEach(h => { horseMap[h.horseId ?? h.id] = h })
       const merged = regs.map(item => {
         const hId = item.horse?.horseId ?? item.horse?.id ?? item.horseId
-        if (hId && imageMap[hId] && !item.horse?.imageUrl) {
-          return { ...item, horse: { ...item.horse, imageUrl: imageMap[hId] } }
+        const src = hId ? horseMap[hId] : null
+        if (!src) return item
+        return {
+          ...item,
+          horse: {
+            horseId:   hId,
+            horseName: item.horse?.horseName || src.horseName,
+            imageUrl:  item.horse?.imageUrl  || src.imageUrl,
+            breed:     item.horse?.breed     || src.breed,
+            age:       item.horse?.age       ?? src.age,
+          }
         }
-        return item
       })
       setSchedule(merged)
     }).finally(() => setLoading(false))
