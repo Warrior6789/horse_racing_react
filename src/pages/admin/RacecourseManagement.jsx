@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import CardCarousel from '../../components/CardCarousel'
 import { getRacecoursesPaged, createRacecourse, updateRacecourse, uploadRacecourseImage, deleteRacecourse } from '../../api/racecourses'
