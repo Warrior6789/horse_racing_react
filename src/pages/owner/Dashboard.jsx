@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Orbit, Calendar, Banknote, ChevronRight, Radio } from 'lucide-react'
+import { Orbit, Calendar, Banknote, ChevronRight, Radio, Flag } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getHorses } from '../../api/horses'
 import { getBalance } from '../../api/payments'
@@ -39,7 +39,9 @@ function StatCard({ icon: Icon, title, value, subtitle, badge, badgeCls, onClick
 }
 
 function HorseCard({ horse }) {
+  const navigate = useNavigate()
   const cls = STATUS_CLS[horse.status] || STATUS_CLS.Inactive
+  const horseId = horse.horseId ?? horse.id
   return (
     <div className="bg-[#1a1c23] rounded-xl border border-gray-800 overflow-hidden flex flex-col">
       <div className="h-40 bg-gray-800 relative">
@@ -53,27 +55,33 @@ function HorseCard({ horse }) {
           {horse.status}
         </span>
       </div>
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-5 flex-1 flex flex-col justify-between gap-4">
         <div>
           <h4 className="text-white font-bold text-lg">{horse.horseName}</h4>
           <p className="text-gray-400 text-xs font-medium mb-4">
             {horse.breed || 'Unknown'} &bull; {horse.age ? `${horse.age}yo` : '—'} &bull; {horse.color || '—'}
           </p>
+          <div className="flex justify-between border-t border-gray-800/80 pt-4">
+            <div>
+              <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Wins</p>
+              <p className="text-white font-bold text-sm">{horse.recordWins ?? 0}</p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Weight</p>
+              <p className="text-white font-bold text-sm">{horse.weight ? `${horse.weight}kg` : '—'}</p>
+            </div>
+            <div>
+              <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Status</p>
+              <p className="text-white font-bold text-sm">{horse.status}</p>
+            </div>
+          </div>
         </div>
-        <div className="flex justify-between border-t border-gray-800/80 pt-4">
-          <div>
-            <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Wins</p>
-            <p className="text-white font-bold text-sm">{horse.recordWins ?? 0}</p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Weight</p>
-            <p className="text-white font-bold text-sm">{horse.weight ? `${horse.weight}kg` : '—'}</p>
-          </div>
-          <div>
-            <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Status</p>
-            <p className="text-white font-bold text-sm">{horse.status}</p>
-          </div>
-        </div>
+        <button
+          onClick={() => navigate('/owner/races', { state: { preselectedHorseId: horseId } })}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-yellow-600/50 text-yellow-500 hover:bg-yellow-500/10 transition-colors text-xs font-bold"
+        >
+          <Flag size={13} /> Register to Race
+        </button>
       </div>
     </div>
   )
