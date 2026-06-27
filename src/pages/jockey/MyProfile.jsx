@@ -69,7 +69,7 @@ export default function JockeyProfile() {
 
   return (
     <JockeyLayout>
-      <div className="p-8 max-w-3xl mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
 
         <div>
           <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">Account</p>

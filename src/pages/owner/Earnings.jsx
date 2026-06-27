@@ -66,12 +66,12 @@ export default function OwnerEarnings() {
 
   return (
     <OwnerLayout>
-      <div className="p-8 max-w-6xl mx-auto space-y-8">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 md:space-y-8">
 
         {/* Header */}
-        <div className="flex justify-between items-end">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
           <div>
-            <h1 className="text-3xl font-black text-[#facc15] mb-2">Earnings Overview</h1>
+            <h1 className="text-2xl md:text-3xl font-black text-[#facc15] mb-2">Earnings Overview</h1>
             <p className="text-gray-400 text-sm">Real-time performance analytics and fiscal breakdown for your racing portfolio.</p>
           </div>
           <div className="flex gap-3">

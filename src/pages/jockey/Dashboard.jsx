@@ -119,22 +119,22 @@ export default function JockeyDashboard() {
 
   return (
     <JockeyLayout>
-      <div className="p-8 space-y-8">
+      <div className="p-4 md:p-8 space-y-6 md:space-y-8">
 
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl font-black text-[#facc15] mb-1">Dashboard Overview</h1>
+            <h1 className="text-2xl md:text-3xl font-black text-[#facc15] mb-1">Dashboard Overview</h1>
             <p className="text-gray-400 text-sm">Welcome back, {displayName}. Here is your current performance outlook.</p>
           </div>
-          <button className="bg-[#facc15] text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-yellow-400 transition-colors">
+          <button className="bg-[#facc15] text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-yellow-400 transition-colors w-fit">
             Export Stats
           </button>
         </div>
 
         {/* Live Race Banner */}
         {liveRace && (
-          <div className="flex items-center justify-between bg-red-950/40 border border-red-900/60 rounded-2xl px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-red-950/40 border border-red-900/60 rounded-2xl px-4 md:px-6 py-4">
             <div className="flex items-center gap-3">
               <Radio size={18} className="text-red-400 animate-pulse shrink-0" />
               <div>
@@ -159,7 +159,7 @@ export default function JockeyDashboard() {
             <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="flex gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard title="Total Wins"       value={totalWins}          icon={Trophy}     />
             <StatCard title="Win Rate"         value={winRate}            icon={TrendingUp} />
             <StatCard title="Confirmed Races"  value={confirmed.length}   icon={Calendar}   />

@@ -158,7 +158,7 @@ export default function OwnerWallet() {
       )}
 
       {/* Sticky header */}
-      <header className="flex justify-between items-center px-8 py-6 sticky top-0 z-10 bg-[#0b0f19]/80 backdrop-blur-md border-b border-gray-800/40">
+      <header className="flex justify-between items-center px-4 md:px-8 py-4 md:py-6 sticky top-0 z-10 bg-[#0b0f19]/80 backdrop-blur-md border-b border-gray-800/40">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">My Wallet</p>
           <h1 className="text-2xl font-black text-gray-100 tracking-tight">Financial Overview</h1>
@@ -170,7 +170,7 @@ export default function OwnerWallet() {
         </div>
       </header>
 
-      <div className="px-8 pb-12 pt-6 space-y-6">
+      <div className="px-4 md:px-8 pb-12 pt-6 space-y-6">
         {msg.text && (
           <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
             msg.type === 'error'

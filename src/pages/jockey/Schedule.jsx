@@ -96,7 +96,7 @@ export default function JockeySchedule() {
 
   return (
     <JockeyLayout>
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         <div>
           <h1 className="text-2xl font-black text-white mb-1">Race Schedule</h1>

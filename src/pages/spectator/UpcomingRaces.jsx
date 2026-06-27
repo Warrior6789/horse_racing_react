@@ -606,7 +606,7 @@ export default function UpcomingRaces() {
       ) : (<>
 
       {/* TOP BAR */}
-      <header className="flex justify-between items-center -mx-8 -mt-8 px-8 py-4 mb-8 bg-[#110e0b]/80 backdrop-blur-md sticky top-0 z-10 border-b border-stone-800/40">
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 -mx-4 md:-mx-8 -mt-4 md:-mt-8 px-4 md:px-8 py-4 mb-6 md:mb-8 bg-[#110e0b]/80 backdrop-blur-md sticky top-0 z-10 border-b border-stone-800/40">
         <div className="text-xs text-stone-500 font-medium flex gap-2">
           <span className="text-stone-400">Races</span>
           <span>›</span>

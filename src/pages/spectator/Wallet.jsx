@@ -163,7 +163,7 @@ export default function WalletPage() {
   return (
     <SpectatorLayout>
       {/* HEADER */}
-      <header className="flex justify-between items-center px-8 py-6 sticky top-0 z-10 bg-[#110e0b]/80 backdrop-blur-md">
+      <header className="flex justify-between items-center px-4 md:px-8 py-4 md:py-6 sticky top-0 z-10 bg-[#110e0b]/80 backdrop-blur-md">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-0.5">My Wallet</p>
           <h1 className="text-2xl font-black text-stone-100 tracking-tight">Financial Overview</h1>
@@ -182,7 +182,7 @@ export default function WalletPage() {
         </div>
       )}
 
-      <div className="px-8 pb-12 space-y-6">
+      <div className="px-4 md:px-8 pb-12 space-y-6">
         {msg.text && (
           <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
             msg.type === 'error'

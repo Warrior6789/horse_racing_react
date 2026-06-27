@@ -77,8 +77,8 @@ export default function SpectatorDashboard() {
     <SpectatorLayout>
 
       {/* HEADER */}
-      <header className="flex justify-between items-center mb-10">
-        <h2 className="text-2xl text-stone-400">
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8 md:mb-10">
+        <h2 className="text-xl md:text-2xl text-stone-400">
           Welcome back, <span className="text-stone-100 font-bold">{displayName}</span>
         </h2>
         <div className="flex items-center gap-4">
@@ -93,7 +93,7 @@ export default function SpectatorDashboard() {
       </header>
 
       {/* STATS */}
-      <section className="grid grid-cols-4 gap-4 mb-8">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-[#141210] border border-stone-800 p-4 rounded-2xl">
           <p className="text-xs text-stone-500 uppercase font-bold mb-2 tracking-wider">Total Bets</p>
           <p className="text-2xl font-bold text-stone-100">

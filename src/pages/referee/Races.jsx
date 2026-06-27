@@ -245,7 +245,7 @@ export default function RefereeRaces() {
         </header>
 
         {/* Body */}
-        <div className="p-8 space-y-6 flex-1">
+        <div className="p-4 md:p-8 space-y-6 flex-1">
 
           {/* Tabs */}
           <div className="flex gap-1 border-b border-slate-200">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Orbit, Calendar, Wallet, TrendingUp, PlusCircle, Search, Bell, Flag } from 'lucide-react'
+import { LayoutDashboard, Orbit, Calendar, Wallet, TrendingUp, PlusCircle, Bell, Flag, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import AccountProfile from './AccountProfile'
 
@@ -13,9 +13,55 @@ const NAV = [
   { to: '/owner/wallet',    icon: Wallet,          label: 'Wallet'    },
 ]
 
+function SidebarContent({ onClose }) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-black text-[#e8e4dc] tracking-tight">Horse Racing</h1>
+          <p className="text-gray-500 text-[10px] font-bold tracking-widest mt-1">MANAGEMENT PORTAL</p>
+        </div>
+        {onClose && (
+          <button onClick={onClose} className="md:hidden text-gray-400 hover:text-white p-1">
+            <X size={20} />
+          </button>
+        )}
+      </div>
+      <nav className="px-4 flex flex-col gap-1 flex-1">
+        {NAV.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium
+               ${isActive
+                 ? 'bg-gray-800 text-yellow-500 border border-gray-700'
+                 : 'text-gray-400 hover:text-white hover:bg-gray-800'}`
+            }
+          >
+            <Icon size={20} />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+      <div className="p-4">
+        <NavLink
+          to="/owner/horses"
+          onClick={onClose}
+          className="w-full bg-[#facc15] hover:bg-[#eab308] text-black font-bold py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+        >
+          <PlusCircle size={18} /> Add New Horse
+        </NavLink>
+      </div>
+    </div>
+  )
+}
+
 export default function OwnerLayout({ children }) {
   const { user } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [mobileOpen, setMobileOpen]   = useState(false)
 
   const displayName = user?.fullName || user?.name || user?.userName
     || (user?.email ? user.email.split('@')[0] : null) || 'User'
@@ -24,55 +70,31 @@ export default function OwnerLayout({ children }) {
   return (
     <div className="flex h-screen bg-[#0f1115] text-gray-200 font-sans overflow-hidden">
 
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#14151a] border-r border-gray-800/60 hidden md:flex flex-col justify-between shrink-0">
-        <div>
-          <div className="p-6">
-            <h1 className="text-xl font-black text-[#e8e4dc] tracking-tight">Horse Racing</h1>
-            <p className="text-gray-500 text-[10px] font-bold tracking-widest mt-1">MANAGEMENT PORTAL</p>
-          </div>
-          <nav className="px-4 flex flex-col gap-1 mt-2">
-            {NAV.map(({ to, icon: Icon, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium
-                   ${isActive
-                     ? 'bg-gray-800 text-yellow-500 border border-gray-700'
-                     : 'text-gray-400 hover:text-white hover:bg-gray-800'}`
-                }
-              >
-                <Icon size={20} />
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-4">
-          <NavLink
-            to="/owner/horses"
-            className="w-full bg-[#facc15] hover:bg-[#eab308] text-black font-bold py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
-          >
-            <PlusCircle size={18} /> Add New Horse
-          </NavLink>
-        </div>
+      {/* Desktop Sidebar */}
+      <aside className="w-64 bg-[#14151a] border-r border-gray-800/60 hidden md:flex flex-col shrink-0">
+        <SidebarContent />
       </aside>
 
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-64 bg-[#14151a] border-r border-gray-800/60 flex flex-col">
+            <SidebarContent onClose={() => setMobileOpen(false)} />
+          </aside>
+        </div>
+      )}
+
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="shrink-0 z-30 flex items-center justify-between px-8 py-4 bg-[#0f1115] border-b border-gray-800/40">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-            <input
-              type="text"
-              placeholder="Search horses, races..."
-              className="w-full bg-[#16181d] border border-gray-800 rounded-full py-2.5 pl-11 pr-4 text-sm text-gray-300 focus:outline-none focus:border-gray-600 transition-colors"
-            />
-          </div>
-          <div className="flex items-center gap-4 ml-6 shrink-0">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <header className="shrink-0 z-30 flex items-center justify-between px-4 md:px-8 py-4 bg-[#0f1115] border-b border-gray-800/40 gap-3">
+          <button
+            className="md:hidden text-gray-400 hover:text-white shrink-0"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu size={22} />
+          </button>
+          <div className="flex items-center gap-4 ml-auto shrink-0">
             <button className="text-gray-400 hover:text-white relative transition-colors">
               <Bell size={20} />
               <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#0f1115]" />
@@ -87,7 +109,7 @@ export default function OwnerLayout({ children }) {
                   : <span className="text-yellow-500 text-xs font-bold">{initials}</span>
                 }
               </div>
-              <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-blue-100 text-blue-700">Owner</span>
+              <span className="hidden sm:inline text-[11px] px-2 py-0.5 rounded font-semibold bg-blue-100 text-blue-700">Owner</span>
             </button>
           </div>
         </header>

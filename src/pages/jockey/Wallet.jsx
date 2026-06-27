@@ -180,29 +180,29 @@ export default function JockeyWallet() {
       )}
 
       {/* Header */}
-      <header className="flex justify-between items-center px-8 py-6 sticky top-0 z-10 bg-[#0b0f19]/80 backdrop-blur-md border-b border-gray-800">
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 px-4 md:px-8 py-4 md:py-6 sticky top-0 z-10 bg-[#0b0f19]/80 backdrop-blur-md border-b border-gray-800">
         <div>
-          <h1 className="text-3xl font-black text-white mb-2">Jockey Wallet</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-white mb-1 md:mb-2">Jockey Wallet</h1>
           <p className="text-gray-400 text-sm">Manage your professional earnings, sponsorships, and race payouts.</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3 shrink-0">
           <button
             onClick={() => { setAmount(''); setMsg({ type: '', text: '' }); setDepositModal(true) }}
-            className="px-6 py-3 border border-gray-600 rounded-lg text-sm font-bold text-gray-300 hover:bg-gray-800 transition-colors"
+            className="px-4 md:px-6 py-2.5 md:py-3 border border-gray-600 rounded-lg text-sm font-bold text-gray-300 hover:bg-gray-800 transition-colors"
           >
-            Deposit Funds
+            Deposit
           </button>
           <button
             onClick={() => { setAmount(''); setMsg({ type: '', text: '' }); setWithdrawModal(true) }}
-            className="flex items-center gap-2 px-6 py-3 bg-[#facc15] hover:bg-yellow-400 rounded-lg text-sm font-bold text-black transition-colors"
+            className="flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-[#facc15] hover:bg-yellow-400 rounded-lg text-sm font-bold text-black transition-colors"
           >
             <WalletCards size={18} />
-            Withdraw Funds
+            Withdraw
           </button>
         </div>
       </header>
 
-      <div className="px-8 pb-12 pt-6 space-y-6">
+      <div className="px-4 md:px-8 pb-12 pt-6 space-y-6">
         {msg.text && (
           <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
             msg.type === 'error'
@@ -246,10 +246,10 @@ export default function JockeyWallet() {
         </div>
 
         {/* Bottom: two-column layout */}
-        <div className="flex gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
 
           {/* Left: Earnings by Race */}
-          <div className="w-1/3 shrink-0">
+          <div className="w-full lg:w-1/3 shrink-0">
             <h2 className="font-bold text-white mb-6 text-lg">Earnings by Race</h2>
             {races.length === 0 ? (
               <p className="text-gray-500 text-sm">No confirmed races yet.</p>

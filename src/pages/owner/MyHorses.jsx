@@ -209,12 +209,12 @@ export default function MyHorses() {
         <div className="max-w-7xl mx-auto space-y-8">
 
           {/* Title */}
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div>
-              <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">My Horses</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">My Horses</h2>
               <p className="text-gray-400 text-sm font-medium">Manage your stable's performance, health, and race registrations.</p>
             </div>
-            <div className="flex bg-[#151a28] p-1 rounded-lg border border-gray-800 shrink-0">
+            <div className="flex bg-[#151a28] p-1 rounded-lg border border-gray-800 shrink-0 w-fit">
               <button
                 onClick={() => setView('grid')}
                 className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${view === 'grid' ? 'bg-[#facc15] text-black' : 'text-gray-400 hover:text-white'}`}

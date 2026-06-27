@@ -73,7 +73,7 @@ export default function MyBets() {
   return (
     <SpectatorLayout>
       {/* HEADER */}
-      <header className="flex justify-between items-center px-8 py-6 sticky top-0 z-10 bg-[#110e0b]/80 backdrop-blur-md">
+      <header className="flex justify-between items-center px-4 md:px-8 py-4 md:py-6 sticky top-0 z-10 bg-[#110e0b]/80 backdrop-blur-md">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-0.5">My Bets</p>
           <h1 className="text-2xl font-black text-stone-100 tracking-tight">Wagering History</h1>
@@ -81,7 +81,7 @@ export default function MyBets() {
         <span className="text-[11px] text-stone-500 font-medium">{totalCount} total</span>
       </header>
 
-      <div className="px-8 pb-12 space-y-6">
+      <div className="px-4 md:px-8 pb-12 space-y-6">
         {/* Filter tabs */}
         <div className="flex bg-[#171410] p-1 rounded-xl border border-stone-800/60 w-fit space-x-1">
           {FILTERS.map(f => (
