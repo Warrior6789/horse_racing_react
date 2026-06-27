@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom'
 
 function Highlight({ text, query }) {
@@ -27,7 +27,7 @@ function rawTimeStr(st) {
   return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
 }
 import {
-  ChevronRight, Calendar, MapPin, Route, Wallet,
+  ChevronLeft, ChevronRight, Calendar, MapPin, Route, Wallet,
   PawPrint, User, UserPlus, Search, X, Disc, MessageSquare, CheckCircle2
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
@@ -71,158 +71,127 @@ function HorseCard({ horse, selected, onSelect }) {
 
 /* ─── Horse Selection Modal ───────────────────────────────────────── */
 function HorseSelectionModal({ horses, selectedId, onSelect, onClose }) {
-  const [search,     setSearch]     = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [search, setSearch] = useState('')
+  const scrollRef = useRef(null)
 
   const filtered = useMemo(() => {
-    let list = [...horses]
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(h =>
-        (h.horseName || '').toLowerCase().includes(q) ||
-        (h.breed || '').toLowerCase().includes(q)
-      )
-    }
-    if (statusFilter === 'Active')   list = list.filter(h => h.status === 'Healthy')
-    if (statusFilter === 'Inactive') list = list.filter(h => h.status !== 'Healthy')
-    return list
-  }, [horses, search, statusFilter])
+    if (!search.trim()) return horses
+    const q = search.toLowerCase()
+    return horses.filter(h =>
+      (h.horseName || '').toLowerCase().includes(q) ||
+      (h.breed || '').toLowerCase().includes(q)
+    )
+  }, [horses, search])
 
-  const FILTERS = [
-    { key: 'All',      label: 'All Horses' },
-    { key: 'Active',   label: 'Healthy',   dot: 'bg-emerald-500' },
-    { key: 'Inactive', label: 'Resting',   dot: 'bg-blue-500' },
-  ]
+  const scroll = (dir) => {
+    if (!scrollRef.current) return
+    scrollRef.current.scrollBy({ left: dir * scrollRef.current.offsetWidth, behavior: 'smooth' })
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07090e]/80 backdrop-blur-sm p-4 md:p-6">
-      <div className="bg-[#1b212e] w-full max-w-5xl rounded-2xl border border-gray-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07090e]/80 backdrop-blur-sm p-4">
+      <div className="bg-[#1b212e] w-full max-w-3xl rounded-2xl border border-gray-700/80 shadow-2xl overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="flex justify-between items-start p-6 md:px-8 border-b border-gray-700/50">
+        <div className="flex justify-between items-center px-6 py-5 border-b border-gray-700/50">
           <div>
-            <h2 className="text-2xl font-bold text-[#facc15] tracking-tight">Select a Horse for Registration</h2>
-            <p className="text-sm text-gray-300 mt-1 font-medium">Choose a horse to enter into this race</p>
+            <h2 className="text-lg font-bold text-[#facc15]">Select a Horse</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{filtered.length} horse{filtered.length !== 1 ? 's' : ''} available</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
-            <X size={24} />
-          </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><X size={20} /></button>
         </div>
 
-        {/* Toolbar */}
-        <div className="px-6 md:px-8 py-4 border-b border-gray-700/50 flex flex-col md:flex-row items-center justify-between gap-4 bg-[#181c28]">
-          <div className="relative w-full md:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+        {/* Search */}
+        <div className="px-6 py-3 border-b border-gray-700/50 bg-[#181c28]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={15} />
             <input
-              type="text"
-              placeholder="Search by name or pedigree..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-[#131722] border border-gray-700/80 rounded-lg py-2.5 pl-11 pr-4 text-sm text-gray-200 focus:outline-none focus:border-gray-500 transition-colors"
+              type="text" placeholder="Search by name or breed..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full bg-[#131722] border border-gray-700/80 rounded-lg py-2 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-gray-500 transition-colors"
             />
           </div>
-          <div className="flex items-center gap-2">
-            {FILTERS.map(f => (
-              <button
-                key={f.key}
-                onClick={() => setStatusFilter(f.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-colors border ${
-                  statusFilter === f.key
-                    ? 'bg-[#facc15] text-black border-[#facc15]'
-                    : 'bg-transparent text-gray-300 border-gray-700 hover:border-gray-500 hover:bg-gray-800/50'
-                }`}
-              >
-                {f.dot && <span className={`w-2 h-2 rounded-full ${f.dot}`} />}
-                {f.label}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {/* Grid */}
-        <div className="p-6 md:px-8 flex-1 overflow-y-auto">
+        {/* Carousel */}
+        <div className="relative px-4 py-5">
           {filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">No horses match your search.</div>
+            <div className="text-center py-12 text-gray-500 text-sm">No horses match your search.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map(h => {
-                const isAvailable = h.status === 'Healthy' || !h.status
-                const isSelected  = selectedId === (h.horseId ?? h.id)
-                return (
-                  <div
-                    key={h.horseId ?? h.id}
-                    className={`bg-[#131722] rounded-xl border overflow-hidden flex flex-col transition-all
-                      ${isSelected ? 'border-[#facc15] shadow-[0_0_16px_rgba(250,204,21,0.2)]' : 'border-gray-700/60 hover:border-gray-500'}`}
-                  >
-                    {/* Image */}
-                    <div className="relative h-40 bg-gray-800">
-                      <div className={`absolute inset-0 bg-gradient-to-b from-transparent to-[#131722] z-10 ${!isAvailable ? 'grayscale opacity-60' : ''}`} />
-                      {h.imageUrl
-                        ? <img src={h.imageUrl} alt="" className={`absolute inset-0 w-full h-full object-cover ${!isAvailable ? 'grayscale opacity-40' : ''}`} />
-                        : <div className={`absolute inset-0 flex items-center justify-center text-5xl ${!isAvailable ? 'opacity-40 grayscale' : ''}`}>🐎</div>}
-                      {isAvailable && h.recordWins > 0 && (
-                        <div className="absolute top-3 right-3 z-20 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-black text-white uppercase tracking-wider border border-white/10">
-                          {h.recordWins} Wins
-                        </div>
-                      )}
-                      {!isAvailable && (
-                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                          <span className="bg-black/60 px-3 py-1.5 rounded text-xs font-bold text-gray-300 border border-gray-600/50 uppercase tracking-widest">
-                            {h.status || 'Unavailable'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Details */}
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="text-base font-bold text-white mb-0.5"><Highlight text={h.horseName} query={search} /></h3>
-                      <p className="text-xs text-gray-400 font-medium flex items-center gap-1.5 mb-4">
-                        <Disc size={10} className="text-gray-500" />
-                        <Highlight text={h.breed || 'Unknown'} query={search} /> • {h.age ? `${h.age} Years` : '—'}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div className="bg-[#1b202c] rounded-lg p-2.5 border border-gray-700/50">
-                          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Wins</p>
-                          <p className="text-base font-bold text-[#facc15]">{h.recordWins ?? 0}</p>
-                        </div>
-                        <div className="bg-[#1b202c] rounded-lg p-2.5 border border-gray-700/50">
-                          <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Weight</p>
-                          <p className="text-base font-bold text-[#facc15]">{h.weight ? `${h.weight}kg` : '—'}</p>
-                        </div>
+            <>
+              {filtered.length > 3 && (
+                <button onClick={() => scroll(-1)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-[#1b212e] border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-colors shadow-lg">
+                  <ChevronLeft size={16} />
+                </button>
+              )}
+              <div
+                ref={scrollRef}
+                className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {filtered.map(h => {
+                  const isAvailable = h.status === 'Healthy' || !h.status
+                  const isSelected  = selectedId === (h.horseId ?? h.id)
+                  return (
+                    <div key={h.horseId ?? h.id}
+                      className={`snap-start shrink-0 w-[calc(33.333%-11px)] bg-[#131722] rounded-xl border overflow-hidden flex flex-col transition-all
+                        ${isSelected ? 'border-[#facc15] shadow-[0_0_12px_rgba(250,204,21,0.2)]' : 'border-gray-700/60 hover:border-gray-500'}`}
+                    >
+                      <div className="relative h-36 bg-gray-800">
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#131722] z-10" />
+                        {h.imageUrl
+                          ? <img src={h.imageUrl} alt="" className={`absolute inset-0 w-full h-full object-cover ${!isAvailable ? 'grayscale opacity-40' : ''}`} />
+                          : <div className="absolute inset-0 flex items-center justify-center text-4xl">🐎</div>}
+                        {h.recordWins > 0 && isAvailable && (
+                          <div className="absolute top-2 right-2 z-20 bg-black/60 px-1.5 py-0.5 rounded text-[9px] font-black text-white border border-white/10">
+                            {h.recordWins}W
+                          </div>
+                        )}
+                        {!isAvailable && (
+                          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                            <span className="bg-black/60 px-2 py-1 rounded text-[10px] font-bold text-gray-300 border border-gray-600/50 uppercase">{h.status}</span>
+                          </div>
+                        )}
                       </div>
-                      <button
-                        disabled={!isAvailable}
-                        onClick={() => { if (isAvailable) { onSelect(h.horseId ?? h.id); onClose() } }}
-                        className={`w-full py-2.5 rounded-lg text-sm font-bold mt-auto transition-colors ${
-                          isSelected
-                            ? 'bg-[#facc15] text-black'
-                            : isAvailable
-                              ? 'bg-[#facc15]/10 hover:bg-[#facc15] text-[#facc15] hover:text-black border border-[#facc15]/40 hover:border-[#facc15]'
-                              : 'bg-[#2a2d36] text-gray-500 cursor-not-allowed'
-                        }`}
-                      >
-                        {isSelected ? '✓ Selected' : isAvailable ? 'Select Horse' : 'Unavailable'}
-                      </button>
+                      <div className="p-3 flex-1 flex flex-col gap-2">
+                        <div>
+                          <h3 className="text-sm font-bold text-white truncate"><Highlight text={h.horseName} query={search} /></h3>
+                          <p className="text-[10px] text-gray-500 truncate"><Highlight text={h.breed || 'Unknown'} query={search} /> • {h.age ? `${h.age}yo` : '—'}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1 bg-[#1b202c] rounded p-2 border border-gray-700/50 text-center">
+                            <p className="text-[8px] text-gray-500 uppercase font-bold">Wins</p>
+                            <p className="text-sm font-bold text-[#facc15]">{h.recordWins ?? 0}</p>
+                          </div>
+                          <div className="flex-1 bg-[#1b202c] rounded p-2 border border-gray-700/50 text-center">
+                            <p className="text-[8px] text-gray-500 uppercase font-bold">Weight</p>
+                            <p className="text-sm font-bold text-[#facc15]">{h.weight ? `${h.weight}kg` : '—'}</p>
+                          </div>
+                        </div>
+                        <button
+                          disabled={!isAvailable}
+                          onClick={() => { if (isAvailable) { onSelect(h.horseId ?? h.id); onClose() } }}
+                          className={`w-full py-2 rounded-lg text-xs font-bold transition-colors ${
+                            isSelected ? 'bg-[#facc15] text-black'
+                            : isAvailable ? 'bg-[#facc15]/10 hover:bg-[#facc15] text-[#facc15] hover:text-black border border-[#facc15]/40'
+                            : 'bg-[#2a2d36] text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          {isSelected ? '✓ Selected' : isAvailable ? 'Select' : 'Unavailable'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+              {filtered.length > 3 && (
+                <button onClick={() => scroll(1)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-[#1b212e] border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-colors shadow-lg">
+                  <ChevronRight size={16} />
+                </button>
+              )}
+            </>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 md:px-8 py-4 bg-[#181c28] border-t border-gray-700/50 flex items-center justify-between gap-4">
-          <p className="text-xs text-gray-400 font-medium">
-            Showing {filtered.length} of {horses.length} horses
-          </p>
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 text-sm font-bold text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
         </div>
       </div>
     </div>
@@ -232,6 +201,7 @@ function HorseSelectionModal({ horses, selectedId, onSelect, onClose }) {
 /* ─── Jockey Selection Modal ──────────────────────────────────────── */
 function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect, onClose }) {
   const [search, setSearch] = useState('')
+  const scrollRef = useRef(null)
 
   const jId = (j) => j.accountId
 
@@ -242,16 +212,21 @@ function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect
     return 'Rising'
   }
 
+  const TIER_STYLE = {
+    Elite:  { text: 'text-[#facc15]', border: 'border-[#facc15]/50' },
+    Pro:    { text: 'text-gray-400',  border: 'border-gray-500/50'  },
+    Rising: { text: 'text-[#38bdf8]', border: 'border-[#38bdf8]/50' },
+  }
+
   const filtered = useMemo(() => {
     if (!search.trim()) return jockeys
     const q = search.toLowerCase()
     return jockeys.filter(j => (j.fullName || j.userName || '').toLowerCase().includes(q))
   }, [jockeys, search])
 
-  const TIER_STYLE = {
-    Elite:  { text: 'text-[#facc15]', border: 'border-[#facc15]/50' },
-    Pro:    { text: 'text-gray-400',  border: 'border-gray-500/50'  },
-    Rising: { text: 'text-[#38bdf8]', border: 'border-[#38bdf8]/50' },
+  const scroll = (dir) => {
+    if (!scrollRef.current) return
+    scrollRef.current.scrollBy({ left: dir * scrollRef.current.offsetWidth, behavior: 'smooth' })
   }
 
   const autoAssign = () => {
@@ -260,127 +235,127 @@ function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 md:p-6">
-      <div className="bg-[#12110e] w-full max-w-6xl rounded-2xl border border-[#2e2a22] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07090e]/80 backdrop-blur-sm p-4">
+      <div className="bg-[#1b212e] w-full max-w-3xl rounded-2xl border border-gray-700/80 shadow-2xl overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 md:px-8 border-b border-[#2e2a22]">
+        <div className="flex justify-between items-center px-6 py-5 border-b border-gray-700/50">
           <div>
-            <h2 className="text-xl font-bold text-[#facc15] tracking-tight">Select Jockey Assignment</h2>
-            <p className="text-sm text-gray-400 mt-1 font-medium">
-              Assign an elite rider for{' '}
-              <span className="text-[#38bdf8]">{raceName || 'this race'}</span>.
-            </p>
+            <h2 className="text-lg font-bold text-[#facc15]">Select Jockey</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{filtered.length} jockey{filtered.length !== 1 ? 's' : ''} available</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative w-56">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={15} />
-              <input
-                type="text" placeholder="Search jockeys..."
-                value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full bg-[#1c1a17] border border-[#33302a] rounded-lg py-2 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-gray-500 transition-colors"
-              />
-            </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-              <X size={22} />
-            </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><X size={20} /></button>
+        </div>
+
+        {/* Search */}
+        <div className="px-6 py-3 border-b border-gray-700/50 bg-[#181c28]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={15} />
+            <input
+              type="text" placeholder="Search jockeys..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full bg-[#131722] border border-gray-700/80 rounded-lg py-2 pl-9 pr-4 text-sm text-gray-200 focus:outline-none focus:border-gray-500 transition-colors"
+            />
           </div>
         </div>
 
-        {/* Grid */}
-        <div className="p-6 md:px-8 flex-1 overflow-y-auto bg-[#12110e]">
+        {/* Carousel */}
+        <div className="relative px-4 py-5">
           {loading ? (
             <div className="flex items-center justify-center h-48">
               <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">No jockeys match your search.</div>
+            <div className="text-center py-12 text-gray-500 text-sm">No jockeys match your search.</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {filtered.map((j, i) => {
-                const tier      = getTier(j)
-                const ts        = TIER_STYLE[tier]
-                const isSelected = selectedId === jId(j)
-                return (
-                  <div key={jId(j) ?? i}
-                    className={`bg-[#0f141f] rounded-xl overflow-hidden border flex flex-col transition-all
-                      ${isSelected ? 'border-[#facc15] shadow-[0_0_16px_rgba(250,204,21,0.2)]' : 'border-[#1f2937] hover:border-gray-500'}`}
-                  >
-                    {/* Portrait */}
-                    <div className="relative h-44 bg-[#1a1f2e]">
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0f141f] via-transparent to-transparent z-10" />
-                      {/* initials layer — always rendered, covered by img if img loads */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20 flex items-center justify-center text-2xl font-black text-[#facc15]">
-                          {(j.fullName || j.userName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+            <>
+              {filtered.length > 3 && (
+                <button onClick={() => scroll(-1)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-[#1b212e] border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-colors shadow-lg">
+                  <ChevronLeft size={16} />
+                </button>
+              )}
+              <div
+                ref={scrollRef}
+                className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {filtered.map((j, i) => {
+                  const tier = getTier(j)
+                  const ts   = TIER_STYLE[tier]
+                  const isSelected = selectedId === jId(j)
+                  return (
+                    <div key={jId(j) ?? i}
+                      className={`snap-start shrink-0 w-[calc(33.333%-11px)] bg-[#131722] rounded-xl overflow-hidden border flex flex-col transition-all
+                        ${isSelected ? 'border-[#facc15] shadow-[0_0_12px_rgba(250,204,21,0.2)]' : 'border-gray-700/60 hover:border-gray-500'}`}
+                    >
+                      {/* Portrait */}
+                      <div className="relative h-40 bg-[#1a1f2e]">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#131722] via-transparent to-transparent z-10" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20 flex items-center justify-center text-xl font-black text-[#facc15]">
+                            {(j.fullName || j.userName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                          </div>
                         </div>
+                        {j.imageUrl && (
+                          <img src={j.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" onError={e => e.target.remove()} />
+                        )}
+                        {tier !== 'Rising' && (
+                          <div className={`absolute top-2 right-2 z-20 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border bg-black/40 backdrop-blur-sm ${ts.text} ${ts.border}`}>
+                            {tier}
+                          </div>
+                        )}
                       </div>
-                      {j.imageUrl && (
-                        <img src={j.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" onError={e => e.target.remove()} />
-                      )}
-                      {tier !== 'Rising' && (
-                        <div className={`absolute top-3 right-3 z-20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border bg-black/40 backdrop-blur-sm ${ts.text} ${ts.border}`}>
-                          {tier}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Details */}
-                    <div className="p-4 flex-1 flex flex-col z-20 -mt-2">
-                      <h3 className="text-base font-bold text-white mb-3 truncate">
-                        <Highlight text={j.fullName || j.userName || `Jockey #${j.jockeyId}`} query={search} />
-                      </h3>
-                      <div className="flex items-center gap-5 mb-4">
-                        <div>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Weight</p>
-                          <p className="text-sm font-bold text-gray-200">{j.weight ? `${j.weight} kg` : '—'}</p>
+                      {/* Details */}
+                      <div className="p-3 flex-1 flex flex-col gap-2 z-20">
+                        <h3 className="text-sm font-bold text-white truncate">
+                          <Highlight text={j.fullName || j.userName || `Jockey #${j.jockeyId}`} query={search} />
+                        </h3>
+                        <div className="flex gap-2">
+                          <div className="flex-1 bg-[#1b202c] rounded p-2 border border-gray-700/50 text-center">
+                            <p className="text-[8px] text-gray-500 uppercase font-bold">Weight</p>
+                            <p className="text-sm font-bold text-[#facc15]">{j.weight ? `${j.weight}kg` : '—'}</p>
+                          </div>
+                          <div className="flex-1 bg-[#1b202c] rounded p-2 border border-gray-700/50 text-center">
+                            <p className="text-[8px] text-gray-500 uppercase font-bold">Win Rate</p>
+                            <p className="text-sm font-bold text-[#facc15]">
+                              {j.totalRaces > 0 ? `${Math.round(((j.totalWins ?? 0) / j.totalRaces) * 100)}%` : '—'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Win Rate</p>
-                          <p className="text-sm font-bold text-gray-200">
-                            {j.totalRaces > 0 ? `${Math.round(((j.totalWins ?? 0) / j.totalRaces) * 100)}%` : '—'}
-                          </p>
-                        </div>
+                        <button
+                          onClick={() => { onSelect(jId(j)); onClose() }}
+                          className={`w-full py-2 rounded-lg text-xs font-bold transition-colors ${
+                            isSelected ? 'bg-[#facc15] text-black'
+                            : 'bg-[#facc15]/10 hover:bg-[#facc15] text-[#facc15] hover:text-black border border-[#facc15]/30'
+                          }`}>
+                          {isSelected ? '✓ Assigned' : 'Select'}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => { onSelect(jId(j)); onClose() }}
-                        className={`w-full py-2.5 rounded-lg text-xs font-black uppercase tracking-wide mt-auto transition-colors ${
-                          isSelected
-                            ? 'bg-[#facc15] text-black'
-                            : 'bg-[#facc15]/10 hover:bg-[#facc15] text-[#facc15] hover:text-black border border-[#facc15]/30 hover:border-[#facc15]'
-                        }`}>
-                        {isSelected ? '✓ Assigned' : 'Select Jockey'}
-                      </button>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+              {filtered.length > 3 && (
+                <button onClick={() => scroll(1)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-[#1b212e] border border-gray-700 rounded-full text-gray-400 hover:text-white hover:border-gray-500 transition-colors shadow-lg">
+                  <ChevronRight size={16} />
+                </button>
+              )}
+            </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 md:px-8 py-4 bg-[#0a0a08] border-t border-[#2e2a22] flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className={`w-7 h-7 rounded-full bg-gray-${700 - i * 100} border-2 border-[#0a0a08]`} style={{ opacity: 0.6 + i * 0.2 }} />
-              ))}
-            </div>
-            <p className="text-[13px] text-gray-400 font-medium">
-              <span className="text-[#facc15] font-bold">{jockeys.length}</span> jockeys available
-            </p>
-          </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button onClick={onClose}
-              className="flex-1 md:flex-none px-6 py-2.5 text-xs font-black uppercase tracking-wide text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg transition-colors">
-              Cancel
-            </button>
-            <button onClick={autoAssign}
-              className="flex-1 md:flex-none px-6 py-2.5 bg-[#facc15] hover:bg-[#eab308] text-black text-xs font-black uppercase tracking-wide rounded-lg transition-colors">
-              Confirm Auto-Assign
-            </button>
-          </div>
+        <div className="px-6 py-4 bg-[#181c28] border-t border-gray-700/50 flex items-center justify-between gap-3">
+          <button onClick={onClose}
+            className="px-5 py-2 text-sm font-bold text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg transition-colors">
+            Cancel
+          </button>
+          <button onClick={autoAssign}
+            className="px-5 py-2 bg-[#facc15] hover:bg-[#eab308] text-black text-sm font-bold rounded-lg transition-colors">
+            Auto-Assign Best
+          </button>
         </div>
       </div>
     </div>
