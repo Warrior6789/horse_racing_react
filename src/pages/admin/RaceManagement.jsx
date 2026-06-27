@@ -175,7 +175,7 @@ export default function RaceManagement() {
 
   const loadCards = ({ silent = false } = {}) => {
     if (!silent) setCLoading(true)
-    getRacesPaged({ page: 1, pageSize: 3 })
+    getRacesPaged({ page: 1, pageSize: 50 })
       .then(r => setCards(r.data.data?.items || []))
       .catch(() => {})
       .finally(() => { if (!silent) setCLoading(false) })
