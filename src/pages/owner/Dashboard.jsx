@@ -126,7 +126,7 @@ export default function OwnerDashboard() {
   const active       = horses.filter(h => h.status === 'Healthy').length
   const pending      = registrations.filter(s => s.status === 'Pending').length
   const formattedBal = balance !== null ? balance.toLocaleString('vi-VN') : '—'
-  const preview      = horses.slice(0, 3)
+  const preview      = horses
 
   const STATUS_ORDER = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3 }
   const upcoming = [...registrations]

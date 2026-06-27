@@ -254,58 +254,17 @@ export default function MyHorses() {
             </div>
           ) : displayed.length === 0 ? (
             <div className="text-center py-20 text-gray-500">No horses found.</div>
-          ) : view === 'grid' ? (() => {
-            const gridTotalPages = Math.max(1, Math.ceil(displayed.length / GRID_SIZE))
-            const safeGridPage   = Math.min(gridPage, gridTotalPages)
-            const gridItems      = displayed.slice((safeGridPage - 1) * GRID_SIZE, safeGridPage * GRID_SIZE)
-            return (
-              <div className="space-y-6 pb-24">
-                <CardCarousel count={gridItems.length}>
-                  {gridItems.map(h => (
-                    <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
-                      <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} />
-                    </div>
-                  ))}
-                </CardCarousel>
-                {gridTotalPages > 1 && (
-                  <div className="flex items-center justify-between">
-                    <p className="text-gray-400 text-sm font-medium">
-                      Showing {(safeGridPage - 1) * GRID_SIZE + 1}–{Math.min(safeGridPage * GRID_SIZE, displayed.length)} of {displayed.length} horses
-                    </p>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={() => setGridPage(p => Math.max(1, p - 1))}
-                        disabled={safeGridPage === 1}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      {Array.from({ length: gridTotalPages }, (_, i) => i + 1).map(p => (
-                        <button
-                          key={p}
-                          onClick={() => setGridPage(p)}
-                          className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
-                            p === safeGridPage
-                              ? 'bg-[#facc15] text-black'
-                              : 'border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white'
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => setGridPage(p => Math.min(gridTotalPages, p + 1))}
-                        disabled={safeGridPage === gridTotalPages}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
+          ) : view === 'grid' ? (
+            <div className="pb-6">
+              <CardCarousel count={displayed.length}>
+                {displayed.map(h => (
+                  <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
+                    <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} />
                   </div>
-                )}
-              </div>
-            )
-          })() : (
+                ))}
+              </CardCarousel>
+            </div>
+          ) : (
             /* List View */
             (() => {
               const totalPages = Math.max(1, Math.ceil(displayed.length / LIST_SIZE))
