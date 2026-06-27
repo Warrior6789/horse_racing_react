@@ -37,7 +37,7 @@ export default function JockeyProfile() {
   const save = async () => {
     setError(''); setSaving(true)
     try {
-      await updateJockeyProfile(user.accountId, {
+      await updateJockeyProfile(user.id, {
         fullName:      form.fullName,
         dateOfBirth:   form.dateOfBirth,
         nationality:   form.nationality,
