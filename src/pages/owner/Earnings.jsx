@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Download } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getHorses, getHorsePerformance } from '../../api/horses'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -73,11 +72,6 @@ export default function OwnerEarnings() {
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-[#facc15] mb-2">Earnings Overview</h1>
             <p className="text-gray-400 text-sm">Real-time performance analytics and fiscal breakdown for your racing portfolio.</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex items-center gap-2 bg-[#1a2130] border border-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors text-gray-300">
-              <Download size={16} /> Export Report
-            </button>
           </div>
         </div>
 
