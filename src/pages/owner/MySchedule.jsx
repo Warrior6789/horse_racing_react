@@ -486,9 +486,12 @@ export default function MySchedule() {
                   <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                       <tr className="text-gray-400 text-[10px] uppercase tracking-wider border-b border-gray-800/50">
-                        {['Horse','Race Name','Racecourse','Time','Gate','Owner / Jockey',''].map(col => (
-                          <th key={col} className={`px-6 py-4 font-bold ${['Gate','Owner / Jockey'].includes(col) ? 'text-center' : ''}`}>{col}</th>
-                        ))}
+                        <th className="px-4 py-4 font-bold w-14"></th>
+                        <th className="px-4 py-4 font-bold">Horse</th>
+                        <th className="px-4 py-4 font-bold">Race</th>
+                        <th className="px-4 py-4 font-bold text-center">Gate</th>
+                        <th className="px-4 py-4 font-bold text-center">Status</th>
+                        <th className="px-4 py-4 w-32"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/50">
@@ -499,33 +502,37 @@ export default function MySchedule() {
                         const jockeyOk = item.jockeyConfirmation === true ? true : item.jockeyId ? null : null
                         return (
                           <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden shrink-0 flex items-center justify-center text-xl">
-                                  {h.imageUrl ? <img src={h.imageUrl} alt="" className="w-full h-full object-cover" /> : '🐎'}
-                                </div>
-                                <div>
-                                  <p className="font-bold text-gray-200 text-sm group-hover:text-white">{h.horseName || '—'}</p>
-                                  <p className="text-[10px] text-gray-500 font-medium mt-0.5">{h.breed || '—'} • {h.age ? `${h.age}yo` : '—'}</p>
-                                </div>
+                            {/* Avatar */}
+                            <td className="px-4 py-3">
+                              <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl shrink-0">
+                                {h.imageUrl
+                                  ? <img src={h.imageUrl} alt="" className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display='none' }} />
+                                  : '🐎'}
                               </div>
                             </td>
-                            <td className="px-6 py-4"><p className="font-bold text-gray-300 text-sm">{r.raceName || `Race #${r.raceNumber || '—'}`}</p></td>
-                            <td className="px-6 py-4"><p className="text-gray-300 text-sm font-medium">{r.racecourseName || '—'}</p></td>
-                            <td className="px-6 py-4">
-                              {r.startTime ? (
-                                <>
-                                  <p className="font-bold text-white text-sm">{rawDate(r.startTime)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                  <p className="text-[10px] text-gray-500 font-medium mt-0.5">{rawTimeStr(r.startTime)}</p>
-                                </>
-                              ) : <span className="text-gray-600">—</span>}
+                            {/* Horse info */}
+                            <td className="px-4 py-3">
+                              <p className="font-bold text-gray-200 text-sm group-hover:text-white">{h.horseName || '—'}</p>
+                              <p className="text-[10px] text-gray-500 font-medium mt-0.5">{h.breed || '—'} • {h.age ? `${h.age}yo` : '—'}</p>
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            {/* Race info */}
+                            <td className="px-4 py-3">
+                              <p className="font-bold text-gray-300 text-sm">{r.raceName || `Race #${r.raceNumber || '—'}`}</p>
+                              <p className="text-[10px] text-gray-500 font-medium mt-0.5">{r.racecourseName || '—'}</p>
+                              {r.startTime && (
+                                <p className="text-[10px] text-gray-600 mt-0.5">
+                                  {rawDate(r.startTime)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · {rawTimeStr(r.startTime)}
+                                </p>
+                              )}
+                            </td>
+                            {/* Gate */}
+                            <td className="px-4 py-3 text-center">
                               <div className="w-8 h-8 rounded-full border border-gray-600 flex items-center justify-center mx-auto text-xs font-bold text-gray-300">
                                 {item.gateNumber || '—'}
                               </div>
                             </td>
-                            <td className="px-6 py-4">
+                            {/* Status */}
+                            <td className="px-4 py-3">
                               <div className="flex items-center justify-center gap-4">
                                 <div className="flex flex-col items-center gap-1">
                                   <StatusIcon ok={ownerOk} />
@@ -537,7 +544,8 @@ export default function MySchedule() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-3 py-4 w-32">
+                            {/* Action */}
+                            <td className="px-4 py-3">
                               {r.status === 'Live' && (
                                 <button
                                   onClick={() => navigate(`/owner/races/${r.raceId}/live`)}
