@@ -6,6 +6,20 @@ import { getUpcomingRaces, getRaceRegistrations } from '../../api/races'
 import { getOwnerAllRegistrations } from '../../api/registrations'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
+function Highlight({ text, query }) {
+  const str = String(text ?? '')
+  if (!query) return <>{str}</>
+  const idx = str.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{str}</>
+  return (
+    <>
+      {str.slice(0, idx)}
+      <span className="text-[#facc15] font-bold">{str.slice(idx, idx + query.length)}</span>
+      {str.slice(idx + query.length)}
+    </>
+  )
+}
+
 function rawDate(st) {
   if (!st) return null
   const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
@@ -19,7 +33,7 @@ function rawTimeStr(st) {
 }
 
 /* ─── Race Card ───────────────────────────────────────────────────── */
-function RaceCard({ race, regCount, onRegister, isRegistered }) {
+function RaceCard({ race, regCount, onRegister, isRegistered, search }) {
   const st    = race.startTime || null
   const month = st ? rawDate(st).toLocaleString('en-US', { month: 'short' }) : '—'
   const day   = st ? rawDate(st).getDate() : '—'
@@ -47,7 +61,7 @@ function RaceCard({ race, regCount, onRegister, isRegistered }) {
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <h3 className="text-base font-bold text-white">{race.raceName || `Race #${race.raceNumber}`}</h3>
+            <h3 className="text-base font-bold text-white"><Highlight text={race.raceName || `Race #${race.raceNumber}`} query={search} /></h3>
             {grade && (
               <span className="bg-[#252d3d] text-gray-300 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-gray-600/50 shrink-0">
                 {grade}
@@ -283,6 +297,7 @@ export default function AvailableRaces() {
                 race={race}
                 regCount={regCountMap[race.raceId] ?? null}
                 isRegistered={myRegisteredIds.has(race.raceId)}
+                search={search}
                 onRegister={id => navigate(`/owner/races/${id}/register`, { state: { preselectedHorseId } })}
               />
             ))}

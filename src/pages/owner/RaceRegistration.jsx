@@ -1,6 +1,20 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams, useLocation, Link } from 'react-router-dom'
 
+function Highlight({ text, query }) {
+  const str = String(text ?? '')
+  if (!query) return <>{str}</>
+  const idx = str.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{str}</>
+  return (
+    <>
+      {str.slice(0, idx)}
+      <span className="text-[#facc15] font-bold">{str.slice(idx, idx + query.length)}</span>
+      {str.slice(idx + query.length)}
+    </>
+  )
+}
+
 function rawDate(st) {
   if (!st) return null
   const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
@@ -162,10 +176,10 @@ function HorseSelectionModal({ horses, selectedId, onSelect, onClose }) {
 
                     {/* Details */}
                     <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="text-base font-bold text-white mb-0.5">{h.horseName}</h3>
+                      <h3 className="text-base font-bold text-white mb-0.5"><Highlight text={h.horseName} query={search} /></h3>
                       <p className="text-xs text-gray-400 font-medium flex items-center gap-1.5 mb-4">
                         <Disc size={10} className="text-gray-500" />
-                        {h.breed || 'Unknown'} • {h.age ? `${h.age} Years` : '—'}
+                        <Highlight text={h.breed || 'Unknown'} query={search} /> • {h.age ? `${h.age} Years` : '—'}
                       </p>
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         <div className="bg-[#1b202c] rounded-lg p-2.5 border border-gray-700/50">
@@ -314,7 +328,7 @@ function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect
                     {/* Details */}
                     <div className="p-4 flex-1 flex flex-col z-20 -mt-2">
                       <h3 className="text-base font-bold text-white mb-3 truncate">
-                        {j.fullName || j.userName || `Jockey #${j.jockeyId}`}
+                        <Highlight text={j.fullName || j.userName || `Jockey #${j.jockeyId}`} query={search} />
                       </h3>
                       <div className="flex items-center gap-5 mb-4">
                         <div>

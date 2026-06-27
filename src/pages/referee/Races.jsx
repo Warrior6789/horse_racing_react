@@ -70,6 +70,20 @@ function MiniTrack({ horses }) {
   )
 }
 
+function Highlight({ text, query }) {
+  const str = String(text ?? '')
+  if (!query) return <>{str}</>
+  const idx = str.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{str}</>
+  return (
+    <>
+      {str.slice(0, idx)}
+      <span className="text-[#facc15] font-bold">{str.slice(idx, idx + query.length)}</span>
+      {str.slice(idx + query.length)}
+    </>
+  )
+}
+
 function LiveRaceCard({ race, onNavigate }) {
   const [horses, setHorses] = useState([])
   const handleUpdate = useCallback((data) => {
@@ -335,10 +349,10 @@ export default function RefereeRaces() {
                       <div className="p-5 space-y-3">
                         <div>
                           <span className="text-[10px] font-mono font-bold text-slate-400 block tracking-wider">
-                            RACE #{race.raceNumber}
+                            RACE #<Highlight text={race.raceNumber} query={search} />
                           </span>
                           <h4 className="text-base font-bold text-slate-800 mt-0.5 truncate">
-                            {race.raceName || `Race #${race.raceNumber}`}
+                            <Highlight text={race.raceName || `Race #${race.raceNumber}`} query={search} />
                           </h4>
                         </div>
 
