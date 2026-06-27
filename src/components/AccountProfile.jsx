@@ -141,7 +141,7 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
         try {
           if (user?.role === 'Jockey') {
             const jockeyFd = new FormData()
-            jockeyFd.append('image', avatarFile)
+            jockeyFd.append('file', avatarFile)
             await updateJockeyImage(jockeyFd)
           } else {
             await updateProfileImage(fd)

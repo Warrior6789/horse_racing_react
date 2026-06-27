@@ -53,7 +53,7 @@ export default function JockeyProfile() {
   const handleImage = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    const fd = new FormData(); fd.append('image', file)
+    const fd = new FormData(); fd.append('file', file)
     await updateJockeyImage(fd).catch(() => {})
     load()
   }
