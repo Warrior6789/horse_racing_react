@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Save, Lock, Camera, X } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getMyJockeyProfile, updateJockeyProfile, updateJockeyImage } from '../../api/jockeyProfiles'
-import { getBalance } from '../../api/payments'
 import { useAuth } from '../../context/AuthContext'
 
 const inputCls = 'w-full bg-[#070d16] border border-[#162235] rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-[#e5b842] transition-colors'
@@ -27,11 +26,8 @@ export default function JockeyProfile() {
 
   const load = () => {
     setLoading(true)
-    Promise.all([
-      getMyJockeyProfile().catch(() => null),
-      getBalance().catch(() => null),
-    ]).then(([profileRes, balRes]) => {
-      const p = profileRes?.data?.data || profileRes?.data || {}
+    getMyJockeyProfile().then(res => {
+      const p = res?.data?.data || res?.data || {}
       setProfile(p)
       setForm({
         fullName:      p.fullName      || '',
@@ -41,8 +37,8 @@ export default function JockeyProfile() {
         weight:        p.weight        != null ? String(p.weight) : '',
         height:        p.height        != null ? String(p.height) : '',
       })
-      setBalance(balRes?.data?.data?.balance ?? null)
-    }).finally(() => setLoading(false))
+      setBalance(p.balance ?? null)
+    }).catch(() => {}).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
 
