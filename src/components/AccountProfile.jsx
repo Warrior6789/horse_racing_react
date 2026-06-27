@@ -277,7 +277,10 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
                 <h3 className="text-xl font-bold mb-1">{displayName}</h3>
                 <p className={`text-sm mb-4 ${t.subText}`}>{email}</p>
                 <button
-                  onClick={() => setEditing(true)}
+                  onClick={() => {
+                    if (role === 'Jockey') { onClose(); navigate('/jockey/profile') }
+                    else setEditing(true)
+                  }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${t.editBtn}`}
                 >
                   <Pencil size={14} />
