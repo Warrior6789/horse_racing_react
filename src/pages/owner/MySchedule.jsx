@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getOwnerAllRegistrationsPaged } from '../../api/registrations'
+import { getHorses } from '../../api/horses'
 import { getRacecourses } from '../../api/racecourses'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
@@ -335,13 +336,25 @@ export default function MySchedule() {
   }, [])
 
   useEffect(() => {
-    getOwnerAllRegistrationsPaged({ page: 1, pageSize: 500 })
-      .then(r => {
-        const d = r.data.data
-        setSchedule(d?.items || d || [])
+    Promise.all([
+      getOwnerAllRegistrationsPaged({ page: 1, pageSize: 500 }).then(r => {
+        const d = r.data.data; return d?.items || d || []
+      }).catch(() => []),
+      getHorses({ page: 1, pageSize: 200 }).then(r => {
+        return r.data.data?.items || r.data.data || []
+      }).catch(() => []),
+    ]).then(([regs, horseList]) => {
+      const imageMap = {}
+      horseList.forEach(h => { imageMap[h.horseId ?? h.id] = h.imageUrl })
+      const merged = regs.map(item => {
+        const hId = item.horse?.horseId ?? item.horse?.id ?? item.horseId
+        if (hId && imageMap[hId] && !item.horse?.imageUrl) {
+          return { ...item, horse: { ...item.horse, imageUrl: imageMap[hId] } }
+        }
+        return item
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      setSchedule(merged)
+    }).finally(() => setLoading(false))
   }, [refreshKey])
 
   const horses = useMemo(() => {
