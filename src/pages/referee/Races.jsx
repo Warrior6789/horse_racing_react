@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext'
 import { getMyRefereeRaces } from '../../api/races'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import AccountProfile from '../../components/AccountProfile'
+import CardCarousel from '../../components/CardCarousel'
 
 /* ── Mini Track Visualization ── */
 const LANE_H = 28, GATE_W = 22, TRACK_START = 4, TRACK_END = 92
@@ -308,21 +309,23 @@ export default function RefereeRaces() {
 
           {/* Race Cards Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <CardCarousel count={3} dark={false}>
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-200 h-72 animate-pulse" />
+                <div key={i} className="snap-start shrink-0 w-[calc(33.333%-11px)] bg-white rounded-2xl border border-slate-200 h-72 animate-pulse" />
               ))}
-            </div>
+            </CardCarousel>
           ) : races.length === 0 ? (
             <div className="text-center py-20 text-sm font-semibold text-slate-400 bg-white rounded-2xl border border-slate-200">
               No races found.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <CardCarousel count={races.length} dark={false}>
               {races.map(race => {
                 const st    = race.status || 'Scheduled'
                 if (st === 'Live') return (
-                  <LiveRaceCard key={race.raceId} race={race} onNavigate={id => navigate(`/referee/races/${id}`)} />
+                  <div key={race.raceId} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
+                    <LiveRaceCard race={race} onNavigate={id => navigate(`/referee/races/${id}`)} />
+                  </div>
                 )
 
                 const label = STATUS_LABEL[st] || st
@@ -332,7 +335,7 @@ export default function RefereeRaces() {
                   ? `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                   : '—'
                 return (
-                  <div key={race.raceId} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
+                  <div key={race.raceId} className="snap-start shrink-0 w-[calc(33.333%-11px)] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
                     <div>
                       <div className="h-40 w-full relative bg-slate-900">
                         {race.imageUrl
@@ -391,7 +394,7 @@ export default function RefereeRaces() {
                   </div>
                 )
               })}
-            </div>
+            </CardCarousel>
           )}
 
           {/* Footer blocks */}

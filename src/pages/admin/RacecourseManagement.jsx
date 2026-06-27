@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import DashboardLayout from '../../components/DashboardLayout'
+import CardCarousel from '../../components/CardCarousel'
 import { getRacecoursesPaged, createRacecourse, updateRacecourse, uploadRacecourseImage, deleteRacecourse } from '../../api/racecourses'
 
 const blank = { racecourseName: '', location: '', trackType: '' }
@@ -12,126 +12,6 @@ const TRACK_BADGE = {
 }
 
 const rcId = (item) => item.RacecourseId || item.racecourseId || item.id
-
-/* ─── Card Carousel ─────────────────────────────────────────────── */
-function CardCarousel({ allCards, deleting, onEdit, onDelete }) {
-  const [slide, setSlide]   = useState(0)
-  const trackRef            = useRef(null)
-  const COLS                = 3
-  const total               = Math.max(1, Math.ceil(allCards.length / COLS))
-
-  const goTo = (idx) => {
-    const next = Math.max(0, Math.min(total - 1, idx))
-    setSlide(next)
-    if (trackRef.current) {
-      trackRef.current.scrollTo({ left: next * trackRef.current.offsetWidth, behavior: 'smooth' })
-    }
-  }
-
-  if (allCards.length === 0) return null
-
-  return (
-    <div className="relative">
-      {/* Prev */}
-      <button
-        onClick={() => goTo(slide - 1)}
-        disabled={slide === 0}
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-0 disabled:pointer-events-none"
-      >
-        <ChevronLeft size={16} className="text-gray-700" />
-      </button>
-
-      {/* Track — overflow-x scroll with hidden scrollbar */}
-      <style>{`#rc-track::-webkit-scrollbar{display:none}`}</style>
-      <div
-        id="rc-track"
-        ref={trackRef}
-        style={{
-          display: 'flex',
-          overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          borderRadius: '1rem',
-        }}
-      >
-        {Array.from({ length: total }, (_, si) => (
-          <div
-            key={si}
-            style={{ flexShrink: 0, width: '100%', scrollSnapAlign: 'start' }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-          >
-            {allCards.slice(si * COLS, (si + 1) * COLS).map(item => (
-              <div key={rcId(item)} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                <div className="w-full aspect-[4/3] overflow-hidden shrink-0">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.racecourseName} className="w-full h-full object-cover block" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '40px' }}>stadium</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-5 flex flex-col gap-3 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm truncate">{item.racecourseName}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{item.location || 'No location'}</p>
-                    </div>
-                    {item.trackType && (
-                      <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ring-inset ${TRACK_BADGE[item.trackType] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
-                        {item.trackType}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2 pt-1 border-t border-gray-100">
-                    <button
-                      onClick={() => onEdit(item)}
-                      className="flex-1 py-1.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(rcId(item))}
-                      disabled={deleting === rcId(item)}
-                      className="w-8 h-8 flex items-center justify-center border border-red-100 text-red-500 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      {/* Next */}
-      <button
-        onClick={() => goTo(slide + 1)}
-        disabled={slide >= total - 1}
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-0 disabled:pointer-events-none"
-      >
-        <ChevronRight size={16} className="text-gray-700" />
-      </button>
-
-      {/* Dots */}
-      {total > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-4">
-          {Array.from({ length: total }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              className={`rounded-full transition-all duration-300 ${
-                i === slide ? 'w-6 h-2 bg-gray-950' : 'w-2 h-2 bg-gray-300 hover:bg-gray-500'
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 /* ─── Main ──────────────────────────────────────────────────────── */
 export default function RacecourseManagement() {
@@ -250,13 +130,50 @@ export default function RacecourseManagement() {
           <div className="flex items-center justify-center h-36">
             <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
           </div>
-        ) : (
-          <CardCarousel
-            allCards={allCards}
-            deleting={deleting}
-            onEdit={openEdit}
-            onDelete={handleDelete}
-          />
+        ) : allCards.length > 0 && (
+          <CardCarousel count={allCards.length} dark={false}>
+            {allCards.map(item => (
+              <div key={rcId(item)} className="snap-start shrink-0 w-[calc(33.333%-11px)] bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="w-full aspect-[4/3] overflow-hidden shrink-0">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.racecourseName} className="w-full h-full object-cover block" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '40px' }}>stadium</span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-5 flex flex-col gap-3 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-900 text-sm truncate">{item.racecourseName}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{item.location || 'No location'}</p>
+                    </div>
+                    {item.trackType && (
+                      <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ring-inset ${TRACK_BADGE[item.trackType] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
+                        {item.trackType}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2 pt-1 border-t border-gray-100">
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="flex-1 py-1.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(rcId(item))}
+                      disabled={deleting === rcId(item)}
+                      className="w-8 h-8 flex items-center justify-center border border-red-100 text-red-500 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardCarousel>
         )}
 
         {/* Table */}

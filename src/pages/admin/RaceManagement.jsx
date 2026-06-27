@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
+import CardCarousel from '../../components/CardCarousel'
 import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace, resetRace, overrideResult, getRaceRegistrations } from '../../api/races'
 import { getRacecoursesPaged } from '../../api/racecourses'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -355,11 +356,11 @@ export default function RaceManagement() {
             <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
           </div>
         ) : cards.length === 0 ? null : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <CardCarousel count={cards.length} dark={false}>
             {cards.map(r => {
               const s = RACE_STATUS[r.status] || RACE_STATUS.Scheduled
               return (
-                <div key={r.raceId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                <div key={r.raceId} className="snap-start shrink-0 w-[calc(33.333%-11px)] bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
                   <div className="w-full aspect-[4/3] overflow-hidden shrink-0">
                   {r.imageUrl ? (
                     <img src={r.imageUrl} alt={`Race #${r.raceNumber}`} className="w-full h-full object-cover block" />
@@ -427,7 +428,7 @@ export default function RaceManagement() {
                 </div>
               )
             })}
-          </div>
+          </CardCarousel>
         )}
 
         {/* Tabs */}

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Orbit, Calendar, Banknote, ChevronRight, Radio, Flag } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
+import CardCarousel from '../../components/CardCarousel'
 import { getHorses } from '../../api/horses'
 import { getBalance } from '../../api/payments'
 import { getOwnerAllRegistrations } from '../../api/registrations'
@@ -168,9 +169,13 @@ export default function OwnerDashboard() {
               <Link to="/owner/horses" className="text-yellow-500 hover:text-yellow-400 font-bold">Add your first horse →</Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {preview.map(h => <HorseCard key={h.horseId ?? h.id} horse={h} />)}
-            </div>
+            <CardCarousel count={preview.length}>
+              {preview.map(h => (
+                <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
+                  <HorseCard horse={h} />
+                </div>
+              ))}
+            </CardCarousel>
           )}
         </section>
 

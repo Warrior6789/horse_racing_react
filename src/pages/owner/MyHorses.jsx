@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Trophy, Plus, X, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
+import CardCarousel from '../../components/CardCarousel'
 import { getHorses, deleteHorse } from '../../api/horses'
 import { getRacesPaged, registerHorseToRace } from '../../api/races'
 import { getJockeysPaged } from '../../api/jockeyProfiles'
@@ -259,11 +260,13 @@ export default function MyHorses() {
             const gridItems      = displayed.slice((safeGridPage - 1) * GRID_SIZE, safeGridPage * GRID_SIZE)
             return (
               <div className="space-y-6 pb-24">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <CardCarousel count={gridItems.length}>
                   {gridItems.map(h => (
-                    <HorseCard key={h.horseId ?? h.id} horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} />
+                    <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
+                      <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} />
+                    </div>
                   ))}
-                </div>
+                </CardCarousel>
                 {gridTotalPages > 1 && (
                   <div className="flex items-center justify-between">
                     <p className="text-gray-400 text-sm font-medium">
