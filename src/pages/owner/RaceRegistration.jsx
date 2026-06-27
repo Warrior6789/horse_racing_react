@@ -9,7 +9,7 @@ function Highlight({ text, query }) {
   return (
     <>
       {str.slice(0, idx)}
-      <span className="text-[#facc15] font-bold">{str.slice(idx, idx + query.length)}</span>
+      <span className="bg-[#facc15] text-black rounded-[2px] px-[1px] font-bold">{str.slice(idx, idx + query.length)}</span>
       {str.slice(idx + query.length)}
     </>
   )
