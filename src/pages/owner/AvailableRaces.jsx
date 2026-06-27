@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { MapPin, Sprout, Mountain, Ruler, CalendarCheck, ChevronDown, Search, Calendar, Users } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getUpcomingRaces, getRaceRegistrations } from '../../api/races'
+import { getOwnerAllRegistrations } from '../../api/registrations'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 function rawDate(st) {
@@ -18,7 +19,7 @@ function rawTimeStr(st) {
 }
 
 /* ─── Race Card ───────────────────────────────────────────────────── */
-function RaceCard({ race, regCount, onRegister }) {
+function RaceCard({ race, regCount, onRegister, isRegistered }) {
   const st    = race.startTime || null
   const month = st ? rawDate(st).toLocaleString('en-US', { month: 'short' }) : '—'
   const day   = st ? rawDate(st).getDate() : '—'
@@ -115,12 +116,21 @@ function RaceCard({ race, regCount, onRegister }) {
             {prize} <span className="text-xs text-[#facc15] ml-0.5">VND</span>
           </p>
         </div>
-        <button
-          onClick={() => onRegister(race.raceId)}
-          className="border-2 border-[#facc15]/60 hover:border-[#facc15] text-[#facc15] bg-transparent hover:bg-[#facc15]/10 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap"
-        >
-          Register
-        </button>
+        {isRegistered ? (
+          <button
+            disabled
+            className="border-2 border-green-600/50 text-green-400 bg-green-500/10 px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap cursor-not-allowed opacity-80"
+          >
+            ✓ Registered
+          </button>
+        ) : (
+          <button
+            onClick={() => onRegister(race.raceId)}
+            className="border-2 border-[#facc15]/60 hover:border-[#facc15] text-[#facc15] bg-transparent hover:bg-[#facc15]/10 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap"
+          >
+            Register
+          </button>
+        )}
       </div>
     </div>
   )
@@ -131,9 +141,10 @@ export default function AvailableRaces() {
   const navigate  = useNavigate()
   const location  = useLocation()
 
-  const [races,        setRaces]        = useState([])
-  const [regCountMap,  setRegCountMap]  = useState({})
-  const [loading,      setLoading]      = useState(true)
+  const [races,           setRaces]           = useState([])
+  const [regCountMap,     setRegCountMap]     = useState({})
+  const [myRegisteredIds, setMyRegisteredIds] = useState(new Set())
+  const [loading,         setLoading]         = useState(true)
   const [search,       setSearch]       = useState('')
   const [trackFilter,  setTrackFilter]  = useState('All')
   const [sortBy,       setSortBy]       = useState('date')
@@ -150,24 +161,23 @@ export default function AvailableRaces() {
   }, [showSuccess])
 
   useEffect(() => {
-    getUpcomingRaces({ pageSize: 50 })
-      .then(r => {
-        const list = r.data.data?.items || r.data.data || []
-        setRaces(list)
-        // fetch registration counts for all races in parallel
-        Promise.allSettled(list.map(race => getRaceRegistrations(race.raceId))).then(results => {
-          const map = {}
-          results.forEach((res, i) => {
-            if (res.status === 'fulfilled') {
-              const regs = res.value.data.data || res.value.data || []
-              map[list[i].raceId] = Array.isArray(regs) ? regs.length : (regs.items?.length ?? 0)
-            }
-          })
-          setRegCountMap(map)
+    Promise.all([
+      getUpcomingRaces({ pageSize: 50 }).then(r => r.data.data?.items || r.data.data || []).catch(() => []),
+      getOwnerAllRegistrations().then(r => r.data.data || []).catch(() => []),
+    ]).then(([list, myRegs]) => {
+      setRaces(list)
+      setMyRegisteredIds(new Set(myRegs.map(reg => reg.raceId).filter(Boolean)))
+      Promise.allSettled(list.map(race => getRaceRegistrations(race.raceId))).then(results => {
+        const map = {}
+        results.forEach((res, i) => {
+          if (res.status === 'fulfilled') {
+            const regs = res.value.data.data || res.value.data || []
+            map[list[i].raceId] = Array.isArray(regs) ? regs.length : (regs.items?.length ?? 0)
+          }
         })
+        setRegCountMap(map)
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    }).finally(() => setLoading(false))
   }, [refreshKey])
 
   const filtered = useMemo(() => {
@@ -272,6 +282,7 @@ export default function AvailableRaces() {
                 key={race.raceId}
                 race={race}
                 regCount={regCountMap[race.raceId] ?? null}
+                isRegistered={myRegisteredIds.has(race.raceId)}
                 onRegister={id => navigate(`/owner/races/${id}/register`, { state: { preselectedHorseId } })}
               />
             ))}
