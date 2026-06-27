@@ -27,6 +27,8 @@ import OwnerEarnings from './pages/owner/Earnings'
 import HorseForm from './pages/owner/HorseForm'
 import AvailableRaces from './pages/owner/AvailableRaces'
 import RaceRegistration from './pages/owner/RaceRegistration'
+import OwnerProfile from './pages/owner/MyProfile'
+import SpectatorProfile from './pages/spectator/MyProfile'
 
 import JockeyDashboard from './pages/jockey/Dashboard'
 import JockeyRequests from './pages/jockey/MyRequests'
@@ -69,8 +71,9 @@ export default function App() {
           <Route path="/spectator/races" element={<PrivateRoute><UpcomingRaces /></PrivateRoute>} />
           <Route path="/spectator/races/:raceId/live"    element={<PrivateRoute><LiveRace /></PrivateRoute>} />
           <Route path="/spectator/races/:raceId/results" element={<PrivateRoute><RaceResult backUrl="/spectator/races" /></PrivateRoute>} />
-          <Route path="/spectator/bets" element={<PrivateRoute><MyBets /></PrivateRoute>} />
-          <Route path="/spectator/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
+          <Route path="/spectator/bets"    element={<PrivateRoute><MyBets /></PrivateRoute>} />
+          <Route path="/spectator/wallet"  element={<PrivateRoute><Wallet /></PrivateRoute>} />
+          <Route path="/spectator/profile" element={<PrivateRoute><SpectatorProfile /></PrivateRoute>} />
 
           {/* Owner */}
           <Route path="/owner/dashboard" element={<PrivateRoute roles={['Owner', 'Admin']}><OwnerDashboard /></PrivateRoute>} />
@@ -83,7 +86,8 @@ export default function App() {
           <Route path="/owner/races/:raceId/live"     element={<PrivateRoute roles={['Owner', 'Admin']}><LiveRace Layout={OwnerLayout} backUrl="/owner/dashboard" /></PrivateRoute>} />
           <Route path="/owner/races/:raceId/results"  element={<PrivateRoute roles={['Owner', 'Admin']}><RaceResult Layout={OwnerLayout} backUrl="/owner/schedule" /></PrivateRoute>} />
           <Route path="/owner/earnings" element={<PrivateRoute roles={['Owner', 'Admin']}><OwnerEarnings /></PrivateRoute>} />
-          <Route path="/owner/wallet" element={<PrivateRoute roles={['Owner', 'Admin']}><OwnerWallet /></PrivateRoute>} />
+          <Route path="/owner/wallet"   element={<PrivateRoute roles={['Owner', 'Admin']}><OwnerWallet /></PrivateRoute>} />
+          <Route path="/owner/profile"  element={<PrivateRoute roles={['Owner', 'Admin']}><OwnerProfile /></PrivateRoute>} />
 
           {/* Jockey */}
           <Route path="/jockey/dashboard" element={<PrivateRoute roles={['Jockey', 'Admin']}><JockeyDashboard /></PrivateRoute>} />

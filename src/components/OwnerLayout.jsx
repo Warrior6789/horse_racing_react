@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Orbit, Calendar, Wallet, TrendingUp, PlusCircle, Bell, Flag, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Orbit, Calendar, Wallet, TrendingUp, PlusCircle, Bell, Flag, Menu, X, UserCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import AccountProfile from './AccountProfile'
 
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/owner/races',     icon: Flag,            label: 'Races'     },
   { to: '/owner/earnings',  icon: TrendingUp,      label: 'Earnings'  },
   { to: '/owner/wallet',    icon: Wallet,          label: 'Wallet'    },
+  { to: '/owner/profile',   icon: UserCircle,      label: 'My Profile'},
 ]
 
 function SidebarContent({ onClose }) {

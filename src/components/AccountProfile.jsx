@@ -278,7 +278,9 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
                 <p className={`text-sm mb-4 ${t.subText}`}>{email}</p>
                 <button
                   onClick={() => {
-                    if (role === 'Jockey') { onClose(); navigate('/jockey/profile') }
+                    if (role === 'Jockey')    { onClose(); navigate('/jockey/profile') }
+                    else if (role === 'Owner')     { onClose(); navigate('/owner/profile') }
+                    else if (role === 'Spectator') { onClose(); navigate('/spectator/profile') }
                     else setEditing(true)
                   }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${t.editBtn}`}

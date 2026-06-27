@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Home, Flag, Layers, Wallet, TrendingUp, Bell, Menu, X } from 'lucide-react'
+import { Home, Flag, Layers, Wallet, TrendingUp, Bell, Menu, X, UserCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import AccountProfile from './AccountProfile'
 
 const NAV = [
-  { to: '/spectator/dashboard', icon: Home,       label: 'Home'         },
-  { to: '/spectator/races',     icon: Flag,       label: 'Races'        },
-  { to: '/spectator/bets',      icon: Layers,     label: 'My Bets'      },
-  { to: '/spectator/wallet',    icon: Wallet,     label: 'Wallet'       },
-  { to: '/upgrade',             icon: TrendingUp, label: 'Upgrade Role' },
+  { to: '/spectator/dashboard', icon: Home,        label: 'Home'         },
+  { to: '/spectator/races',     icon: Flag,        label: 'Races'        },
+  { to: '/spectator/bets',      icon: Layers,      label: 'My Bets'      },
+  { to: '/spectator/wallet',    icon: Wallet,      label: 'Wallet'       },
+  { to: '/spectator/profile',   icon: UserCircle,  label: 'My Profile'   },
+  { to: '/upgrade',             icon: TrendingUp,  label: 'Upgrade Role' },
 ]
 
 const navLinkCls = ({ isActive }) =>
