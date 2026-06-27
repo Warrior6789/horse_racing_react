@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Check, X, Clock, AlertCircle, Trophy, CalendarDays } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, Trophy, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
-import { getJockeyMyRequests, acceptRegistration, rejectRegistration } from '../../api/registrations'
+import { getJockeyMyRequestsPaged, acceptRegistration, rejectRegistration } from '../../api/registrations'
+import { getBalance } from '../../api/payments'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
+
+const PAGE_SIZE = 10
 
 function StatCard({ title, value, subtitle, icon: Icon }) {
   return (
@@ -25,34 +28,51 @@ const STATUS_CLS = {
 }
 
 export default function JockeyRequests() {
-  const { user } = useAuth()
-  const [regs, setRegs]         = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [acting, setActing]     = useState(null)
+  const { user, updateUser } = useAuth()
+  const [regs, setRegs]           = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [acting, setActing]       = useState(null)
+  const [page, setPage]           = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback((p = 1) => {
     setLoading(true)
-    getJockeyMyRequests()
-      .then(r => setRegs(r.data.data || []))
+    getJockeyMyRequestsPaged({ page: p, pageSize: PAGE_SIZE })
+      .then(r => {
+        const d = r.data.data
+        setRegs(d?.items || d || [])
+        setTotalPages(d?.totalPages ?? 1)
+        setTotalCount(d?.totalCount ?? (d?.items?.length ?? 0))
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { fetchData(page) }, [fetchData, page])
 
   const handleRegistrationsUpdated = useCallback((data) => {
     if (data?.jockeyId && data.jockeyId !== user?.id) return
-    fetchData()
-  }, [fetchData, user])
+    fetchData(page)
+  }, [fetchData, page, user])
 
   useRaceHub(null, { onRegistrationsUpdated: handleRegistrationsUpdated })
 
   const handle = async (id, action) => {
     setActing(id)
     try {
-      if (action === 'accept') await acceptRegistration(id)
-      else                     await rejectRegistration(id)
-      fetchData()
+      if (action === 'accept') {
+        await acceptRegistration(id)
+      } else {
+        await rejectRegistration(id)
+        // refresh balance since owner gets refund → jockey balance unaffected,
+        // but keep UI consistent by refreshing
+        getBalance().then(r => {
+          const bal = r.data.data?.balance
+          if (bal != null) updateUser({ balance: bal })
+        }).catch(() => {})
+      }
+      fetchData(page)
     } catch {}
     finally { setActing(null) }
   }
@@ -73,17 +93,17 @@ export default function JockeyRequests() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Pending"  value={pending}        subtitle="Requires action"     icon={Clock}        />
-          <StatCard title="Accepted" value={accepted}       subtitle="Confirmed races"      icon={Trophy}       />
-          <StatCard title="Rejected" value={rejected}       subtitle="Declined invitations" icon={AlertCircle}  />
-          <StatCard title="Total"    value={regs.length}    subtitle="All invitations"      icon={CalendarDays} />
+          <StatCard title="Pending"  value={pending}     subtitle="Requires action"     icon={Clock}        />
+          <StatCard title="Accepted" value={accepted}    subtitle="Confirmed races"      icon={Trophy}       />
+          <StatCard title="Rejected" value={rejected}    subtitle="Declined invitations" icon={AlertCircle}  />
+          <StatCard title="Total"    value={totalCount}  subtitle="All invitations"      icon={CalendarDays} />
         </div>
 
         {/* Table */}
         <div className="bg-[#161a23] rounded-xl border border-gray-800 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
             <h2 className="text-sm font-bold text-gray-200">Invitation List</h2>
-            <span className="text-[11px] text-gray-500">{regs.length} total</span>
+            <span className="text-[11px] text-gray-500">{totalCount} total</span>
           </div>
 
           {loading ? (
@@ -104,11 +124,11 @@ export default function JockeyRequests() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {regs.map(item => {
-                    const race    = item.race  || {}
-                    const horse   = item.horse || {}
+                    const race      = item.race  || {}
+                    const horse     = item.horse || {}
                     const isPending = item.jockeyConfirmation === null || item.jockeyConfirmation === undefined
-                    const status  = item.jockeyConfirmation === true ? 'Accepted' : item.jockeyConfirmation === false ? 'Rejected' : 'Pending'
-                    const isActing = acting === item.registrationId
+                    const status    = item.jockeyConfirmation === true ? 'Accepted' : item.jockeyConfirmation === false ? 'Rejected' : 'Pending'
+                    const isActing  = acting === item.registrationId
                     return (
                       <tr key={item.registrationId} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="px-6 py-4">
@@ -163,6 +183,40 @@ export default function JockeyRequests() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
+              <p className="text-gray-500 text-xs">
+                Page {page} of {totalPages}
+              </p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${p === page ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
           )}
         </div>

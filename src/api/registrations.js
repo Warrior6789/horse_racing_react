@@ -7,8 +7,8 @@ export const adminRejectRegistration = (id) => client.put(`/registrations/${id}/
 export const scratchRegistration = (id) => client.put(`/registrations/${id}/scratch`)
 
 // Owner endpoints
-export const getMyRegistrations      = ()       => client.get('/registrations/owner/my-requests')
-export const getMyRegistrationsPaged = (params) => client.get('/registrations/owner/my-requests/paged', { params })
+export const getMyRegistrations      = ()       => client.get('/registrations/owner-requests')
+export const getMyRegistrationsPaged = (params) => client.get('/registrations/owner-requests/paged', { params })
 export const getOwnerAllRegistrations      = ()       => client.get('/registrations/owner')
 export const getOwnerAllRegistrationsPaged = (params) => client.get('/registrations/owner/paged', { params })
 
