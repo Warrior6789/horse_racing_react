@@ -53,15 +53,19 @@ function RaceListView({ onSelect }) {
   const [totalPages, setTotal]  = useState(1)
   const [loading, setLoading]   = useState(true)
 
+  const PAGE_SIZE = 8
+
   useEffect(() => {
     setLoading(true)
-    const params = { page, pageSize: 8, ...(tab === 'finished' && { status: 'Finished' }) }
-    getRacesPaged(params)
+    getRacesPaged({ page: 1, pageSize: 500 })
       .then(r => {
-        const items = r.data.data?.items || []
-        const filtered = tab === 'active' ? items.filter(r => !FINISHED_STATUSES.includes(r.status)) : items
-        setRaces(filtered)
-        setTotal(r.data.data?.totalPages || 1)
+        const all = r.data.data?.items || []
+        const filtered = tab === 'active'
+          ? all.filter(x => !FINISHED_STATUSES.includes(x.status))
+          : all.filter(x => FINISHED_STATUSES.includes(x.status))
+        const start = (page - 1) * PAGE_SIZE
+        setRaces(filtered.slice(start, start + PAGE_SIZE))
+        setTotal(Math.ceil(filtered.length / PAGE_SIZE) || 1)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
