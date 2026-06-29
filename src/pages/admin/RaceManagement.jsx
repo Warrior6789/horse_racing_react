@@ -230,7 +230,7 @@ export default function RaceManagement() {
     setForm(blank); setEditId(null); setError('')
     setImageFile(null); setImagePreview(null); setModal(true)
   }
-  const validGuid = (id) => (id && id !== '00000000-0000-0000-0000-000000000000') ? id : null
+  const validGuid = (id) => (id && id !== '00000000-0000-0000-0000-000000000000') ? id.toLowerCase() : null
 
   const openEdit = (r) => {
     const st = r.startTime?.slice(0, 16) || ''
@@ -621,7 +621,7 @@ export default function RaceManagement() {
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Racecourse *</label>
                 <select className={inputCls} {...f('racecourseId')}>
                   <option value="">— Select —</option>
-                  {racecourses.map(rc => <option key={rc.racecourseId} value={rc.racecourseId}>{rc.racecourseName}</option>)}
+                  {racecourses.map(rc => <option key={rc.racecourseId} value={rc.racecourseId?.toLowerCase()}>{rc.racecourseName}</option>)}
                 </select>
               </div>
               <div>
