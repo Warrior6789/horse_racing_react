@@ -659,15 +659,8 @@ export default function UpcomingRaces() {
         </div>
       </header>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6">
         <h2 className="text-3xl font-extrabold text-white tracking-tight">Market Overview</h2>
-        <button
-          onClick={() => setRefreshKey(k => k + 1)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a1613] border border-stone-800/60 text-stone-400 hover:text-stone-200 hover:border-stone-700 rounded-lg text-xs font-semibold transition-colors"
-        >
-          <Search size={12} className="rotate-0" />
-          Refresh
-        </button>
       </div>
 
       {/* TABS */}
