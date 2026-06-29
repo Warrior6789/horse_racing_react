@@ -14,6 +14,20 @@ const TABS = ['All', 'Scheduled', 'Open For Betting', 'Live', 'Finished']
 const STATUS_PRIORITY = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3, Finished: 4, Completed: 4, Cancelled: 5 }
 const sortByStatus = (a, b) => (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3)
 
+function Highlight({ text, query }) {
+  const str = String(text ?? '')
+  if (!query) return <>{str}</>
+  const idx = str.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return <>{str}</>
+  return (
+    <>
+      {str.slice(0, idx)}
+      <span className="bg-[#f7e0a3] text-[#110e0b] rounded-[2px] px-[1px] font-black">{str.slice(idx, idx + query.length)}</span>
+      {str.slice(idx + query.length)}
+    </>
+  )
+}
+
 function computeState(race) {
   const sl = (race.status || '').toLowerCase()
   if (['completed', 'finished'].includes(sl))
@@ -358,7 +372,7 @@ function RaceDetailScreen({ race, mode, canBetByRole, onClose, onBetSuccess }) {
   )
 }
 
-function RaceRow({ race, canBetByRole = true, onAction }) {
+function RaceRow({ race, canBetByRole = true, onAction, query = '' }) {
   const [info, setInfo] = useState(() => computeState(race))
   useEffect(() => {
     setInfo(computeState(race))
@@ -406,7 +420,7 @@ function RaceRow({ race, canBetByRole = true, onAction }) {
         <div className="flex flex-col xl:flex-row justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-xl font-black text-white truncate mb-0.5">
-              {race.raceName || `Race #${race.raceNumber}`}
+              <Highlight text={race.raceName || `Race #${race.raceNumber}`} query={query} />
             </h3>
 
             <div className={`mt-2 inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider items-center gap-1.5 border bg-[#110e0b] ${
@@ -678,7 +692,7 @@ export default function UpcomingRaces() {
           <div className="text-center py-16 text-stone-500 text-sm bg-[#161310] rounded-xl border border-stone-800/60">No races found.</div>
         ) : (
           races.map(race => (
-            <RaceRow key={race.raceId} race={race} canBetByRole={canBetByRole} onAction={(r, m) => {
+            <RaceRow key={race.raceId} race={race} canBetByRole={canBetByRole} query={search} onAction={(r, m) => {
               if (m === 'results') { navigate(`/spectator/races/${r.raceId}/results`); return }
               if (m === 'live')    { navigate(`/spectator/races/${r.raceId}/live`);    return }
               setArenaRace(r); setArenaMode(m)
