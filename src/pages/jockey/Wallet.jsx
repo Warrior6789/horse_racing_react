@@ -59,14 +59,14 @@ export default function JockeyWallet() {
     setLoading(true)
     Promise.all([
       getBalance().then(r => setBalance(r.data.data?.balance ?? 0)).catch(() => {}),
-      getTransactions({ page: p, pageSize: PAGE_SIZE }).then(r => {
-        const d = r.data.data
-        setTransactions(d?.items || [])
-        setTotalPages(d?.totalPages || 1)
-        setTotalCount(d?.totalCount || 0)
-      }).catch(() => {}),
-      getTransactions({ page: 1, pageSize: 200 }).then(r => {
-        setAllTx(r.data.data?.items || [])
+      getTransactions({ page: 1, pageSize: 500 }).then(r => {
+        const all = r.data.data?.items || []
+        setAllTx(all)
+        const completed = all.filter(x => (x.status || '').toLowerCase() === 'completed')
+        const start = (p - 1) * PAGE_SIZE
+        setTransactions(completed.slice(start, start + PAGE_SIZE))
+        setTotalPages(Math.ceil(completed.length / PAGE_SIZE) || 1)
+        setTotalCount(completed.length)
       }).catch(() => {}),
     ]).finally(() => setLoading(false))
   }, [])
@@ -81,11 +81,13 @@ export default function JockeyWallet() {
       setToast(mkMsg(data.amount ?? 0))
       setTimeout(() => setToast(null), 4000)
     }
-    getTransactions({ page: 1, pageSize: PAGE_SIZE }).then(r => {
-      const d = r.data.data
-      setTransactions(d?.items || [])
-      setTotalPages(d?.totalPages || 1)
-      setTotalCount(d?.totalCount || 0)
+    getTransactions({ page: 1, pageSize: 500 }).then(r => {
+      const all = r.data.data?.items || []
+      const completed = all.filter(x => (x.status || '').toLowerCase() === 'completed')
+      setTransactions(completed.slice(0, PAGE_SIZE))
+      setTotalPages(Math.ceil(completed.length / PAGE_SIZE) || 1)
+      setTotalCount(completed.length)
+      setPage(1)
     }).catch(() => {})
   }, [user])
 
