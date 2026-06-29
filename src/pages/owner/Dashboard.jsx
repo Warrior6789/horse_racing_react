@@ -60,7 +60,7 @@ function HorseCard({ horse }) {
         <div>
           <h4 className="text-white font-bold text-lg">{horse.horseName}</h4>
           <p className="text-gray-400 text-xs font-medium mb-4">
-            {horse.breed || 'Unknown'} &bull; {horse.age ? `${horse.age}yo` : '—'} &bull; {horse.color || '—'}
+            {horse.breed || 'Unknown'} &bull; {horse.color || '—'}
           </p>
           <div className="flex justify-between border-t border-gray-800/80 pt-4">
             <div>
