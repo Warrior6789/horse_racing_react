@@ -72,8 +72,8 @@ function HorseCard({ horse }) {
               <p className="text-white font-bold text-sm">{horse.weight ? `${horse.weight}kg` : '—'}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Status</p>
-              <p className="text-white font-bold text-sm">{horse.status}</p>
+              <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Age</p>
+              <p className="text-white font-bold text-sm">{horse.age ? `${horse.age}yo` : '—'}</p>
             </div>
           </div>
         </div>
