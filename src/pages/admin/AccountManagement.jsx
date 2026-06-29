@@ -326,7 +326,16 @@ export default function AccountManagement() {
       .then(r => setCountBanned(r.data.data?.totalCount || 0)).catch(() => {})
   }
 
-  useEffect(() => { loadCounts() }, [])
+  useEffect(() => {
+    loadCounts()
+    getUpgradeRequests({ page: 1, pageSize: 1 })
+      .then(r => {
+        const data = r.data.data
+        const tc = data?.totalCount ?? (Array.isArray(data) ? data.length : 0)
+        setPendingCount(tc)
+      })
+      .catch(() => {})
+  }, [])
   useEffect(() => { if (tab === 'accounts') loadAccounts(page, search, statusFilter) }, [tab, page, search, statusFilter])
 
   const handleUpgradeUpdated = useCallback((data) => {
