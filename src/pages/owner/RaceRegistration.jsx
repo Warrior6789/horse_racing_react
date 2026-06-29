@@ -455,7 +455,7 @@ export default function RaceRegistration() {
   const address   = race?.location || null
   const trackType = race?.racecourse?.surfaceType || race?.racecourse?.trackType || ''
   const distance  = race?.trackLength ? `${race.trackLength}m${trackType ? ` - ${trackType}` : ''}` : '—'
-  const prize     = race?.prizePool != null ? Number(race.prizePool).toLocaleString('vi-VN') : '—'
+  const prize     = Number(race?.totalPoolAmount ?? 0).toLocaleString('vi-VN')
   const grade     = race?.raceGrade || race?.grade || null
   const status    = race?.status || race?.raceStatus || null
 

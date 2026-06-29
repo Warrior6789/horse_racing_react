@@ -44,7 +44,7 @@ function RaceCard({ race, regCount, onRegister, isRegistered, search }) {
   const venue     = race.racecourseName || race.racecourse?.racecourseName || '—'
   const address   = race.location || null
   const distance  = race.trackLength ? `${race.trackLength}m` : race.distance ? `${race.distance}m` : '—'
-  const prizeVal  = race.prizePool ?? race.totalPrizePool ?? race.prize ?? 0
+  const prizeVal  = race.totalPoolAmount ?? 0
   const prize     = Number(prizeVal).toLocaleString('vi-VN')
   const grade     = race.raceGrade || race.grade || null
   const status    = race.status || race.raceStatus || ''
@@ -213,7 +213,7 @@ export default function AvailableRaces() {
         return t === trackFilter
       })
     }
-    if (sortBy === 'prize') list.sort((a, b) => (b.prizePool || 0) - (a.prizePool || 0))
+    if (sortBy === 'prize') list.sort((a, b) => (b.totalPoolAmount || 0) - (a.totalPoolAmount || 0))
     else                    list.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
     return list
   }, [races, search, trackFilter, sortBy])
