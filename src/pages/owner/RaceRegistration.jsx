@@ -670,7 +670,7 @@ export default function RaceRegistration() {
                   ? 'text-gray-300 border-gray-500/50 bg-gray-700/30'
                   : 'text-[#38bdf8] border-[#38bdf8]/50 bg-[#38bdf8]/10'
                 return (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     {/* Left — Jockey card */}
                     {(() => {
                       const status = activeJockey.status || activeJockey.assignmentStatus || 'Pending'
@@ -682,7 +682,7 @@ export default function RaceRegistration() {
                       const horseName  = activeHorse?.horseName || activeHorse?.name || 'Unknown Horse'
                       const jockeyName = activeJockey.fullName || activeJockey.userName || `Jockey #${activeJockey.jockeyId}`
                       return (
-                        <div className="w-full bg-[#161a23] border border-gray-700/60 rounded-xl overflow-hidden flex flex-col min-h-[340px]">
+                        <div className="col-span-2 w-full bg-[#161a23] border border-gray-700/60 rounded-xl overflow-hidden flex flex-col min-h-[340px]">
                           <div className="h-1 bg-[#facc15] w-full" />
                           <div className="bg-[#1a1f2b] px-5 py-4 flex justify-between items-center border-b border-gray-700/60">
                             <div className="flex gap-3 items-center">
