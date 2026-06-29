@@ -163,6 +163,7 @@ function UpgradeRequests({ onCountChange }) {
     setLoading(true)
     getUpgradeRequests({ page: p, pageSize })
       .then(r => {
+        console.log('[UpgradeRequests] response:', r.data)
         const raw   = r.data?.data ?? r.data ?? {}
         const items = Array.isArray(raw) ? raw : (raw.items ?? [])
         const tc    = raw.totalCount ?? (Array.isArray(raw) ? raw.length : items.length)
@@ -172,7 +173,7 @@ function UpgradeRequests({ onCountChange }) {
         setCount(tc)
         onCountChange(tc)
       })
-      .catch(() => {})
+      .catch((err) => { console.error('[UpgradeRequests] error:', err?.response?.status, err?.response?.data) })
       .finally(() => setLoading(false))
   }
 
