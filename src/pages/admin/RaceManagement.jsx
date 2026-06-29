@@ -154,7 +154,7 @@ export default function RaceManagement() {
   const [races, setRaces]           = useState([])
   const [tab, setTab]               = useState('active')
   const [page, setPage]             = useState(1)
-  const [pageSize, setPageSize]     = useState(4)
+  const [pageSize, setPageSize]     = useState(5)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading]       = useState(true)
