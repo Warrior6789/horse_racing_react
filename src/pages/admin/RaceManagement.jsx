@@ -235,9 +235,15 @@ export default function RaceManagement() {
   const openEdit = (r) => {
     const st = r.startTime?.slice(0, 16) || ''
     setOrigStartTime(st)
+    const resolvedRacecourseId =
+      validGuid(r.racecourseId) ||
+      validGuid(r.racecourse?.racecourseId) ||
+      validGuid(r.racecourse?.RacecourseId) ||
+      racecourses.find(rc => rc.racecourseName === (r.racecourseName || r.racecourse?.racecourseName))?.racecourseId?.toLowerCase() ||
+      ''
     setForm({
       raceName:        r.raceName        || '',
-      racecourseId:    validGuid(r.racecourseId) || validGuid(r.racecourse?.racecourseId) || '',
+      racecourseId:    resolvedRacecourseId,
       raceNumber:      r.raceNumber      || '',
       startTime:       st,
       trackLength:     r.trackLength     || '',
