@@ -61,30 +61,44 @@ export default function RefereeAssignment() {
   // Load races
   const loadRaces = useCallback((p = page, q = search, t = tab) => {
     setLoading(true)
-    const statusParam = t === 'finished' ? 'Finished' : undefined
-    getRacesPaged({ page: p, pageSize: PAGE_SIZE, ...(q && { search: q }), ...(statusParam && { status: statusParam }) })
-      .then(async r => {
-        const all = r.data.data?.items || []
-        const items = t === 'active' ? all.filter(r => !['Finished', 'Cancelled'].includes(r.status)) : all
-        setRaces(items)
-        setTotalPages(r.data.data?.totalPages || 1)
-        setTotalCount(r.data.data?.totalCount || 0)
 
-        // Load assigned referee for each race
-        const results = await Promise.allSettled(items.map(race => getRaceReferee(race.raceId)))
-        const map = {}
-        const sel = {}
-        items.forEach((race, i) => {
-          const res = results[i]
-          const ref = res.status === 'fulfilled' ? res.value.data?.data : null
-          map[race.raceId] = ref?.refereeId ?? null
-          sel[race.raceId] = ref?.refereeId ?? ''
-        })
-        setAssigned(map)
-        setSelected(prev => ({ ...prev, ...sel }))
+    const processItems = async (items, totalCount, pages) => {
+      setRaces(items)
+      setTotalPages(pages)
+      setTotalCount(totalCount)
+      const results = await Promise.allSettled(items.map(race => getRaceReferee(race.raceId)))
+      const map = {}
+      const sel = {}
+      items.forEach((race, i) => {
+        const res = results[i]
+        const ref = res.status === 'fulfilled' ? res.value.data?.data : null
+        map[race.raceId] = ref?.refereeId ?? null
+        sel[race.raceId] = ref?.refereeId ?? ''
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      setAssigned(map)
+      setSelected(prev => ({ ...prev, ...sel }))
+    }
+
+    if (t === 'active') {
+      getRacesPaged({ page: 1, pageSize: 500, ...(q && { search: q }) })
+        .then(async r => {
+          const all = r.data.data?.items || []
+          const active = all.filter(x => !['Finished', 'Cancelled'].includes(x.status))
+          const start = (p - 1) * PAGE_SIZE
+          const items = active.slice(start, start + PAGE_SIZE)
+          await processItems(items, r.data.data?.totalCount || 0, Math.ceil(active.length / PAGE_SIZE) || 1)
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    } else {
+      getRacesPaged({ page: p, pageSize: PAGE_SIZE, status: 'Finished', ...(q && { search: q }) })
+        .then(async r => {
+          const items = r.data.data?.items || []
+          await processItems(items, r.data.data?.totalCount || 0, r.data.data?.totalPages || 1)
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    }
   }, [page, search, tab])
 
   useEffect(() => { loadRaces(page, search, tab) }, [page, search, tab])
