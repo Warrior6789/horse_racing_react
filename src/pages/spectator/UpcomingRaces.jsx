@@ -9,7 +9,7 @@ import { getBalance } from '../../api/payments'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const BET_TYPES = ['Win', 'Place', 'Show']
-const TABS = ['Scheduled', 'Open For Betting', 'Live', 'Finished']
+const TABS = ['All', 'Scheduled', 'Open For Betting', 'Live', 'Finished']
 
 function computeState(race) {
   const sl = (race.status || '').toLowerCase()
@@ -509,7 +509,7 @@ export default function UpcomingRaces() {
   const [page, setPage]           = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading]     = useState(true)
-  const [activeTab, setActiveTab] = useState('Scheduled')
+  const [activeTab, setActiveTab] = useState('All')
   const [search, setSearch]       = useState('')
   const [arenaRace, setArenaRace] = useState(null)
   const [arenaMode, setArenaMode] = useState('details')
@@ -526,7 +526,7 @@ export default function UpcomingRaces() {
   const canBetByRole = authSynced && (!user?.role || user.role === 'Spectator') && !user?.requestedRole
 
   const TAB_API_STATUS = {
-    'Scheduled': 'Scheduled', 'Open For Betting': 'BettingOpen', 'Live': 'Live',
+    'All': '', 'Scheduled': 'Scheduled', 'Open For Betting': 'BettingOpen', 'Live': 'Live',
   }
 
   useEffect(() => {
