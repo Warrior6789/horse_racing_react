@@ -291,7 +291,7 @@ export default function AccountManagement() {
   const [tab, setTab]             = useState('accounts')
   const [accounts, setAccounts]   = useState([])
   const [page, setPage]           = useState(1)
-  const [pageSize, setPageSize]   = useState(4)
+  const pageSize = 4
   const [totalPages, setTotal]    = useState(1)
   const [totalCount, setCount]    = useState(0)
   const [loading, setLoading]     = useState(true)
@@ -459,13 +459,6 @@ export default function AccountManagement() {
                       className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 w-52"
                     />
                   </div>
-                  <select
-                    value={pageSize}
-                    onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
-                  >
-                    {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
-                  </select>
                 </form>
               </div>
 

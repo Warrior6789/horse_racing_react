@@ -20,7 +20,7 @@ export default function RacecourseManagement() {
   const [cLoading, setCLoading]   = useState(true)
   const [rows, setRows]           = useState([])
   const [page, setPage]           = useState(1)
-  const [pageSize, setPageSize]   = useState(4)
+  const pageSize = 4
   const [totalPages, setTotal]    = useState(1)
   const [totalCount, setCount]    = useState(0)
   const [loading, setLoading]     = useState(true)
@@ -187,13 +187,6 @@ export default function RacecourseManagement() {
               <h2 className="text-sm font-bold text-gray-900">All Racecourses</h2>
               <span className="ml-1 text-xs text-gray-400 font-medium">({totalCount} total)</span>
             </div>
-            <select
-              value={pageSize}
-              onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
-              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
-            >
-              {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
-            </select>
           </div>
 
           {loading ? (
