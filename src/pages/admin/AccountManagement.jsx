@@ -163,7 +163,7 @@ function UpgradeRequests({ onCountChange }) {
     setLoading(true)
     getUpgradeRequests({ page: p, pageSize })
       .then(r => {
-        console.log('[UpgradeRequests] response:', r.data)
+        console.log('[UpgradeRequests] response:', JSON.stringify(r.data).slice(0, 1000))
         const raw   = r.data?.data ?? r.data ?? {}
         const items = Array.isArray(raw) ? raw : (raw.items ?? [])
         const tc    = raw.totalCount ?? (Array.isArray(raw) ? raw.length : items.length)
