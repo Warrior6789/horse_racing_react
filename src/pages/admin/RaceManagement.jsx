@@ -196,11 +196,13 @@ export default function RaceManagement() {
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
     } else {
-      getRacesPaged({ page: p, pageSize: ps, status: 'Finished' })
+      getRacesPaged({ page: 1, pageSize: 500 })
         .then(r => {
-          const items = r.data.data?.items || []
-          setRaces(items)
-          setTotalPages(r.data.data?.totalPages || 1)
+          const all = r.data.data?.items || []
+          const done = all.filter(x => ['Finished', 'Cancelled'].includes(x.status))
+          const start = (p - 1) * ps
+          setRaces(done.slice(start, start + ps))
+          setTotalPages(Math.ceil(done.length / ps) || 1)
           setTotalCount(r.data.data?.totalCount || 0)
         })
         .catch(() => {})
