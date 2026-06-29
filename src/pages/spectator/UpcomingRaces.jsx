@@ -553,8 +553,8 @@ export default function UpcomingRaces() {
       if (activeTab === 'Finished') {
         // backend có thể dùng 'Finished' hoặc 'Completed' — fetch cả hai
         const [r1, r2] = await Promise.allSettled([
-          getRacesPaged({ page, pageSize: 10, status: 'Finished', ...(search && { search }) }),
-          getRacesPaged({ page, pageSize: 10, status: 'Completed', ...(search && { search }) }),
+          getRacesPaged({ page, pageSize: 4, status: 'Finished', ...(search && { search }) }),
+          getRacesPaged({ page, pageSize: 4, status: 'Completed', ...(search && { search }) }),
         ])
         const items1 = r1.status === 'fulfilled' ? (r1.value.data.data?.items || []) : []
         const items2 = r2.status === 'fulfilled' ? (r2.value.data.data?.items || []) : []
@@ -575,7 +575,7 @@ export default function UpcomingRaces() {
       } else {
         const status = TAB_API_STATUS[activeTab]
         const r = await getRacesPaged({
-          page, pageSize: 10,
+          page, pageSize: 4,
           ...(status && { status }),
           ...(search && { search }),
         })
