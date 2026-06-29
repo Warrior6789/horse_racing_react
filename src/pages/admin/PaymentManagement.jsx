@@ -28,7 +28,7 @@ export default function PaymentManagement() {
 
   const load = useCallback((p, ps) => {
     setLoading(true)
-    getAllPayments({ page: p, pageSize: ps })
+    getAllPayments({ page: p, pageSize: ps, status: 'Completed' })
       .then(r => {
         setRows(r.data.data?.items || [])
         setTotal(r.data.data?.totalPages || 1)
