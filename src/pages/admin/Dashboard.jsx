@@ -122,7 +122,7 @@ export default function AdminDashboard() {
         return { label: dateLabel(d.toISOString()), date: d.toDateString(), total: 0 }
       })
       deposits.forEach(p => {
-        const d = new Date(p.createdAt || p.transactionDate || p.date || '')
+        const d = new Date(p.createAt || p.createdAt || p.transactionDate || p.date || '')
         const ds = d.toDateString()
         const slot = last7.find(x => x.date === ds)
         if (slot) slot.total += p.amount || 0
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
 
   const handlePaymentsUpdated = useCallback((data) => {
     const amount = data?.amount || 0
-    const label  = data?.createdAt ? dateLabel(data.createdAt) : null
+    const label  = (data?.createAt || data?.createdAt) ? dateLabel(data.createAt || data.createdAt) : null
 
     setStats(prev => ({ ...prev, revenue: (prev.revenue || 0) + amount }))
 
