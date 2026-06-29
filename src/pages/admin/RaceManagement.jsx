@@ -264,6 +264,7 @@ export default function RaceManagement() {
   }
 
   const save = async () => {
+    if (!form.raceName)      { setError('Race name is required.'); return }
     if (!form.racecourseId) { setError('Please select a racecourse.'); return }
     if (!form.raceNumber)   { setError('Race number is required.'); return }
     if (!form.startTime)    { setError('Start time is required.'); return }
@@ -391,7 +392,7 @@ export default function RaceManagement() {
                         #{r.raceNumber}
                       </div>
                       <div>
-                        <div className="font-bold text-gray-900 text-sm">{r.raceName || r.racecourseName || '—'}</div>
+                        <div className="font-bold text-gray-900 text-sm">{r.raceName || '—'}</div>
                         <div className="text-[11px] text-gray-400 mt-0.5">{r.racecourseName || '—'}</div>
                       </div>
                     </div>
@@ -613,7 +614,7 @@ export default function RaceManagement() {
             <h3 className="text-base font-bold text-gray-900">{editId ? 'Edit Race' : 'Create Race'}</h3>
             <div className="space-y-3">
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Race Name</label>
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Race Name *</label>
                 <input type="text" placeholder="e.g. Golden Cup Sprint" className={inputCls} {...f('raceName')} />
               </div>
               <div>
