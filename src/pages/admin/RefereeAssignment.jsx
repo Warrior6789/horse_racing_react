@@ -91,10 +91,13 @@ export default function RefereeAssignment() {
         .catch(() => {})
         .finally(() => setLoading(false))
     } else {
-      getRacesPaged({ page: p, pageSize: PAGE_SIZE, status: 'Finished', ...(q && { search: q }) })
+      getRacesPaged({ page: 1, pageSize: 500, ...(q && { search: q }) })
         .then(async r => {
-          const items = r.data.data?.items || []
-          await processItems(items, r.data.data?.totalCount || 0, r.data.data?.totalPages || 1)
+          const all = r.data.data?.items || []
+          const done = all.filter(x => ['Finished', 'Cancelled'].includes(x.status))
+          const start = (p - 1) * PAGE_SIZE
+          const items = done.slice(start, start + PAGE_SIZE)
+          await processItems(items, r.data.data?.totalCount || 0, Math.ceil(done.length / PAGE_SIZE) || 1)
         })
         .catch(() => {})
         .finally(() => setLoading(false))
