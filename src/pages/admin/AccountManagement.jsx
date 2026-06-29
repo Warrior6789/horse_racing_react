@@ -149,7 +149,7 @@ function DetailModal({ acc, onClose, onApprove, onReject, acting }) {
   )
 }
 
-function UpgradeRequests({ onCountChange }) {
+function UpgradeRequests({ onCountChange, refreshKey }) {
   const [list, setList]           = useState([])
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
@@ -163,7 +163,6 @@ function UpgradeRequests({ onCountChange }) {
     setLoading(true)
     getUpgradeRequests({ page: p, pageSize })
       .then(r => {
-        console.log('[UpgradeRequests] response:', JSON.stringify(r.data).slice(0, 1000))
         const raw   = r.data?.data ?? r.data ?? {}
         const items = Array.isArray(raw) ? raw : (raw.items ?? [])
         const tc    = raw.totalCount ?? (Array.isArray(raw) ? raw.length : items.length)
@@ -173,11 +172,12 @@ function UpgradeRequests({ onCountChange }) {
         setCount(tc)
         onCountChange(tc)
       })
-      .catch((err) => { console.error('[UpgradeRequests] error:', err?.response?.status, err?.response?.data) })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { load(page) }, [page])
+  useEffect(() => { if (refreshKey > 0) { setPage(1); load(1) } }, [refreshKey])
 
   const handle = async (accountId, fn) => {
     setActing(accountId)
@@ -299,7 +299,8 @@ export default function AccountManagement() {
   const [acting, setActing]       = useState(null)
   const [search, setSearch]       = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [pendingCount, setPendingCount] = useState(0)
+  const [pendingCount, setPendingCount]       = useState(0)
+  const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
 
   const [countActive, setCountActive]       = useState(0)
@@ -341,6 +342,7 @@ export default function AccountManagement() {
 
   const handleUpgradeUpdated = useCallback((data) => {
     if (data?.pendingCount != null) setPendingCount(data.pendingCount)
+    setUpgradeRefreshKey(k => k + 1)
   }, [])
 
   useRaceHub(null, { onUpgradeRequestsUpdated: handleUpgradeUpdated })
@@ -400,7 +402,7 @@ export default function AccountManagement() {
         </div>
 
         {tab === 'upgrades' ? (
-          <UpgradeRequests onCountChange={setPendingCount} />
+          <UpgradeRequests onCountChange={setPendingCount} refreshKey={upgradeRefreshKey} />
         ) : (
           <>
             {/* KPI Cards */}
