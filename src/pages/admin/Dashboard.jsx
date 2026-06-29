@@ -148,7 +148,7 @@ export default function AdminDashboard() {
 
   // fetch races — called on mount + mỗi khi SignalR báo RacesUpdated
   const fetchRaces = useCallback(() => {
-    getRacesPaged({ page: 1, pageSize: 20 })
+    getRacesPaged({ page: 1, pageSize: 500 })
       .then(res => {
         const all = res.data.data?.items || []
         const active = all.filter(r => ['Live', 'BettingOpen', 'BettingClosed'].includes(r.status))
