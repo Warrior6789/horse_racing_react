@@ -79,6 +79,7 @@ export default function RacecourseManagement() {
   }
 
   const save = async () => {
+    if (!form.racecourseName.trim()) { setError('Racecourse name is required.'); return }
     setError(''); setSaving(true)
     try {
       if (editId) {
