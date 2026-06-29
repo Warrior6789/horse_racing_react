@@ -163,10 +163,10 @@ function UpgradeRequests({ onCountChange }) {
     setLoading(true)
     getUpgradeRequests({ page: p, pageSize })
       .then(r => {
-        const data = r.data.data
-        const items = data?.items || data || []
-        const tc = data?.totalCount ?? items.length
-        const tp = (data?.totalPages ?? Math.ceil(tc / pageSize)) || 1
+        const raw   = r.data?.data ?? r.data ?? {}
+        const items = Array.isArray(raw) ? raw : (raw.items ?? [])
+        const tc    = raw.totalCount ?? (Array.isArray(raw) ? raw.length : items.length)
+        const tp    = (raw.totalPages ?? Math.ceil(tc / pageSize)) || 1
         setList(items)
         setTotal(tp)
         setCount(tc)
@@ -330,8 +330,8 @@ export default function AccountManagement() {
     loadCounts()
     getUpgradeRequests({ page: 1, pageSize: 1 })
       .then(r => {
-        const data = r.data.data
-        const tc = data?.totalCount ?? (Array.isArray(data) ? data.length : 0)
+        const raw = r.data?.data ?? r.data ?? {}
+        const tc  = raw.totalCount ?? (Array.isArray(raw) ? raw.length : 0)
         setPendingCount(tc)
       })
       .catch(() => {})
