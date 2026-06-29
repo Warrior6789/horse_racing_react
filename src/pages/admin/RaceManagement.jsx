@@ -486,7 +486,7 @@ export default function RaceManagement() {
                         Advance
                       </button>
                     )}
-                    {r.status === 'BettingClosed' && (
+                    {r.status === 'BettingOpen' && (
                       <button
                         onClick={() => setCollectRace(r)}
                         className="flex-1 py-1.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-500 transition-colors"
@@ -600,7 +600,7 @@ export default function RaceManagement() {
                               {acting === r.raceId ? '…' : 'Advance'}
                             </button>
                           )}
-                          {r.status === 'BettingClosed' && (
+                          {r.status === 'BettingOpen' && (
                             <button
                               onClick={() => setCollectRace(r)}
                               className="px-2.5 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-500 transition-colors"
