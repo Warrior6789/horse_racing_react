@@ -11,6 +11,9 @@ import { useRaceHub } from '../../hooks/useRaceHub'
 const BET_TYPES = ['Win', 'Place', 'Show']
 const TABS = ['All', 'Scheduled', 'Open For Betting', 'Live', 'Finished']
 
+const STATUS_PRIORITY = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3, Finished: 4, Completed: 4, Cancelled: 5 }
+const sortByStatus = (a, b) => (STATUS_PRIORITY[a.status] ?? 3) - (STATUS_PRIORITY[b.status] ?? 3)
+
 function computeState(race) {
   const sl = (race.status || '').toLowerCase()
   if (['completed', 'finished'].includes(sl))
@@ -571,6 +574,13 @@ export default function UpcomingRaces() {
           r2.status === 'fulfilled' ? (r2.value.data.data?.totalPages || 1) : 1,
           Math.ceil(combinedTotal / 10),
         ))
+      } else if (activeTab === 'All') {
+        const r = await getRacesPaged({ page: 1, pageSize: 500, ...(search && { search }) })
+        const data = r.data.data || {}
+        const sorted = (data.items || []).slice().sort(sortByStatus)
+        const start = (page - 1) * 4
+        setRaces(sorted.slice(start, start + 4))
+        setTotalPages(Math.ceil(sorted.length / 4) || 1)
       } else {
         const status = TAB_API_STATUS[activeTab]
         const r = await getRacesPaged({
@@ -580,7 +590,7 @@ export default function UpcomingRaces() {
         })
         const data = r.data.data || {}
         const totalCount = data.totalCount || data.TotalCount || 0
-        const pages = data.totalPages || data.TotalPages || Math.ceil(totalCount / 10) || 1
+        const pages = data.totalPages || data.TotalPages || Math.ceil(totalCount / 4) || 1
         setRaces(data.items || [])
         setTotalPages(pages)
       }
