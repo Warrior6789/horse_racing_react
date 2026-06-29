@@ -80,6 +80,7 @@ export default function RacecourseManagement() {
 
   const save = async () => {
     if (!form.racecourseName.trim()) { setError('Racecourse name is required.'); return }
+    if (!form.trackType) { setError('Track type is required.'); return }
     setError(''); setSaving(true)
     try {
       if (editId) {
@@ -319,7 +320,7 @@ export default function RacecourseManagement() {
                 <input type="text" className={inputCls} {...f('location')} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Track Type</label>
+                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Track Type *</label>
                 <select className={inputCls} {...f('trackType')}>
                   <option value="">— Select —</option>
                   <option value="Turf">Turf</option>
