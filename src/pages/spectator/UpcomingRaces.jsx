@@ -565,10 +565,12 @@ export default function UpcomingRaces() {
         })
         const total1 = r1.status === 'fulfilled' ? (r1.value.data.data?.totalCount || 0) : 0
         const total2 = r2.status === 'fulfilled' ? (r2.value.data.data?.totalCount || 0) : 0
+        const combinedTotal = total1 + total2
         setRaces(merged)
         setTotalPages(Math.max(
           r1.status === 'fulfilled' ? (r1.value.data.data?.totalPages || 1) : 1,
           r2.status === 'fulfilled' ? (r2.value.data.data?.totalPages || 1) : 1,
+          Math.ceil(combinedTotal / 10),
         ))
       } else {
         const status = TAB_API_STATUS[activeTab]
@@ -577,8 +579,11 @@ export default function UpcomingRaces() {
           ...(status && { status }),
           ...(search && { search }),
         })
-        setRaces(r.data.data?.items || [])
-        setTotalPages(r.data.data?.totalPages || r.data.data?.TotalPages || 1)
+        const data = r.data.data || {}
+        const totalCount = data.totalCount || data.TotalCount || 0
+        const pages = data.totalPages || data.TotalPages || Math.ceil(totalCount / 10) || 1
+        setRaces(data.items || [])
+        setTotalPages(pages)
       }
     }
 
