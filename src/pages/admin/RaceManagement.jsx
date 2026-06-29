@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import CardCarousel from '../../components/CardCarousel'
-import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace, resetRace, overrideResult, getRaceRegistrations } from '../../api/races'
+import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace, resetRace, overrideResult, getRaceRegistrations, collectPool } from '../../api/races'
 import { getRacecoursesPaged } from '../../api/racecourses'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
@@ -134,6 +134,62 @@ function SetResultModal({ race, onClose, onSuccess }) {
   )
 }
 
+function CollectPoolModal({ race, onClose, onSuccess }) {
+  const [amount, setAmount] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState('')
+
+  const confirm = async () => {
+    const val = Number(amount)
+    if (!amount || isNaN(val) || val <= 0) { setError('Please enter a valid amount.'); return }
+    setSaving(true); setError('')
+    try {
+      await collectPool(race.raceId, { amountPerSpectator: val, betType: 1 })
+      onSuccess()
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to collect pool.')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-gray-900">Collect Pool — Race #{race.raceNumber}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
+          </button>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Amount Per Spectator (VND)</label>
+          <input
+            type="number"
+            min="0"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            placeholder="e.g. 50000"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white"
+          />
+          <p className="text-[11px] text-gray-400 mt-1">Bet type: Win (fixed)</p>
+        </div>
+        {error && <p className="text-xs text-red-500">{error}</p>}
+        <div className="flex gap-3 pt-1">
+          <button onClick={onClose} className="flex-1 h-11 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={confirm}
+            disabled={saving}
+            className="flex-1 h-11 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-500 transition-colors disabled:opacity-60"
+          >
+            {saving ? 'Collecting…' : 'Collect'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function KpiCard({ title, value, icon, iconColor, bgIcon }) {
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
@@ -171,6 +227,7 @@ export default function RaceManagement() {
   const [imagePreview, setImagePreview] = useState(null)
   const [origStartTime, setOrigStartTime] = useState('')
   const [resultRace, setResultRace]     = useState(null)
+  const [collectRace, setCollectRace]   = useState(null)
   const [toast, setToast]               = useState('')
 
   const loadCards = ({ silent = false } = {}) => {
@@ -429,6 +486,14 @@ export default function RaceManagement() {
                         Advance
                       </button>
                     )}
+                    {r.status === 'BettingClosed' && (
+                      <button
+                        onClick={() => setCollectRace(r)}
+                        className="flex-1 py-1.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-500 transition-colors"
+                      >
+                        Collect Pool
+                      </button>
+                    )}
                     {(r.status === 'BettingClosed' || r.status === 'Live') && (
                       <button
                         onClick={() => setResultRace(r)}
@@ -535,6 +600,14 @@ export default function RaceManagement() {
                               {acting === r.raceId ? '…' : 'Advance'}
                             </button>
                           )}
+                          {r.status === 'BettingClosed' && (
+                            <button
+                              onClick={() => setCollectRace(r)}
+                              className="px-2.5 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-500 transition-colors"
+                            >
+                              Collect Pool
+                            </button>
+                          )}
                           {(r.status === 'BettingClosed' || r.status === 'Live') && (
                             <button
                               onClick={() => setResultRace(r)}
@@ -601,6 +674,19 @@ export default function RaceManagement() {
           onSuccess={() => {
             setResultRace(null)
             showToast('Đã set kết quả')
+            loadCards(); load(page, pageSize)
+          }}
+        />
+      )}
+
+      {/* Collect Pool Modal */}
+      {collectRace && (
+        <CollectPoolModal
+          race={collectRace}
+          onClose={() => setCollectRace(null)}
+          onSuccess={() => {
+            setCollectRace(null)
+            showToast('Pool collected successfully!')
             loadCards(); load(page, pageSize)
           }}
         />

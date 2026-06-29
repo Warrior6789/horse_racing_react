@@ -23,3 +23,4 @@ export const unassignReferee   = (raceId) => client.delete(`/races/${raceId}/ref
 export const deleteRace = (id) => client.delete(`/races/${id}`)
 export const registerHorseToRace = (raceId, data) => client.post(`/races/${raceId}/register`, data)
 export const getRaceRegistrations = (raceId) => client.get(`/races/${raceId}/registrations`)
+export const collectPool = (raceId, data) => client.post(`/races/${raceId}/pool/collect`, data)
