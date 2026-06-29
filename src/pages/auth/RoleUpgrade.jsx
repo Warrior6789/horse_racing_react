@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Home, Flag, Layers, Wallet, TrendingUp, UploadCloud, Send, CheckCircle2 } from 'lucide-react'
 import { upgrade } from '../../api/auth'
-import { getMyProfile } from '../../api/userProfiles'
+import { getMyProfile, updateProfile } from '../../api/userProfiles'
 import { getMyJockeyProfile } from '../../api/jockeyProfiles'
 import { useAuth } from '../../context/AuthContext'
 import AccountProfile from '../../components/AccountProfile'
@@ -40,11 +40,13 @@ export default function RoleUpgrade() {
     fullName: '', phone: '',
     dateOfBirth: '', nationality: '', licenseNumber: '', weight: '', height: '',
   })
+  const [profileId, setProfileId] = useState(null)
 
   useEffect(() => {
     getMyProfile()
       .then(r => {
         const p = r.data?.data || r.data || {}
+        setProfileId(p.userProfileId || p.profileId || p.id || null)
         setFields(prev => ({ ...prev, fullName: p.fullName || '', phone: p.phone || '' }))
       })
       .catch(() => {})
@@ -99,6 +101,9 @@ export default function RoleUpgrade() {
       }
       if (docFile) fd.append('CertificateImage', docFile)
       await upgrade(fd)
+      if (profileId) {
+        updateProfile(profileId, { fullName: fields.fullName.trim(), phone: fields.phone.trim() }).catch(() => {})
+      }
       await refreshUser()
       setDone(true)
     } catch (err) {
