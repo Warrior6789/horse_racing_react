@@ -154,7 +154,7 @@ export default function RaceManagement() {
   const [races, setRaces]           = useState([])
   const [tab, setTab]               = useState('active')
   const [page, setPage]             = useState(1)
-  const [pageSize, setPageSize]     = useState(5)
+  const [pageSize, setPageSize]     = useState(4)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading]       = useState(true)
@@ -475,13 +475,6 @@ export default function RaceManagement() {
               <h2 className="text-sm font-bold text-gray-900">All Races</h2>
               <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
             </div>
-            <select
-              value={pageSize}
-              onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
-              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 font-medium focus:outline-none focus:border-gray-400"
-            >
-              {[5, 10, 20].map(n => <option key={n} value={n}>{n} / page</option>)}
-            </select>
           </div>
 
           {loading ? (
