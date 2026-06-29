@@ -155,7 +155,7 @@ export default function AdminDashboard() {
         setLiveRaces(active.slice(0, 8))
         setStats(prev => ({
           ...prev,
-          activeRaces: active.filter(r => r.status === 'Live' || r.status === 'BettingOpen').length,
+          activeRaces: res.data.data?.totalCount || all.length,
         }))
       })
       .catch(() => {})
@@ -220,9 +220,9 @@ export default function AdminDashboard() {
             icon={<TrendingUp size={20} strokeWidth={2} />}
           />
           <StatCard
-            title="Active Races"
+            title="Total Races"
             value={loading ? '—' : (stats.activeRaces ?? 0)}
-            sub="Live & Betting Open"
+            sub="All races in system"
             accent="blue"
             icon={<Activity size={20} strokeWidth={2} />}
           />
