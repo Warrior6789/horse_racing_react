@@ -28,11 +28,14 @@ export default function PaymentManagement() {
 
   const load = useCallback((p, ps) => {
     setLoading(true)
-    getAllPayments({ page: p, pageSize: ps, status: 'Completed' })
+    getAllPayments({ page: 1, pageSize: 500 })
       .then(r => {
-        setRows(r.data.data?.items || [])
-        setTotal(r.data.data?.totalPages || 1)
-        setCount(r.data.data?.totalCount || 0)
+        const all = r.data.data?.items || []
+        const completed = all.filter(x => (x.status || '').toLowerCase() === 'completed')
+        const start = (p - 1) * ps
+        setRows(completed.slice(start, start + ps))
+        setTotal(Math.ceil(completed.length / ps) || 1)
+        setCount(completed.length)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
