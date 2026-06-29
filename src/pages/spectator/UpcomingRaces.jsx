@@ -457,7 +457,7 @@ function RaceRow({ race, canBetByRole = true, onAction, query = '' }) {
             </div>
             <div>
               <p className="text-[9px] text-stone-500 font-bold uppercase tracking-wider mb-1">Racecourse</p>
-              <p className="text-sm font-bold text-stone-200">{race.racecourseName || race.racecourse?.racecourseName || '—'}</p>
+              <p className="text-sm font-bold text-stone-200"><Highlight text={race.racecourseName || race.racecourse?.racecourseName || '—'} query={query} /></p>
             </div>
           </div>
 
