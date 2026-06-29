@@ -144,7 +144,7 @@ function CollectPoolModal({ race, onClose, onSuccess }) {
     if (!amount || isNaN(val) || val <= 0) { setError('Please enter a valid amount.'); return }
     setSaving(true); setError('')
     try {
-      await collectPool(race.raceId, { amountPerSpectator: val, betType: 1 })
+      await collectPool(race.raceId, { amountPerSpectator: val, betType: 'Win' })
       onSuccess()
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to collect pool.')
@@ -170,7 +170,7 @@ function CollectPoolModal({ race, onClose, onSuccess }) {
             placeholder="e.g. 50000"
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white"
           />
-          <p className="text-[11px] text-gray-400 mt-1">Bet type: Win (fixed)</p>
+          <p className="text-[11px] text-gray-400 mt-1">Bet type: Win</p>
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         <div className="flex gap-3 pt-1">
