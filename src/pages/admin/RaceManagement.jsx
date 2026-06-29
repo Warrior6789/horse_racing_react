@@ -183,17 +183,29 @@ export default function RaceManagement() {
 
   const load = (p = page, ps = pageSize, { silent = false, t = tab } = {}) => {
     if (!silent) setLoading(true)
-    const statusParam = t === 'finished' ? 'Finished' : undefined
-    getRacesPaged({ page: p, pageSize: ps, ...(statusParam && { status: statusParam }) })
-      .then(r => {
-        const items = r.data.data?.items || []
-        const filtered = t === 'active' ? items.filter(r => !['Finished', 'Cancelled'].includes(r.status)) : items
-        setRaces(filtered)
-        setTotalPages(r.data.data?.totalPages || 1)
-        setTotalCount(r.data.data?.totalCount || 0)
-      })
-      .catch(() => {})
-      .finally(() => { if (!silent) setLoading(false) })
+    if (t === 'active') {
+      getRacesPaged({ page: 1, pageSize: 500 })
+        .then(r => {
+          const all = r.data.data?.items || []
+          const active = all.filter(x => !['Finished', 'Cancelled'].includes(x.status))
+          const start = (p - 1) * ps
+          setRaces(active.slice(start, start + ps))
+          setTotalPages(Math.ceil(active.length / ps) || 1)
+          setTotalCount(r.data.data?.totalCount || 0)
+        })
+        .catch(() => {})
+        .finally(() => { if (!silent) setLoading(false) })
+    } else {
+      getRacesPaged({ page: p, pageSize: ps, status: 'Finished' })
+        .then(r => {
+          const items = r.data.data?.items || []
+          setRaces(items)
+          setTotalPages(r.data.data?.totalPages || 1)
+          setTotalCount(r.data.data?.totalCount || 0)
+        })
+        .catch(() => {})
+        .finally(() => { if (!silent) setLoading(false) })
+    }
   }
 
   useEffect(() => {
