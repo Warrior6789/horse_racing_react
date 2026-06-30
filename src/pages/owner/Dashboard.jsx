@@ -222,7 +222,7 @@ export default function OwnerDashboard() {
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-800 bg-[#16181d]/50">
-                    {['Race', 'Date & Time', 'Horse', 'Jockey', 'Gate', 'Venue', ''].map(col => (
+                    {['Race', 'Date & Time', 'Horse', 'Jockey', 'Gate', 'Racecourse', ''].map(col => (
                       <th key={col} className="px-6 py-4 font-bold">{col}</th>
                     ))}
                   </tr>

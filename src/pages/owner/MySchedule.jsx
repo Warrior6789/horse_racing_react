@@ -638,9 +638,9 @@ export default function MySchedule() {
             {/* Bottom cards (table view only) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-[#161a23] rounded-2xl p-5 border border-gray-800/80">
-                <h2 className="text-sm font-bold text-[#facc15] mb-4">Venue Analysis</h2>
+                <h2 className="text-sm font-bold text-[#facc15] mb-4">Racecourse Analysis</h2>
                 {Object.keys(venueCounts).length === 0 ? (
-                  <p className="text-gray-600 text-sm">No venue data yet.</p>
+                  <p className="text-gray-600 text-sm">No racecourse data yet.</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-[#1a1f2b] p-4 rounded-xl border border-gray-800/60">
@@ -649,7 +649,7 @@ export default function MySchedule() {
                       <p className="text-gray-400 text-xs font-medium mt-1">{topVenue?.[1] || 0} Races Scheduled</p>
                     </div>
                     <div className="bg-[#1a1f2b] p-4 rounded-xl border border-gray-800/60">
-                      <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">Total Venues</p>
+                      <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">Total Racecourses</p>
                       <h4 className="text-white font-bold text-sm">{Object.keys(venueCounts).length}</h4>
                       <p className="text-gray-400 text-xs font-medium mt-1">Unique racecourses</p>
                     </div>
