@@ -688,40 +688,64 @@ export default function MySchedule() {
       {dropOpen && <div className="fixed inset-0 z-40" onClick={() => setDropOpen(false)} />}
 
       {/* Jockey Detail Modal */}
-      {selectedJockey && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedJockey(null)}>
-          <div className="bg-[#161a23] border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-base font-bold text-white">Jockey Info</h3>
-              <button onClick={() => setSelectedJockey(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
-            </div>
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-3xl shrink-0">
-                {selectedJockey.imageUrl ? <img src={selectedJockey.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
+      {selectedJockey && (() => {
+        const j = selectedJockey
+        const age = j.dateOfBirth
+          ? Math.floor((Date.now() - new Date(j.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
+          : null
+        const winRate = j.totalRaces > 0 ? Math.round((j.totalWins / j.totalRaces) * 100) : 0
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedJockey(null)}>
+            <div className="bg-[#161a23] border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-base font-bold text-white">Jockey Info</h3>
+                <button onClick={() => setSelectedJockey(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
               </div>
-              <div>
-                <p className="font-bold text-white text-lg">{selectedJockey.fullName || '—'}</p>
-                <p className="text-gray-400 text-xs mt-0.5">{selectedJockey.nationality || '—'}</p>
-              </div>
-            </div>
-            <div className="space-y-2.5">
-              {[
-                { label: 'Age',         value: selectedJockey.age       ? `${selectedJockey.age} years`  : '—' },
-                { label: 'Weight',      value: selectedJockey.weight    ? `${selectedJockey.weight} kg`  : '—' },
-                { label: 'Height',      value: selectedJockey.height    ? `${selectedJockey.height} cm`  : '—' },
-                { label: 'Experience',  value: selectedJockey.yearsOfExperience ? `${selectedJockey.yearsOfExperience} years` : '—' },
-                { label: 'Total Races', value: selectedJockey.totalRaces ?? '—' },
-                { label: 'Total Wins',  value: selectedJockey.totalWins  ?? '—' },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-800">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</span>
-                  <span className="text-sm font-bold text-gray-200">{value}</span>
+
+              {/* Header */}
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-16 h-16 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-3xl shrink-0">
+                  {j.imageUrl ? <img src={j.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
                 </div>
-              ))}
+                <div>
+                  <p className="font-bold text-white text-lg leading-tight">{j.fullName || '—'}</p>
+                  <p className="text-gray-400 text-xs mt-0.5">{j.nationality || '—'}{age ? ` · ${age} years old` : ''}</p>
+                  {j.licenseNumber && (
+                    <p className="text-[10px] text-[#facc15]/70 font-bold mt-1">License: {j.licenseNumber}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { label: 'Races',    value: j.totalRaces ?? '—' },
+                  { label: 'Wins',     value: j.totalWins  ?? '—' },
+                  { label: 'Win Rate', value: j.totalRaces > 0 ? `${winRate}%` : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-[#1a1f2b] rounded-xl p-3 text-center border border-gray-800">
+                    <p className="text-lg font-black text-white">{value}</p>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Physical */}
+              <div className="space-y-2">
+                {[
+                  { label: 'Weight', value: j.weight ? `${j.weight} kg` : '—' },
+                  { label: 'Height', value: j.height ? `${j.height} cm` : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-800">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</span>
+                    <span className="text-sm font-bold text-gray-200">{value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </OwnerLayout>
   )
 }
