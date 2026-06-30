@@ -78,7 +78,7 @@ export default function SpectatorDashboard() {
 
       {/* HEADER */}
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8 md:mb-10">
-        <h2 className="text-xl md:text-2xl text-stone-400">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-stone-400 tracking-tight">
           Welcome back, <span className="text-stone-100 font-bold">{displayName}</span>
         </h2>
         <div className="flex items-center gap-4">

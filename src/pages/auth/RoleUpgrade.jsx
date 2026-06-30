@@ -175,14 +175,14 @@ export default function RoleUpgrade() {
       </aside>
 
       {/* MAIN */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-2xl mx-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div className="max-w-4xl">
 
           {/* Header */}
           <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-1">Account</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">Account</p>
             <h1 className="text-3xl font-extrabold text-stone-100 tracking-tight">Request Role Upgrade</h1>
-            <p className="text-xs text-stone-500 mt-2">
+            <p className="text-sm text-stone-500 mt-2">
               Apply for professional status to unlock advanced features.
             </p>
           </div>
@@ -208,23 +208,23 @@ export default function RoleUpgrade() {
             <form onSubmit={handleSubmit} className="space-y-6">
 
               {/* Role selection */}
-              <div className="bg-[#171410] rounded-2xl border border-stone-800 p-6 space-y-4">
-                <h4 className="text-[10px] font-bold text-stone-500 tracking-wider uppercase">Select Desired Role</h4>
-                <div className="grid grid-cols-3 gap-4">
+              <div className="bg-[#171410] rounded-2xl border border-stone-800 p-6 space-y-5">
+                <h4 className="text-xs font-bold text-stone-500 tracking-widest uppercase">Select Desired Role</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {ROLES.map(({ id, label, icon, desc }) => (
                     <button
                       key={id}
                       type="button"
                       onClick={() => handleSelectRole(id)}
-                      className={`p-5 rounded-xl border bg-[#110e0b] flex flex-col items-center text-center transition-all ${
+                      className={`p-6 rounded-xl border bg-[#110e0b] flex flex-col items-center text-center transition-all ${
                         selectedRole === id
                           ? 'border-[#f7e0a3] ring-1 ring-[#f7e0a3]/30'
                           : 'border-stone-800 hover:border-stone-600'
                       }`}
                     >
-                      <div className="text-2xl mb-3">{icon}</div>
-                      <span className="text-sm font-bold text-stone-100">{label}</span>
-                      <span className="text-[10px] text-stone-500 mt-1 leading-tight">{desc}</span>
+                      <div className="text-3xl mb-3">{icon}</div>
+                      <span className="text-base font-bold text-stone-100">{label}</span>
+                      <span className="text-xs text-stone-500 mt-1 leading-tight">{desc}</span>
                     </button>
                   ))}
                 </div>
