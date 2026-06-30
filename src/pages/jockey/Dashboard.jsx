@@ -115,7 +115,6 @@ export default function JockeyDashboard() {
   // wrap publicRace into same shape as myFeatured for unified display
   const featuredRace = myFeatured || (publicRace ? { race: publicRace, horse: null, gateNumber: null, _isPublic: true } : null)
   const liveRace = featuredRace?.race?.status === 'Live' ? featuredRace : null
-  if (featuredRace) console.log('[Dashboard] featuredRace.race.imageUrl:', featuredRace.race?.imageUrl, '| horse.imageUrl:', featuredRace.horse?.imageUrl, '| race:', JSON.stringify(featuredRace.race)?.slice(0, 200))
 
   const displayName = user?.fullName || user?.name || profile?.fullName || 'Jockey'
 
