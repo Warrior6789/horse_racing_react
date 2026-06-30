@@ -41,7 +41,8 @@ export default function JockeyRequests() {
     getJockeyMyRequestsPaged({ page: p, pageSize: PAGE_SIZE })
       .then(r => {
         const d = r.data.data
-        setRegs(d?.items || d || [])
+        const items = d?.items || d || []
+        setRegs(items)
         setTotalPages(d?.totalPages ?? 1)
         setTotalCount(d?.totalCount ?? (d?.items?.length ?? 0))
       })
@@ -137,7 +138,7 @@ export default function JockeyRequests() {
                         </td>
                         <td className="px-6 py-4">
                           <p className="text-gray-300 text-sm font-medium">
-                            {item.ownerName || item.horse?.ownerName || item.horse?.owner?.fullName || item.owner?.fullName || '—'}
+                            {item.horse?.ownerName || '—'}
                           </p>
                         </td>
                         <td className="px-6 py-4">
