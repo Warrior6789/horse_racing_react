@@ -297,7 +297,9 @@ export default function JockeyDashboard() {
                   </div>
                 ))}
                 {pending.length > 4 && (
-                  <p className="text-[10px] text-gray-500 text-center pt-1">+{pending.length - 4} more in Race Requests</p>
+                  <button onClick={() => navigate('/jockey/requests')} className="w-full text-[10px] text-gray-500 hover:text-yellow-500 text-center pt-1 transition-colors">
+                    +{pending.length - 4} more in Race Requests →
+                  </button>
                 )}
               </div>
             )}
