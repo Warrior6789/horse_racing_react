@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
@@ -51,28 +50,6 @@ import ConfigManagement from './pages/admin/ConfigManagement'
 import PaymentManagement from './pages/admin/PaymentManagement'
 import RefereeAssignment from './pages/admin/RefereeAssignment'
 
-function SpectatorPreviewGate() {
-  useEffect(() => {
-    if (!import.meta.env.DEV) return
-    localStorage.setItem('token', 'spectator-preview-token')
-    localStorage.setItem('user', JSON.stringify({
-      id: 'spectator-preview',
-      email: 'preview@spectator.local',
-      fullName: 'Spectator Preview',
-      role: 'Spectator',
-    }))
-    window.location.replace('/spectator/dashboard')
-  }, [])
-
-  if (!import.meta.env.DEV) return <Navigate to="/login" replace />
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f8f5f0] text-sm font-semibold text-gray-700">
-      Opening spectator preview...
-    </div>
-  )
-}
-
 export default function App() {
   return (
     <AuthProvider>
@@ -82,7 +59,6 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<HomePage />} />
-          <Route path="/preview/spectator" element={<SpectatorPreviewGate />} />
 
           {/* Upgrade (any authenticated user) */}
           <Route path="/upgrade" element={<PrivateRoute><RoleUpgrade /></PrivateRoute>} />
