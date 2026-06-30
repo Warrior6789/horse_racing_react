@@ -79,25 +79,17 @@ export default function HorseForm() {
       Object.entries(form).forEach(([k, v]) => { if (v !== '') payload[k] = v })
 
       if (isEdit) {
-        if (image) {
-          const fd = new FormData()
-          Object.entries(payload).forEach(([k, v]) => fd.append(k, v))
-          fd.append('image', image)
-          await updateHorse(id, fd)
-        } else {
-          await updateHorse(id, payload)
-        }
+        const fd = new FormData()
+        Object.entries(payload).forEach(([k, v]) => fd.append(k, v))
+        if (image) fd.append('image', image)
+        await updateHorse(id, fd)
       } else {
         const ownerId = user?.accountId ?? user?.id
         if (ownerId) payload.ownerId = ownerId
-        if (image) {
-          const fd = new FormData()
-          Object.entries(payload).forEach(([k, v]) => fd.append(k, v))
-          fd.append('image', image)
-          await createHorse(fd)
-        } else {
-          await createHorse(payload)
-        }
+        const fd = new FormData()
+        Object.entries(payload).forEach(([k, v]) => fd.append(k, v))
+        if (image) fd.append('image', image)
+        await createHorse(fd)
       }
       navigate('/owner/horses')
     } catch (e) {
