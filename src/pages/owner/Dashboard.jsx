@@ -140,7 +140,7 @@ export default function OwnerDashboard() {
       getHorses({ page: 1, pageSize: 100 }).then(r => r.data.data?.items || []).catch(() => []),
       getOwnerAllRegistrations().then(r => r.data.data || []).catch(() => []),
       getBalance().then(r => r.data.data?.balance ?? 0).catch(() => null),
-    ]).then(([h, regs, b]) => { setHorses(h); setRegistrations(regs); setBalance(b) })
+    ]).then(([h, regs, b]) => { console.log('[Dashboard] horses[0]:', h[0]); setHorses(h); setRegistrations(regs); setBalance(b) })
       .finally(() => setLoading(false))
   }, [refreshKey])
 
