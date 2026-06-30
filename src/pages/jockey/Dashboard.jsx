@@ -92,6 +92,7 @@ export default function JockeyDashboard() {
       if (action === 'accept') {
         const reg = regs.find(r => r.registrationId === id)
         const raceId = reg?.race?.raceId || reg?.raceId
+        console.log('[accept] reg:', reg, '| raceId:', raceId)
         await acceptRegistration(id)
         if (raceId) setLocalAcceptedRaceIds(prev => new Set([...prev, raceId]))
       } else {
@@ -111,6 +112,7 @@ export default function JockeyDashboard() {
     ...confirmed.map(r => r.race?.raceId || r.raceId).filter(Boolean),
     ...localAcceptedRaceIds,
   ])
+  console.log('[pending] localAcceptedRaceIds:', [...localAcceptedRaceIds], '| acceptedRaceIds:', [...acceptedRaceIds])
   const pending       = regs.filter(r =>
     (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
     !acceptedRaceIds.has(r.race?.raceId || r.raceId)
