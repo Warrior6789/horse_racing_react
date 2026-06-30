@@ -69,7 +69,11 @@ function HorseCard({ horse, onEdit, onDelete, onRegister, hasActiveReg }) {
           <StatusDot status={status} />
           <span className="text-white text-[10px] font-bold">{status}</span>
         </div>
-        {isAvailable && (
+        {hasActiveReg ? (
+          <div className="absolute top-3 right-3 z-20 bg-green-900/60 backdrop-blur-sm border border-green-700/50 text-green-400 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide">
+            IN RACE
+          </div>
+        ) : isAvailable && (
           <div className="absolute top-3 right-3 z-20 bg-[#facc15]/20 backdrop-blur-sm border border-[#facc15]/30 text-[#facc15] px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide">
             AVAILABLE
           </div>
