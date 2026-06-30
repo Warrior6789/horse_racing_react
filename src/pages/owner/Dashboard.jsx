@@ -39,10 +39,14 @@ function StatCard({ icon: Icon, title, value, subtitle, badge, badgeCls, onClick
   )
 }
 
-function HorseCard({ horse }) {
+function HorseCard({ horse, reg }) {
   const navigate = useNavigate()
   const cls = STATUS_CLS[horse.status] || STATUS_CLS.Inactive
   const horseId = horse.horseId ?? horse.id
+
+  const isConfirmed = reg?.status === 'Confirmed' || reg?.jockeyConfirmation === true
+  const isInRace    = reg && reg.status !== 'Rejected' && reg.status !== 'Scratched'
+
   return (
     <div className="bg-[#1a1c23] rounded-xl border border-gray-800 overflow-hidden flex flex-col">
       <div className="h-40 bg-gray-800 relative">
@@ -51,6 +55,14 @@ function HorseCard({ horse }) {
           : <div className="w-full h-full flex items-center justify-center text-5xl">🐴</div>
         }
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c23] to-transparent pointer-events-none" />
+        {/* Race status badge (top left) */}
+        {isInRace && (
+          <span className={`absolute top-3 left-3 z-10 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1.5 ${isConfirmed ? 'bg-yellow-900/80 text-yellow-400' : 'bg-blue-900/80 text-blue-400'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isConfirmed ? 'bg-yellow-400' : 'bg-blue-400'}`} />
+            {isConfirmed ? 'In Race' : 'Pending'}
+          </span>
+        )}
+        {/* Horse health status badge (top right) */}
         <span className={`absolute top-3 right-3 z-10 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1.5 ${cls}`}>
           {horse.status === 'Healthy' && <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />}
           {horse.status}
@@ -77,12 +89,21 @@ function HorseCard({ horse }) {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => navigate('/owner/races', { state: { preselectedHorseId: horseId } })}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-yellow-600/50 text-yellow-500 hover:bg-yellow-500/10 transition-colors text-xs font-bold"
-        >
-          <Flag size={13} /> Register to Race
-        </button>
+        {isInRace ? (
+          <button
+            onClick={() => navigate('/owner/schedule')}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition-colors text-xs font-bold"
+          >
+            <Flag size={13} /> View Schedule
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/owner/races', { state: { preselectedHorseId: horseId } })}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-yellow-600/50 text-yellow-500 hover:bg-yellow-500/10 transition-colors text-xs font-bold"
+          >
+            <Flag size={13} /> Register to Race
+          </button>
+        )}
       </div>
     </div>
   )
@@ -122,6 +143,12 @@ export default function OwnerDashboard() {
     ]).then(([h, regs, b]) => { setHorses(h); setRegistrations(regs); setBalance(b) })
       .finally(() => setLoading(false))
   }, [refreshKey])
+
+  const activeRegMap = Object.fromEntries(
+    registrations
+      .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
+      .map(r => [r.horseId || r.horse?.horseId, r])
+  )
 
   const active       = horses.filter(h => h.status === 'Healthy').length
   const pending      = registrations.filter(s => s.status === 'Pending').length
@@ -172,7 +199,7 @@ export default function OwnerDashboard() {
             <CardCarousel count={preview.length}>
               {preview.map(h => (
                 <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
-                  <HorseCard horse={h} />
+                  <HorseCard horse={h} reg={activeRegMap[h.horseId ?? h.id]} />
                 </div>
               ))}
             </CardCarousel>
