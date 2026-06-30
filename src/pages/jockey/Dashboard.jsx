@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trophy, TrendingUp, Calendar, Flag, Check, X, Radio } from 'lucide-react'
+import { Trophy, TrendingUp, Calendar, Flag, Check, X, Radio, Phone } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getMyJockeyProfile } from '../../api/jockeyProfiles'
 import { getJockeyMyRequests, acceptRegistration, rejectRegistration } from '../../api/registrations'
@@ -54,6 +54,7 @@ export default function JockeyDashboard() {
   const [loading,    setLoading]    = useState(true)
   const [acting,     setActing]     = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedOwner, setSelectedOwner] = useState(null)
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
 
@@ -250,6 +251,22 @@ export default function JockeyDashboard() {
               <div className="space-y-4 overflow-y-auto">
                 {pending.slice(0, 4).map(item => (
                   <div key={item.registrationId} className="border-b border-gray-700/60 pb-4 last:border-0 last:pb-0">
+                    {/* Owner info */}
+                    {item.owner && (
+                      <button
+                        onClick={() => setSelectedOwner(item.owner)}
+                        className="flex items-center gap-2 mb-2 group/o hover:opacity-80 transition-opacity"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-gray-700 border border-gray-600 overflow-hidden flex items-center justify-center text-[10px] shrink-0">
+                          {item.owner.imageUrl
+                            ? <img src={item.owner.imageUrl} alt="" className="w-full h-full object-cover" />
+                            : <span className="text-gray-400 font-bold">{item.owner.fullName?.[0] || '?'}</span>}
+                        </div>
+                        <span className="text-[10px] text-gray-400 group-hover/o:text-white transition-colors font-medium">
+                          {item.owner.fullName || '—'}
+                        </span>
+                      </button>
+                    )}
                     <div className="flex justify-between text-xs mb-1">
                       <p className="font-bold text-gray-200">{item.horse?.horseName || '—'}</p>
                       <p className="text-gray-500">
@@ -287,6 +304,33 @@ export default function JockeyDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Owner Detail Modal */}
+      {selectedOwner && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedOwner(null)}>
+          <div className="bg-[#161a23] border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-bold text-white">Owner Info</h3>
+              <button onClick={() => setSelectedOwner(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
+            </div>
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-16 h-16 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                {selectedOwner.imageUrl
+                  ? <img src={selectedOwner.imageUrl} alt="" className="w-full h-full object-cover" />
+                  : <span className="text-gray-400 font-black text-xl">{selectedOwner.fullName?.[0] || '?'}</span>}
+              </div>
+              <div>
+                <p className="font-bold text-white text-lg leading-tight">{selectedOwner.fullName || '—'}</p>
+                {selectedOwner.phone && (
+                  <p className="flex items-center gap-1.5 text-gray-400 text-xs mt-1">
+                    <Phone size={11} /> {selectedOwner.phone}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </JockeyLayout>
   )
 }
