@@ -286,3 +286,143 @@ body { margin: 0; background-color: #fcf8fa; font-family: 'Inter', sans-serif; }
 .owner-soft-dark [class*="shadow"] {
   box-shadow: 0 14px 30px rgba(30, 39, 70, 0.10) !important;
 }
+
+/* ── Casino / Premium theme ─────────────────────────────────────────── */
+.casino-theme {
+  background: #121212 !important;
+  color: #E0E0E0 !important;
+}
+
+/* Sidebar & header */
+.casino-theme > aside,
+.casino-theme > div > header,
+.casino-theme header[class*="sticky"] {
+  background-color: #1E1E1E !important;
+  border-color: #2A2A2A !important;
+}
+
+/* Very dark backgrounds → main bg */
+.casino-theme [class*="bg-[#0b0f19]"],
+.casino-theme [class*="bg-[#0d1017]"],
+.casino-theme [class*="bg-[#0f1115]"],
+.casino-theme [class*="bg-[#0f1117]"],
+.casino-theme [class*="bg-[#110e0b]"],
+.casino-theme [class*="bg-[#11141e]"],
+.casino-theme [class*="bg-[#131722]"],
+.casino-theme [class*="bg-[#14151a]"] {
+  background-color: #121212 !important;
+  border-color: #2A2A2A !important;
+}
+
+/* Card / container backgrounds → #1E1E1E */
+.casino-theme [class*="bg-[#151a28]"],
+.casino-theme [class*="bg-[#161a23]"],
+.casino-theme [class*="bg-[#16181d]"],
+.casino-theme [class*="bg-[#1a1c23]"],
+.casino-theme [class*="bg-[#1a1f2b]"],
+.casino-theme [class*="bg-[#1a2031]"],
+.casino-theme [class*="bg-[#1a2130]"],
+.casino-theme [class*="bg-[#1e2433]"],
+.casino-theme [class*="bg-[#1f1d28]"],
+.casino-theme [class*="bg-[#252d3d]"],
+.casino-theme [class*="bg-[#1b212e]"],
+.casino-theme [class*="bg-[#1a1b23]"],
+.casino-theme [class*="bg-gray-900"],
+.casino-theme [class*="bg-gray-800"] {
+  background-color: #1E1E1E !important;
+  border-color: #2A2A2A !important;
+}
+
+/* Slightly lighter surfaces (inputs, table heads) */
+.casino-theme [class*="bg-[#1a2031]"],
+.casino-theme [class*="bg-gray-700"],
+.casino-theme input,
+.casino-theme select,
+.casino-theme textarea {
+  background-color: #2A2A2A !important;
+  border-color: #3A3A3A !important;
+  color: #E0E0E0 !important;
+}
+
+.casino-theme input::placeholder,
+.casino-theme textarea::placeholder {
+  color: #A0A0A0 !important;
+}
+
+/* Borders */
+.casino-theme [class*="border-gray"] {
+  border-color: #2A2A2A !important;
+}
+
+/* Text — primary */
+.casino-theme .text-white,
+.casino-theme [class*="text-gray-100"],
+.casino-theme [class*="text-gray-200"],
+.casino-theme [class*="text-gray-300"],
+.casino-theme [class*="text-[#e8e4dc]"],
+.casino-theme [class*="group-hover:text-white"] {
+  color: #E0E0E0 !important;
+}
+
+/* Text — secondary */
+.casino-theme [class*="text-gray-400"],
+.casino-theme [class*="text-gray-500"],
+.casino-theme [class*="text-gray-600"] {
+  color: #A0A0A0 !important;
+}
+
+/* Gold accent — text */
+.casino-theme [class*="text-[#facc15]"],
+.casino-theme [class*="text-yellow"],
+.casino-theme [class*="text-[#d9b44a]"],
+.casino-theme [class*="text-[#f7e0a3]"] {
+  color: #D4AF37 !important;
+}
+
+/* Gold accent — background */
+.casino-theme [class*="bg-[#facc15]"],
+.casino-theme [class*="bg-yellow-500"],
+.casino-theme [class*="bg-[#d9b44a]"],
+.casino-theme [class*="bg-[#eab308]"] {
+  background-color: #D4AF37 !important;
+  color: #121212 !important;
+}
+
+.casino-theme [class*="bg-[#facc15]/"],
+.casino-theme [class*="bg-yellow-500/"] {
+  background-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+.casino-theme [class*="hover:bg-[#facc15]"]:hover,
+.casino-theme [class*="hover:bg-yellow"]:hover,
+.casino-theme [class*="hover:bg-[#eab308]"]:hover {
+  background-color: #C9A227 !important;
+}
+
+/* Gold accent — border */
+.casino-theme [class*="border-[#facc15]"],
+.casino-theme [class*="border-yellow"] {
+  border-color: rgba(212, 175, 55, 0.5) !important;
+}
+
+/* Hover states */
+.casino-theme [class*="hover:bg-gray"]:hover,
+.casino-theme [class*="hover:bg-[#1a2031]"]:hover {
+  background-color: #2A2A2A !important;
+}
+
+/* Table */
+.casino-theme table thead {
+  background-color: #1E1E1E !important;
+}
+.casino-theme tbody tr:hover {
+  background-color: #2A2A2A !important;
+}
+.casino-theme [class*="divide-gray"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #2A2A2A !important;
+}
+
+/* Shadow */
+.casino-theme [class*="shadow"] {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}

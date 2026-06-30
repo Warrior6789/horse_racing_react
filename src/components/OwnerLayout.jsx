@@ -69,7 +69,7 @@ export default function OwnerLayout({ children }) {
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
-    <div className="owner-soft-dark flex h-screen bg-[#0f1115] text-gray-200 font-sans overflow-hidden">
+    <div className="casino-theme flex h-screen bg-[#0f1115] text-gray-200 font-sans overflow-hidden">
 
       {/* Desktop Sidebar */}
       <aside className="w-64 bg-[#14151a] border-r border-gray-800/60 hidden md:flex flex-col shrink-0">
