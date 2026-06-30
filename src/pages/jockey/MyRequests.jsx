@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Check, X, Clock, AlertCircle, Trophy, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, Trophy, CalendarDays, ChevronLeft, ChevronRight, Phone } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getJockeyMyRequestsPaged, acceptRegistration, rejectRegistration } from '../../api/registrations'
 import { getBalance } from '../../api/payments'
@@ -35,6 +35,7 @@ export default function JockeyRequests() {
   const [page, setPage]           = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [selectedOwner, setSelectedOwner] = useState(null)
 
   const fetchData = useCallback((p = 1) => {
     setLoading(true)
@@ -138,9 +139,23 @@ export default function JockeyRequests() {
                           <p className="text-gray-500 text-[10px] mt-0.5">{race.racecourseName || '—'}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="text-gray-300 text-sm font-medium">
-                            {item.horse?.ownerName || '—'}
-                          </p>
+                          {item.owner ? (
+                            <button
+                              onClick={() => setSelectedOwner(item.owner)}
+                              className="flex items-center gap-2 group/o hover:opacity-80 transition-opacity text-left"
+                            >
+                              <div className="w-7 h-7 rounded-full bg-gray-700 border border-gray-600 overflow-hidden flex items-center justify-center text-xs shrink-0">
+                                {item.owner.imageUrl
+                                  ? <img src={item.owner.imageUrl} alt="" className="w-full h-full object-cover" />
+                                  : <span className="text-gray-400 font-bold">{item.owner.fullName?.[0] || '?'}</span>}
+                              </div>
+                              <span className="text-gray-300 text-sm font-medium group-hover/o:text-white transition-colors">
+                                {item.owner.fullName || '—'}
+                              </span>
+                            </button>
+                          ) : (
+                            <span className="text-gray-600 text-sm">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -228,6 +243,33 @@ export default function JockeyRequests() {
           )}
         </div>
       </div>
+
+      {/* Owner Detail Modal */}
+      {selectedOwner && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedOwner(null)}>
+          <div className="bg-[#161a23] border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-bold text-white">Owner Info</h3>
+              <button onClick={() => setSelectedOwner(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
+            </div>
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-16 h-16 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl shrink-0">
+                {selectedOwner.imageUrl
+                  ? <img src={selectedOwner.imageUrl} alt="" className="w-full h-full object-cover" />
+                  : <span className="text-gray-400 font-black text-xl">{selectedOwner.fullName?.[0] || '?'}</span>}
+              </div>
+              <div>
+                <p className="font-bold text-white text-lg leading-tight">{selectedOwner.fullName || '—'}</p>
+                {selectedOwner.phone && (
+                  <p className="flex items-center gap-1.5 text-gray-400 text-xs mt-1">
+                    <Phone size={11} /> {selectedOwner.phone}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </JockeyLayout>
   )
 }
