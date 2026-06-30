@@ -48,7 +48,7 @@ function SidebarContent({ onClose }) {
       </nav>
       <div className="p-4">
         <NavLink
-          to="/owner/horses"
+          to="/owner/horses/new"
           onClick={onClose}
           className="w-full bg-[#facc15] hover:bg-[#eab308] text-black font-bold py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
         >

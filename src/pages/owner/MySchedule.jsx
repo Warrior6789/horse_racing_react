@@ -10,6 +10,7 @@ import OwnerLayout from '../../components/OwnerLayout'
 import { getOwnerAllRegistrationsPaged } from '../../api/registrations'
 import { getHorses } from '../../api/horses'
 import { getRacecourses } from '../../api/racecourses'
+import { getJockeyProfile } from '../../api/jockeyProfiles'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const PAGE_SIZE = 4
@@ -325,6 +326,8 @@ export default function MySchedule() {
   const [horseFilter, setHorseFilter] = useState('all')
   const [dropOpen, setDropOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [jockeyMap, setJockeyMap] = useState({})
+  const [selectedJockey, setSelectedJockey] = useState(null)
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
   useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
@@ -362,6 +365,17 @@ export default function MySchedule() {
         }
       })
       setSchedule(merged)
+
+      const jockeyIds = [...new Set(regs.filter(r => r.jockeyId).map(r => r.jockeyId))]
+      if (jockeyIds.length > 0) {
+        Promise.allSettled(jockeyIds.map(id => getJockeyProfile(id))).then(results => {
+          const map = {}
+          results.forEach((res, idx) => {
+            if (res.status === 'fulfilled') map[jockeyIds[idx]] = res.value.data.data || res.value.data
+          })
+          setJockeyMap(map)
+        })
+      }
     }).finally(() => setLoading(false))
   }, [refreshKey])
 
@@ -489,6 +503,7 @@ export default function MySchedule() {
                         <th className="px-4 py-4 font-bold w-14"></th>
                         <th className="px-4 py-4 font-bold">Horse</th>
                         <th className="px-4 py-4 font-bold">Race</th>
+                        <th className="px-4 py-4 font-bold">Jockey</th>
                         <th className="px-4 py-4 font-bold text-center">Gate</th>
                         <th className="px-4 py-4 font-bold text-center">Status</th>
                         <th className="px-4 py-4 w-32"></th>
@@ -523,6 +538,27 @@ export default function MySchedule() {
                                 <p className="text-[10px] text-gray-600 mt-0.5">
                                   {rawDate(r.startTime)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · {rawTimeStr(r.startTime)}
                                 </p>
+                              )}
+                            </td>
+                            {/* Jockey */}
+                            <td className="px-4 py-3">
+                              {item.jockeyId ? (() => {
+                                const j = jockeyMap[item.jockeyId]
+                                return (
+                                  <button
+                                    onClick={() => setSelectedJockey(j || { jockeyId: item.jockeyId })}
+                                    className="flex items-center gap-2 group/j hover:opacity-80 transition-opacity text-left"
+                                  >
+                                    <div className="w-7 h-7 rounded-full bg-gray-700 border border-gray-600 overflow-hidden flex items-center justify-center text-xs shrink-0">
+                                      {j?.imageUrl ? <img src={j.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
+                                    </div>
+                                    <span className="text-gray-300 text-xs font-medium group-hover/j:text-white transition-colors">
+                                      {j?.fullName || item.jockeyName || 'View'}
+                                    </span>
+                                  </button>
+                                )
+                              })() : (
+                                <span className="text-gray-600 text-xs">—</span>
                               )}
                             </td>
                             {/* Gate */}
@@ -650,6 +686,66 @@ export default function MySchedule() {
       </div>
 
       {dropOpen && <div className="fixed inset-0 z-40" onClick={() => setDropOpen(false)} />}
+
+      {/* Jockey Detail Modal */}
+      {selectedJockey && (() => {
+        const j = selectedJockey
+        const age = j.dateOfBirth
+          ? Math.floor((Date.now() - new Date(j.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
+          : null
+        const winRate = j.totalRaces > 0 ? Math.round((j.totalWins / j.totalRaces) * 100) : 0
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedJockey(null)}>
+            <div className="bg-[#161a23] border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-base font-bold text-white">Jockey Info</h3>
+                <button onClick={() => setSelectedJockey(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-16 h-16 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-3xl shrink-0">
+                  {j.imageUrl ? <img src={j.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
+                </div>
+                <div>
+                  <p className="font-bold text-white text-lg leading-tight">{j.fullName || '—'}</p>
+                  <p className="text-gray-400 text-xs mt-0.5">{j.nationality || '—'}{age ? ` · ${age} years old` : ''}</p>
+                  {j.licenseNumber && (
+                    <p className="text-[10px] text-[#facc15]/70 font-bold mt-1">License: {j.licenseNumber}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { label: 'Races',    value: j.totalRaces ?? '—' },
+                  { label: 'Wins',     value: j.totalWins  ?? '—' },
+                  { label: 'Win Rate', value: j.totalRaces > 0 ? `${winRate}%` : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-[#1a1f2b] rounded-xl p-3 text-center border border-gray-800">
+                    <p className="text-lg font-black text-white">{value}</p>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Physical */}
+              <div className="space-y-2">
+                {[
+                  { label: 'Weight', value: j.weight ? `${j.weight} kg` : '—' },
+                  { label: 'Height', value: j.height ? `${j.height} cm` : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-800">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</span>
+                    <span className="text-sm font-bold text-gray-200">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </OwnerLayout>
   )
 }
