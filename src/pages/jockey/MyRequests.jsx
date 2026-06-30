@@ -42,6 +42,7 @@ export default function JockeyRequests() {
       .then(r => {
         const d = r.data.data
         const items = d?.items || d || []
+        if (items.length > 0) console.log('[MyRequests] horse object:', items[0].horse)
         setRegs(items)
         setTotalPages(d?.totalPages ?? 1)
         setTotalCount(d?.totalCount ?? (d?.items?.length ?? 0))
