@@ -82,7 +82,7 @@ export default function HorseForm() {
         await updateHorse(id, payload)
         if (image) {
           const fd = new FormData()
-          fd.append('image', image)
+          fd.append('file', image)
           await updateHorseImage(id, fd)
         }
       } else {
