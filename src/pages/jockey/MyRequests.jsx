@@ -80,7 +80,10 @@ export default function JockeyRequests() {
     finally { setActing(null) }
   }
 
-  const pending  = regs.filter(r => r.jockeyConfirmation === null || r.jockeyConfirmation === undefined).length
+  const acceptedRaceIds = new Set(
+    regs.filter(r => r.jockeyConfirmation === true).map(r => r.race?.raceId).filter(Boolean)
+  )
+  const pending  = regs.filter(r => (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) && !acceptedRaceIds.has(r.race?.raceId)).length
   const accepted = regs.filter(r => r.jockeyConfirmation === true).length
   const rejected = regs.filter(r => r.jockeyConfirmation === false).length
 
@@ -129,7 +132,7 @@ export default function JockeyRequests() {
                   {regs.map(item => {
                     const race      = item.race  || {}
                     const horse     = item.horse || {}
-                    const isPending = item.jockeyConfirmation === null || item.jockeyConfirmation === undefined
+                    const isPending = (item.jockeyConfirmation === null || item.jockeyConfirmation === undefined) && !acceptedRaceIds.has(item.race?.raceId)
                     const status    = item.jockeyConfirmation === true ? 'Accepted' : item.jockeyConfirmation === false ? 'Rejected' : 'Pending'
                     const isActing  = acting === item.registrationId
                     return (
@@ -253,7 +256,7 @@ export default function JockeyRequests() {
               <button onClick={() => setSelectedOwner(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
             </div>
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl shrink-0">
+              <div className="w-16 h-16 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl shrink-0">
                 {selectedOwner.imageUrl
                   ? <img src={selectedOwner.imageUrl} alt="" className="w-full h-full object-cover" />
                   : <span className="text-gray-400 font-black text-xl">{selectedOwner.fullName?.[0] || '?'}</span>}

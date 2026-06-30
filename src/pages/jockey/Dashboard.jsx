@@ -99,8 +99,12 @@ export default function JockeyDashboard() {
   const totalRaces = profile?.totalRaces ?? 0
   const winRate    = totalRaces > 0 ? `${Math.round((totalWins / totalRaces) * 100)}%` : '0%'
 
-  const confirmed  = regs.filter(r => r.jockeyConfirmation === true)
-  const pending    = regs.filter(r => r.jockeyConfirmation === null || r.jockeyConfirmation === undefined)
+  const confirmed     = regs.filter(r => r.jockeyConfirmation === true)
+  const acceptedRaceIds = new Set(confirmed.map(r => r.race?.raceId).filter(Boolean))
+  const pending       = regs.filter(r =>
+    (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
+    !acceptedRaceIds.has(r.race?.raceId)
+  )
 
   const STATUS_PRIORITY = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3 }
   const myFeatured = [...regs]
