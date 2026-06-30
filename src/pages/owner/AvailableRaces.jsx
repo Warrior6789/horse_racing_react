@@ -182,7 +182,12 @@ export default function AvailableRaces() {
       getOwnerAllRegistrations().then(r => r.data.data || []).catch(() => []),
     ]).then(([list, myRegs]) => {
       setRaces(list)
-      setMyRegisteredIds(new Set(myRegs.map(reg => reg.raceId || reg.race?.raceId).filter(Boolean)))
+      setMyRegisteredIds(new Set(
+        myRegs
+          .filter(reg => reg.status !== 'Rejected' && reg.status !== 'Scratched')
+          .map(reg => reg.raceId || reg.race?.raceId)
+          .filter(Boolean)
+      ))
       Promise.allSettled(list.map(race => getRaceRegistrations(race.raceId))).then(results => {
         const map = {}
         results.forEach((res, i) => {

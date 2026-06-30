@@ -117,7 +117,7 @@ export default function JockeyRequests() {
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-800 bg-[#16181d]/50">
-                    {['Race Info', 'Horse', 'Gate', 'Date', 'Status', 'Actions'].map(col => (
+                    {['Race Info', 'Owner', 'Horse', 'Gate', 'Date', 'Status', 'Actions'].map(col => (
                       <th key={col} className="px-6 py-4 font-bold">{col}</th>
                     ))}
                   </tr>
@@ -134,6 +134,11 @@ export default function JockeyRequests() {
                         <td className="px-6 py-4">
                           <p className="font-bold text-white text-sm">{race.raceName || `Race #${race.raceNumber || '—'}`}</p>
                           <p className="text-gray-500 text-[10px] mt-0.5">{race.racecourseName || '—'}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-gray-300 text-sm font-medium">
+                            {item.ownerName || item.horse?.ownerName || item.horse?.owner?.fullName || item.owner?.fullName || '—'}
+                          </p>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">

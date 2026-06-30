@@ -6,6 +6,7 @@ import CardCarousel from '../../components/CardCarousel'
 import { getHorses, deleteHorse } from '../../api/horses'
 import { getRacesPaged, registerHorseToRace } from '../../api/races'
 import { getJockeysPaged } from '../../api/jockeyProfiles'
+import { getOwnerAllRegistrations } from '../../api/registrations'
 
 
 const STATUS_DOT = {
@@ -38,13 +39,16 @@ function FilterPill({ label, count, status, active, onClick }) {
   )
 }
 
-function HorseCard({ horse, onEdit, onDelete, onRegister }) {
+function HorseCard({ horse, onEdit, onDelete, onRegister, hasActiveReg }) {
   const status = horse.status || 'Healthy'
-  const isAvailable = status === 'Healthy'
+  const isAvailable = status === 'Healthy' && !hasActiveReg
 
   let primaryBtnCls  = 'bg-[#1a2031] text-gray-400 border border-gray-700 cursor-default'
   let primaryBtnText = 'Resting'
-  if (status === 'Healthy') {
+  if (hasActiveReg) {
+    primaryBtnCls  = 'bg-green-900/20 text-green-400 border border-green-900/50 cursor-not-allowed'
+    primaryBtnText = '✓ In Race'
+  } else if (status === 'Healthy') {
     primaryBtnCls  = 'bg-[#facc15] text-black hover:bg-yellow-400 font-bold'
     primaryBtnText = 'Register to Race'
   } else if (status === 'Injury') {
@@ -153,14 +157,25 @@ export default function MyHorses() {
   const [regHorse, setRegHorse] = useState(null)
   const [races, setRaces]       = useState([])
   const [jockeys, setJockeys]   = useState([])
-  const [reg, setReg]           = useState({ raceId: '', jockeyId: '', gateNumber: '' })
-  const [regError, setRegError] = useState('')
+  const [reg, setReg]                   = useState({ raceId: '', jockeyId: '', gateNumber: '' })
+  const [regError, setRegError]         = useState('')
+  const [activeRegHorseIds, setActiveRegHorseIds] = useState(new Set())
 
   const load = () => {
     setLoading(true)
-    getHorses({ page: 1, pageSize: 100 })
-      .then(r => setHorses(r.data.data?.items || []))
-      .finally(() => setLoading(false))
+    Promise.all([
+      getHorses({ page: 1, pageSize: 100 }),
+      getOwnerAllRegistrations().catch(() => ({ data: { data: [] } })),
+    ]).then(([hRes, rRes]) => {
+      setHorses(hRes.data.data?.items || [])
+      const regs = rRes.data.data || []
+      setActiveRegHorseIds(new Set(
+        regs
+          .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
+          .map(r => r.horseId || r.horse?.horseId)
+          .filter(Boolean)
+      ))
+    }).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
 
@@ -259,7 +274,7 @@ export default function MyHorses() {
               <CardCarousel count={displayed.length}>
                 {displayed.map(h => (
                   <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
-                    <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} />
+                    <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} hasActiveReg={activeRegHorseIds.has(h.horseId ?? h.id)} />
                   </div>
                 ))}
               </CardCarousel>
@@ -314,14 +329,19 @@ export default function MyHorses() {
                               <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-1 text-gray-400">
                                   {status === 'Active' && (
-                                    <button
-                                      onClick={() => navigate('/owner/races')}
-
-                                      title="Register to Race"
-                                      className="p-2 hover:bg-[#1a2031] hover:text-yellow-400 rounded-lg transition-colors"
-                                    >
-                                      <CalendarPlus size={18} />
-                                    </button>
+                                    activeRegHorseIds.has(hId) ? (
+                                      <span title="Already in a race" className="p-2 text-green-600 cursor-not-allowed">
+                                        <CalendarPlus size={18} />
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => navigate('/owner/races')}
+                                        title="Register to Race"
+                                        className="p-2 hover:bg-[#1a2031] hover:text-yellow-400 rounded-lg transition-colors"
+                                      >
+                                        <CalendarPlus size={18} />
+                                      </button>
+                                    )
                                   )}
                                   <button
                                     onClick={() => navigate(`/owner/horses/${hId}/edit`)}
