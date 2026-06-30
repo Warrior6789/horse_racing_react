@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { FileText, Camera, CloudUpload, Save, ChevronRight, ChevronDown, X } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
-import { getHorse, createHorse, updateHorse } from '../../api/horses'
+import { getHorse, createHorse, updateHorse, updateHorseImage } from '../../api/horses'
 import { useAuth } from '../../context/AuthContext'
 
 const STATUSES  = ['Healthy', 'Injury', 'Resting', 'Retired']
@@ -79,10 +79,12 @@ export default function HorseForm() {
       Object.entries(form).forEach(([k, v]) => { if (v !== '') payload[k] = v })
 
       if (isEdit) {
-        const fd = new FormData()
-        Object.entries(payload).forEach(([k, v]) => fd.append(k, v))
-        if (image) fd.append('image', image)
-        await updateHorse(id, fd)
+        await updateHorse(id, payload)
+        if (image) {
+          const fd = new FormData()
+          fd.append('image', image)
+          await updateHorseImage(id, fd)
+        }
       } else {
         const ownerId = user?.accountId ?? user?.id
         if (ownerId) payload.ownerId = ownerId
