@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Trophy, TrendingUp, Calendar, Flag, Check, X, Radio, Phone } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getMyJockeyProfile } from '../../api/jockeyProfiles'
-import { getJockeyMyRequests, acceptRegistration, rejectRegistration } from '../../api/registrations'
+import { getJockeyMyRequestsPaged, acceptRegistration, rejectRegistration } from '../../api/registrations'
 import { getRacesPaged } from '../../api/races'
 import { useAuth } from '../../context/AuthContext'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -60,13 +60,13 @@ export default function JockeyDashboard() {
 
   const handleRegistrationsUpdated = useCallback((data) => {
     if (data?.jockeyId && data.jockeyId !== user?.id) return
-    getJockeyMyRequests().then(r => setRegs(r.data.data || [])).catch(() => {})
+    getJockeyMyRequestsPaged({ page: 1, pageSize: 100 }).then(r => { const d = r.data.data; setRegs(d?.items || d || []) }).catch(() => {})
   }, [user])
 
   useRaceHub(null, { onRacesUpdated: handleRacesUpdated, onRegistrationsUpdated: handleRegistrationsUpdated })
 
   const fetchRegs = () =>
-    getJockeyMyRequests().then(r => setRegs(r.data.data || [])).catch(() => {})
+    getJockeyMyRequestsPaged({ page: 1, pageSize: 100 }).then(r => { const d = r.data.data; setRegs(d?.items || d || []) }).catch(() => {})
 
   useEffect(() => {
     const fetchPublicRace = async () => {
