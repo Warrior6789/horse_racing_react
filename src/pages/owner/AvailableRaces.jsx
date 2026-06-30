@@ -170,7 +170,7 @@ export default function AvailableRaces() {
   const preselectedHorseId = location.state?.preselectedHorseId
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
-  useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
+  useRaceHub(null, { onRacesUpdated: handleRacesUpdated, onRegistrationsUpdated: handleRacesUpdated })
 
   useEffect(() => {
     if (showSuccess) setTimeout(() => setShowSuccess(false), 3000)
