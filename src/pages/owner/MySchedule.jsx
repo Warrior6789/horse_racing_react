@@ -63,7 +63,7 @@ function StatCard({ title, value, sub, accent, leftBorder }) {
 }
 
 /* ─── Calendar View ────────────────────────────────────────────────── */
-function CalendarView({ items, venues }) {
+function CalendarView({ items, venues, jockeyMap, onJockeyClick }) {
   const today = new Date()
   const [cur, setCur] = useState({ year: today.getFullYear(), month: today.getMonth() })
   const [filterVenue,  setFilterVenue]  = useState('all')
@@ -285,6 +285,7 @@ function CalendarView({ items, venues }) {
                         const ec = eventColor(r.status)
                         const c  = colorMap[ec]
                         const timeStr = rawTimeStr(r.race?.startTime)
+                        const jockey  = r.jockeyId ? jockeyMap?.[r.jockeyId] : null
                         return (
                           <div key={ri} className={`${c.bg} border-l-2 ${c.border} rounded-r py-1 px-2`}>
                             {timeStr && (
@@ -296,6 +297,19 @@ function CalendarView({ items, venues }) {
                             <p className={`text-[9px] ${c.sub} truncate mt-0.5`}>
                               {ec === 'scratched' ? 'Scratched' : r.race?.raceName || `Race #${r.race?.raceNumber}`}
                             </p>
+                            {r.jockeyId && (
+                              <button
+                                onClick={e => { e.stopPropagation(); onJockeyClick?.(jockey || { jockeyId: r.jockeyId }) }}
+                                className="mt-1 flex items-center gap-1 group/j hover:opacity-80 transition-opacity"
+                              >
+                                <div className="w-4 h-4 rounded-full bg-gray-700 border border-gray-600 overflow-hidden flex items-center justify-center text-[8px] shrink-0">
+                                  {jockey?.imageUrl ? <img src={jockey.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
+                                </div>
+                                <span className="text-[9px] text-gray-400 group-hover/j:text-white transition-colors truncate">
+                                  {jockey?.fullName || r.jockeyName || 'Jockey'}
+                                </span>
+                              </button>
+                            )}
                           </div>
                         )
                       })}
@@ -680,7 +694,7 @@ export default function MySchedule() {
 
         {/* ── Calendar view ─────────────────────────────────────────── */}
         {view === 'calendar' && !loading && (
-          <CalendarView items={schedule} venues={allVenues} />
+          <CalendarView items={schedule} venues={allVenues} jockeyMap={jockeyMap} onJockeyClick={setSelectedJockey} />
         )}
 
       </div>
