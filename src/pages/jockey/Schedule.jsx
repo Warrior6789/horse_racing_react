@@ -41,7 +41,11 @@ export default function JockeySchedule() {
   useEffect(() => {
     Promise.all([
       getJockeyMyRequests()
-        .then(r => setRegs((r.data.data || []).filter(reg => reg.jockeyConfirmation === true)))
+        .then(r => {
+          const all = r.data.data || []
+          console.log('[Schedule] all regs:', all)
+          setRegs(all.filter(reg => reg.jockeyConfirmation === true))
+        })
         .catch(() => {}),
       getMyJockeyProfile()
         .then(r => setProfile(r.data.data))
