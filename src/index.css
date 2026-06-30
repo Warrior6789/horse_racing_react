@@ -42,3 +42,109 @@ body { margin: 0; background-color: #fcf8fa; font-family: 'Inter', sans-serif; }
   to { transform: rotate(360deg); }
 }
 .animate-spin { animation: spin 1s linear infinite; }
+
+/* Spectator keeps the original dark racing look, with slightly brighter surfaces and text. */
+.spectator-soft-dark {
+  background: #17130f !important;
+  color: #eee7dc !important;
+}
+
+.spectator-soft-dark > aside,
+.spectator-soft-dark [class*="bg-[#171410]"],
+.spectator-soft-dark [class*="bg-[#141210]"],
+.spectator-soft-dark [class*="bg-[#161310]"],
+.spectator-soft-dark [class*="bg-[#1c1814]"] {
+  background-color: #211b15 !important;
+  border-color: #3a3027 !important;
+}
+
+.spectator-soft-dark [class*="bg-[#110e0b]"],
+.spectator-soft-dark [class*="bg-[#1a1610]"],
+.spectator-soft-dark [class*="bg-[#1a1612]"],
+.spectator-soft-dark [class*="bg-[#1a1613]"],
+.spectator-soft-dark [class*="bg-[#1f1a14]"],
+.spectator-soft-dark [class*="bg-[#1f1b15]"],
+.spectator-soft-dark [class*="bg-[#211d19]"],
+.spectator-soft-dark [class*="bg-[#24211a]"],
+.spectator-soft-dark [class*="bg-stone-900"],
+.spectator-soft-dark [class*="bg-stone-800"] {
+  background-color: #282119 !important;
+  border-color: #3a3027 !important;
+}
+
+.spectator-soft-dark > div > header,
+.spectator-soft-dark main > header,
+.spectator-soft-dark header[class*="sticky"] {
+  background: rgba(23, 19, 15, 0.92) !important;
+  border-color: #302821 !important;
+}
+
+.spectator-soft-dark [class*="border-stone"] {
+  border-color: #3a3027 !important;
+}
+
+.spectator-soft-dark [class*="text-stone-100"],
+.spectator-soft-dark [class*="text-stone-200"],
+.spectator-soft-dark [class*="text-stone-300"],
+.spectator-soft-dark .text-white {
+  color: #f7f2ea !important;
+}
+
+.spectator-soft-dark [class*="text-stone-400"] {
+  color: #c5b9aa !important;
+}
+
+.spectator-soft-dark [class*="text-stone-500"],
+.spectator-soft-dark [class*="text-stone-600"],
+.spectator-soft-dark [class*="text-stone-700"] {
+  color: #9f9283 !important;
+}
+
+.spectator-soft-dark [class*="text-[#f7e0a3]"] {
+  color: #f7e0a3 !important;
+}
+
+.spectator-soft-dark [class*="bg-[#29221a]"] {
+  background-color: #3a2d1c !important;
+  border-color: rgba(247, 224, 163, 0.32) !important;
+}
+
+.spectator-soft-dark nav a:hover,
+.spectator-soft-dark button:hover {
+  border-color: #5a4a38 !important;
+}
+
+.spectator-soft-dark input,
+.spectator-soft-dark select,
+.spectator-soft-dark textarea {
+  background-color: #1e1812 !important;
+  border-color: #4a3d30 !important;
+  color: #f7f2ea !important;
+}
+
+.spectator-soft-dark input::placeholder,
+.spectator-soft-dark textarea::placeholder {
+  color: #8e8275 !important;
+}
+
+.spectator-soft-dark table thead {
+  background-color: #1e1812 !important;
+}
+
+.spectator-soft-dark tbody tr:hover {
+  background-color: #2d251d !important;
+}
+
+.spectator-soft-dark [class*="divide-stone"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #3a3027 !important;
+}
+
+.spectator-soft-dark [class*="shadow"] {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22) !important;
+}
+
+.spectator-soft-dark [class*="bg-black/"],
+.spectator-soft-dark [style*="rgba(0,0,0"] {
+  background-color: rgba(17, 14, 11, 0.62) !important;
+  color: #ffffff !important;
+}

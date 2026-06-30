@@ -74,7 +74,9 @@ export default function RoleUpgrade() {
           weight:        p.weight        != null ? String(p.weight) : prev.weight,
           height:        p.height        != null ? String(p.height) : prev.height,
         }))
-      } catch {}
+      } catch {
+        // Keep the manually entered values if the optional jockey profile cannot be loaded.
+      }
     }
   }
 
@@ -128,7 +130,7 @@ export default function RoleUpgrade() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#110e0b] text-stone-200 font-sans">
+    <div className="spectator-soft-dark flex min-h-screen bg-[#110e0b] text-stone-200 font-sans">
 
       {/* SIDEBAR */}
       <aside className="w-64 bg-[#171410] p-5 flex flex-col justify-between border-r border-stone-900 shrink-0">
