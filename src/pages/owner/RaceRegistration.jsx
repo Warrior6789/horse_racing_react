@@ -31,7 +31,7 @@ import {
   PawPrint, User, UserPlus, Search, X, Disc, MessageSquare, CheckCircle2
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
-import { getRace, registerHorseToRace } from '../../api/races'
+import { getRace, registerHorseToRace, getRaceRegistrations } from '../../api/races'
 import { getHorses } from '../../api/horses'
 import { getJockeysPaged, getJockeyProfile } from '../../api/jockeyProfiles'
 import { getBalance } from '../../api/payments'
@@ -371,8 +371,9 @@ export default function RaceRegistration() {
 
   const [race,         setRace]         = useState(null)
   const [horses,       setHorses]       = useState([])
-  const [jockeys,      setJockeys]      = useState([])
-  const [balance,      setBalance]      = useState(null)
+  const [jockeys,        setJockeys]        = useState([])
+  const [bookedJockeyIds, setBookedJockeyIds] = useState(new Set())
+  const [balance,        setBalance]        = useState(null)
   const [entryFee,     setEntryFee]     = useState(null)
 
   const [selectedHorse,   setSelectedHorse]   = useState(preselectedHorseId)
@@ -394,7 +395,8 @@ export default function RaceRegistration() {
       getHorses({ pageSize: 100 }),
       getBalance(),
       getActiveRegistrationFeeConfig().catch(() => null),
-    ]).then(([r, h, bal, fee]) => {
+      getRaceRegistrations(raceId).catch(() => null),
+    ]).then(([r, h, bal, fee, regsRes]) => {
       setRace(r.data.data || r.data)
       const hList = h.data.data?.items || h.data.data || []
       setHorses(hList.filter(h => h.status === 'Healthy' || !h.status))
@@ -403,6 +405,16 @@ export default function RaceRegistration() {
       if (fee) {
         const f = fee.data.data || fee.data
         setEntryFee(f?.feeAmount ?? f?.amount ?? null)
+      }
+      if (regsRes) {
+        const regs = regsRes.data.data || regsRes.data || []
+        const ids = new Set(
+          regs
+            .filter(reg => reg.jockeyConfirmation === true)
+            .map(reg => reg.jockeyId || reg.jockey?.accountId)
+            .filter(Boolean)
+        )
+        setBookedJockeyIds(ids)
       }
     }).catch(() => {})
      .finally(() => setLoading(false))
@@ -868,7 +880,7 @@ export default function RaceRegistration() {
 
       {jockeyModalOpen && (
         <JockeySelectionModal
-          jockeys={jockeys}
+          jockeys={jockeys.filter(j => !bookedJockeyIds.has(j.accountId || j.jockeyId))}
           loading={jockeyLoading}
           selectedId={selectedJockey}
           raceName={race?.raceName || `Race #${race?.raceNumber}`}
