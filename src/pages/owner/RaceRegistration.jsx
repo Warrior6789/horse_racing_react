@@ -755,16 +755,16 @@ export default function RaceRegistration() {
                     {/* Right — Reassign dashed area */}
                     <div
                       onClick={() => openJockeyModal()}
-                      className="border-2 border-dashed border-[#facc15]/40 bg-[#facc15]/5 hover:border-[#facc15]/70 transition-colors rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer min-h-[340px]"
+                      className="border-2 border-dashed border-[#d9b44a]/40 bg-[#2a2830] hover:border-[#d9b44a]/70 hover:bg-[#302d34] transition-colors rounded-xl p-12 flex flex-col items-center justify-center text-center cursor-pointer min-h-[340px]"
                     >
-                      <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center mb-4">
-                        <UserPlus size={26} className="text-[#facc15]" />
+                      <div className="w-14 h-14 rounded-full bg-[#d9b44a]/12 border border-[#d9b44a]/30 flex items-center justify-center mb-4">
+                        <UserPlus size={26} className="text-[#d9b44a]" />
                       </div>
                       <h4 className="text-gray-200 font-bold text-base mb-2">Change Jockey</h4>
                       <p className="text-sm text-gray-500 mb-6">Click to reassign a different rider.</p>
                       <button
                         onClick={e => { e.stopPropagation(); openJockeyModal() }}
-                        className="border border-[#facc15]/50 hover:border-[#facc15] text-[#facc15] px-7 py-2.5 rounded-lg text-sm font-bold transition-colors"
+                        className="border border-[#d9b44a]/50 hover:border-[#d9b44a] text-[#d9b44a] hover:bg-[#d9b44a]/10 px-7 py-2.5 rounded-lg text-sm font-bold transition-colors"
                       >
                         Reassign
                       </button>
@@ -775,16 +775,16 @@ export default function RaceRegistration() {
                 /* Empty state */
                 <div
                   onClick={() => openJockeyModal()}
-                  className="border-2 border-dashed border-gray-700 bg-[#0f1117] hover:border-[#facc15]/40 hover:bg-[#facc15]/5 transition-colors rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer"
+                  className="border-2 border-dashed border-[#d9b44a]/35 bg-[#2a2830] hover:border-[#d9b44a]/60 hover:bg-[#302d34] transition-colors rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer"
                 >
-                  <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-3">
-                    <UserPlus size={22} className="text-gray-400" />
+                  <div className="w-12 h-12 rounded-full bg-[#d9b44a]/12 border border-[#d9b44a]/30 flex items-center justify-center mb-3">
+                    <UserPlus size={22} className="text-[#d9b44a]" />
                   </div>
                   <h4 className="text-gray-200 font-bold text-base mb-1">No Jockey Assigned</h4>
                   <p className="text-sm text-gray-500 mb-5">Click to browse and assign a professional jockey.</p>
                   <button
                     onClick={e => { e.stopPropagation(); openJockeyModal() }}
-                    className="bg-[#facc15] hover:bg-yellow-400 text-black px-6 py-2.5 rounded-lg text-sm font-bold transition-colors"
+                    className="bg-[#d9b44a] hover:bg-[#e7c86a] text-[#151821] px-6 py-2.5 rounded-lg text-sm font-bold transition-colors"
                   >
                     Assign Jockey
                   </button>
