@@ -52,9 +52,10 @@ export default function JockeyDashboard() {
   const [regs,       setRegs]       = useState([])
   const [publicRace, setPublicRace] = useState(null)
   const [loading,    setLoading]    = useState(true)
-  const [acting,     setActing]     = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
-  const [selectedOwner, setSelectedOwner] = useState(null)
+  const [acting,          setActing]          = useState(null)
+  const [refreshKey,      setRefreshKey]      = useState(0)
+  const [selectedOwner,   setSelectedOwner]   = useState(null)
+  const [localAcceptedRaceIds, setLocalAcceptedRaceIds] = useState(new Set())
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
 
@@ -88,8 +89,14 @@ export default function JockeyDashboard() {
   const handle = async (id, action) => {
     setActing(id)
     try {
-      if (action === 'accept') await acceptRegistration(id)
-      else                     await rejectRegistration(id)
+      if (action === 'accept') {
+        const reg = regs.find(r => r.registrationId === id)
+        const raceId = reg?.race?.raceId || reg?.raceId
+        await acceptRegistration(id)
+        if (raceId) setLocalAcceptedRaceIds(prev => new Set([...prev, raceId]))
+      } else {
+        await rejectRegistration(id)
+      }
       await fetchRegs()
     } catch {}
     finally { setActing(null) }
@@ -100,10 +107,13 @@ export default function JockeyDashboard() {
   const winRate    = totalRaces > 0 ? `${Math.round((totalWins / totalRaces) * 100)}%` : '0%'
 
   const confirmed     = regs.filter(r => r.jockeyConfirmation === true)
-  const acceptedRaceIds = new Set(confirmed.map(r => r.race?.raceId).filter(Boolean))
+  const acceptedRaceIds = new Set([
+    ...confirmed.map(r => r.race?.raceId || r.raceId).filter(Boolean),
+    ...localAcceptedRaceIds,
+  ])
   const pending       = regs.filter(r =>
     (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
-    !acceptedRaceIds.has(r.race?.raceId)
+    !acceptedRaceIds.has(r.race?.raceId || r.raceId)
   )
 
   const STATUS_PRIORITY = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3 }
