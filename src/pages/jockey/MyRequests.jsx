@@ -94,7 +94,7 @@ export default function JockeyRequests() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-black text-white mb-1">Pending Race Invitations</h1>
+          <h1 className="text-2xl font-black text-white mb-1">Race Invitations</h1>
           <p className="text-gray-400 text-sm">Review and respond to race assignment requests from horse owners.</p>
         </div>
 
