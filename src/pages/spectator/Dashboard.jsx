@@ -152,7 +152,7 @@ export default function SpectatorDashboard() {
               </div>
             </div>
             <Link
-              to="/spectator/races"
+              to={`/spectator/races/${soonest.raceId}/bet`}
               className="px-5 py-2 bg-[#f7e0a3] text-[#110e0b] font-bold text-sm rounded-lg hover:bg-[#ebd292] transition-colors shrink-0"
             >
               Place Bet Now
@@ -265,7 +265,7 @@ export default function SpectatorDashboard() {
                         : <span className="px-3 py-1 border border-stone-700 text-stone-500 text-xs rounded-md font-semibold">Scheduled</span>
                       }
                       <Link
-                        to="/spectator/races"
+                        to={race.status === 'BettingOpen' ? `/spectator/races/${race.raceId}/bet` : '/spectator/races'}
                         className="px-4 py-2 bg-[#f7e0a3] text-[#110e0b] font-bold rounded-lg hover:bg-[#ebd292] transition-colors text-sm"
                       >
                         {race.status === 'BettingOpen' ? 'Place Bet' : 'View'}
