@@ -173,9 +173,9 @@ export default function AdminBets() {
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] px-5 py-3 bg-gray-950">
+          <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] px-5 py-3 bg-gray-50 border-b border-gray-100">
             {['Race', 'Scheduled Start', 'Status', 'Total Pool', 'Bets', ''].map(col => (
-              <span key={col} className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80">{col}</span>
+              <span key={col} className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{col}</span>
             ))}
           </div>
 
