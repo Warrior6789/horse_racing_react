@@ -33,6 +33,7 @@ export default function OwnerEarnings() {
     getHorses({ page: 1, pageSize: 100 })
       .then(async r => {
         const list = r.data.data?.items || []
+        console.log('[Earnings] horse[0]:', JSON.stringify(list[0]))
         setHorses(list)
         const stats = await Promise.all(
           list.map(h =>
