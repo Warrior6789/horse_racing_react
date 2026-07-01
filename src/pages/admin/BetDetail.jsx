@@ -63,7 +63,7 @@ export default function BetDetail() {
   const [loadingPool, setLoadingPool]   = useState(true)
   const [loadingPrize, setLoadingPrize] = useState(true)
   const [betPage, setBetPage]           = useState(1)
-  const BET_PAGE_SIZE = 10
+  const BET_PAGE_SIZE = 4
 
   const fetchPool = useCallback(() => {
     setLoadingPool(true)
