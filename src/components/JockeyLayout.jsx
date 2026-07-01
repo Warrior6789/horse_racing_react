@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, ListChecks, Wallet, CalendarDays, Bell, UserCircle, Menu, X } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Wallet, CalendarDays, History, Bell, UserCircle, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import AccountProfile from './AccountProfile'
 
@@ -8,6 +8,7 @@ const NAV = [
   { to: '/jockey/dashboard', icon: LayoutDashboard, label: 'Dashboard'     },
   { to: '/jockey/requests',  icon: ListChecks,      label: 'Race Requests' },
   { to: '/jockey/schedule',  icon: CalendarDays,    label: 'Schedule'      },
+  { to: '/jockey/history',   icon: History,         label: 'Race History'  },
   { to: '/jockey/wallet',    icon: Wallet,          label: 'Wallet'        },
   { to: '/jockey/profile',   icon: UserCircle,      label: 'My Profile'    },
 ]

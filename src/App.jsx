@@ -35,6 +35,7 @@ import JockeyDashboard from './pages/jockey/Dashboard'
 import JockeyRequests from './pages/jockey/MyRequests'
 import JockeyWallet from './pages/jockey/Wallet'
 import JockeySchedule from './pages/jockey/Schedule'
+import JockeyRaceHistory from './pages/jockey/RaceHistory'
 import JockeyProfile from './pages/jockey/MyProfile'
 
 import RefereeRaces from './pages/referee/Races'
@@ -96,6 +97,7 @@ export default function App() {
           <Route path="/jockey/requests"  element={<PrivateRoute roles={['Jockey', 'Admin']}><JockeyRequests /></PrivateRoute>} />
           <Route path="/jockey/wallet"    element={<PrivateRoute roles={['Jockey', 'Admin']}><JockeyWallet /></PrivateRoute>} />
           <Route path="/jockey/schedule"  element={<PrivateRoute roles={['Jockey', 'Admin']}><JockeySchedule /></PrivateRoute>} />
+          <Route path="/jockey/history"   element={<PrivateRoute roles={['Jockey', 'Admin']}><JockeyRaceHistory /></PrivateRoute>} />
           <Route path="/jockey/profile"   element={<PrivateRoute roles={['Jockey', 'Admin']}><JockeyProfile /></PrivateRoute>} />
           <Route path="/jockey/races/:raceId/live"    element={<PrivateRoute roles={['Jockey', 'Admin']}><LiveRace Layout={JockeyLayout} backUrl="/jockey/dashboard" /></PrivateRoute>} />
           <Route path="/jockey/races/:raceId/results" element={<PrivateRoute roles={['Jockey', 'Admin']}><RaceResult Layout={JockeyLayout} backUrl="/jockey/schedule" /></PrivateRoute>} />
