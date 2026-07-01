@@ -344,7 +344,7 @@ export default function MySchedule() {
   const [selectedJockey, setSelectedJockey] = useState(null)
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
-  useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
+  useRaceHub(null, { onRacesUpdated: handleRacesUpdated, onRegistrationsUpdated: handleRacesUpdated })
 
   useEffect(() => {
     getRacecourses()
