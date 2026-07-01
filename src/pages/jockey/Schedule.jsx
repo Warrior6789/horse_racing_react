@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Download, Radio } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
-import { getJockeyMyRequests } from '../../api/registrations'
+import { getJockeyMyRequestsPaged } from '../../api/registrations'
 import { getMyJockeyProfile, getMyJockeyRewards } from '../../api/jockeyProfiles'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
@@ -40,14 +40,12 @@ export default function JockeySchedule() {
 
   useEffect(() => {
     Promise.all([
-      getJockeyMyRequests()
+      getJockeyMyRequestsPaged({ page: 1, pageSize: 500 })
         .then(r => {
           const d = r.data.data
-          const items = Array.isArray(d) ? d : d?.items || []
-          console.log('[Schedule] regs count:', items.length, '| first item:', items[0])
-          setRegs(items)
+          setRegs(d?.items || [])
         })
-        .catch(e => console.error('[Schedule] fetch error:', e)),
+        .catch(() => {}),
       getMyJockeyProfile()
         .then(r => setProfile(r.data.data))
         .catch(() => {}),
