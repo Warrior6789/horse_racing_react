@@ -58,7 +58,10 @@ export default function JockeyWallet() {
   const fetchData = useCallback((p) => {
     setLoading(true)
     Promise.all([
-      getBalance().then(r => setBalance(r.data.data?.balance ?? 0)).catch(() => {}),
+      getBalance().then(r => {
+        console.log('[JockeyWallet] balance raw:', JSON.stringify(r.data))
+        setBalance(r.data.data?.balance ?? r.data.data?.walletBalance ?? r.data.balance ?? 0)
+      }).catch(() => {}),
       getTransactions({ page: 1, pageSize: 500 }).then(r => {
         const all = r.data.data?.items || []
         setAllTx(all)
