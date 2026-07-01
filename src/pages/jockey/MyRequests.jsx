@@ -252,7 +252,6 @@ export default function JockeyRequests() {
               {[
                 { label: 'Age',    value: selectedHorse.age    ? `${selectedHorse.age} years old` : '—' },
                 { label: 'Weight', value: selectedHorse.weight ? `${selectedHorse.weight} kg`     : '—' },
-                { label: 'Height', value: selectedHorse.height ? `${selectedHorse.height} cm`     : '—' },
                 { label: 'Color',  value: selectedHorse.color  || '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-800">
