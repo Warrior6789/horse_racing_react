@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../../components/DashboardLayout'
-import { getRacePool, getRacePrizePreview, getRace } from '../../api/races'
+import { getRacePool, getRacePrizePreview, getRace, getRaceRegistrations } from '../../api/races'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const BET_TYPE_CLS = {
@@ -56,6 +56,7 @@ export default function BetDetail() {
   const [loadingPrize, setLoadingPrize] = useState(true)
   const [betPage, setBetPage]           = useState(1)
   const [matrixPage, setMatrixPage]     = useState(1)
+  const [horseImageMap, setHorseImageMap] = useState({})
 
   const fetchPool = useCallback(() => {
     setLoadingPool(true)
@@ -77,6 +78,18 @@ export default function BetDetail() {
     getRace(raceId).then(r => setRace(r.data.data)).catch(() => {})
     fetchPool()
     fetchPrize()
+    getRaceRegistrations(raceId)
+      .then(r => {
+        const regs = r.data.data || r.data || []
+        const map = {}
+        regs.forEach(reg => {
+          const name = reg.horse?.horseName || reg.horseName
+          const img  = reg.horse?.imageUrl  || reg.imageUrl  || null
+          if (name) map[name] = img
+        })
+        setHorseImageMap(map)
+      })
+      .catch(() => {})
   }, [raceId, fetchPool, fetchPrize])
 
   const handlePoolUpdate = useCallback((pools) => {
@@ -179,7 +192,7 @@ export default function BetDetail() {
                 const horseMap = new Map()
                 bets.forEach(b => {
                   const key = b.horseId || b.horseName
-                  if (!horseMap.has(key)) horseMap.set(key, { name: b.horseName, img: b.horseImageUrl || b.horseAvatar || null })
+                  if (!horseMap.has(key)) horseMap.set(key, { name: b.horseName, img: horseImageMap[b.horseName] || null })
                 })
                 const horses = [...horseMap.values()]
                 const matrix = horses.map(({ name, img }) => {
