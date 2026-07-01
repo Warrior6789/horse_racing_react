@@ -10,6 +10,60 @@ import { useAuth } from '../../context/AuthContext'
 const BET_TYPES = ['Win', 'Place', 'Show']
 const QUICK_AMOUNTS = [10000, 50000, 100000, 500000]
 
+function PersonModal({ person, onClose }) {
+  if (!person) return null
+  const age = person.dateOfBirth
+    ? Math.floor((Date.now() - new Date(person.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000))
+    : null
+  const winRate = person.totalRaces > 0 ? Math.round((person.totalWins / person.totalRaces) * 100) : 0
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4" onClick={onClose}>
+      <div className="bg-[#1c1814] border border-stone-700/60 rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-base font-bold text-stone-100">{person._type === 'jockey' ? 'Jockey' : 'Owner'} Info</h3>
+          <button onClick={onClose} className="text-stone-500 hover:text-stone-300 transition-colors">✕</button>
+        </div>
+        <div className="flex items-center gap-4 mb-5">
+          <div className="w-16 h-16 rounded-xl bg-stone-800 border border-stone-700 overflow-hidden flex items-center justify-center text-3xl shrink-0">
+            {person.imageUrl
+              ? <img src={person.imageUrl} alt="" className="w-full h-full object-cover" />
+              : <span className="text-stone-400 font-black text-xl">{person.fullName?.[0] || '?'}</span>}
+          </div>
+          <div>
+            <p className="font-bold text-stone-100 text-lg leading-tight">{person.fullName || '—'}</p>
+            {person.nationality && <p className="text-stone-400 text-xs mt-0.5">{person.nationality}{age ? ` · ${age} yrs` : ''}</p>}
+            {person.licenseNumber && <p className="text-[10px] text-[#f7e0a3]/70 font-bold mt-1">License: {person.licenseNumber}</p>}
+            {person.phone && <p className="text-stone-400 text-xs mt-0.5">📞 {person.phone}</p>}
+          </div>
+        </div>
+        {person._type === 'jockey' && (
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {[
+              { label: 'Races', value: person.totalRaces ?? '—' },
+              { label: 'Wins',  value: person.totalWins  ?? '—' },
+              { label: 'Win %', value: person.totalRaces > 0 ? `${winRate}%` : '—' },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-[#110e0b] rounded-xl p-3 text-center border border-stone-800">
+                <p className="text-lg font-black text-stone-100">{value}</p>
+                <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wide mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {[
+          { label: 'Weight', value: person.weight ? `${person.weight} kg` : null },
+          { label: 'Height', value: person.height ? `${person.height} cm` : null },
+        ].filter(r => r.value).map(({ label, value }) => (
+          <div key={label} className="flex justify-between items-center py-1.5 border-b border-stone-800">
+            <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">{label}</span>
+            <span className="text-sm font-bold text-stone-200">{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function PlaceBet() {
   const { raceId } = useParams()
   const navigate   = useNavigate()
@@ -24,9 +78,10 @@ export default function PlaceBet() {
   const [betType,      setBetType]      = useState('Win')
   const [rawAmount,    setRawAmount]    = useState('')
   const [focused,      setFocused]      = useState(false)
-  const [submitting,   setSubmitting]   = useState(false)
-  const [error,        setError]        = useState('')
-  const [done,         setDone]         = useState(false)
+  const [submitting,     setSubmitting]     = useState(false)
+  const [error,          setError]          = useState('')
+  const [done,           setDone]           = useState(false)
+  const [selectedPerson, setSelectedPerson] = useState(null)
 
   const numAmount = Number(rawAmount) || 0
   const displayValue = focused ? rawAmount : (numAmount > 0 ? numAmount.toLocaleString('en-US') : '')
@@ -158,9 +213,37 @@ export default function PlaceBet() {
                         <p className="text-[11px] text-stone-500 mt-0.5 truncate">
                           {reg.horse?.breed || '—'} · {reg.horse?.age ? `${reg.horse.age}yo` : '—'}
                         </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[10px] text-stone-600">🏇 {reg.jockeyName || reg.jockey?.fullName || '—'}</span>
-                          <span className="text-[10px] text-stone-600">👤 {reg.ownerName || reg.owner?.fullName || '—'}</span>
+                        <div className="flex flex-col gap-1 mt-1.5">
+                          {(() => {
+                            const j = reg.jockey || {}
+                            const name = reg.jockeyName || j.fullName
+                            return (
+                              <button
+                                onClick={e => { e.stopPropagation(); setSelectedPerson({ ...j, fullName: name, _type: 'jockey' }) }}
+                                className="flex items-center gap-1.5 group/j hover:opacity-80 transition-opacity text-left w-fit"
+                              >
+                                <div className="w-5 h-5 rounded-full bg-stone-700 border border-stone-600 overflow-hidden flex items-center justify-center text-[9px] shrink-0">
+                                  {j.imageUrl ? <img src={j.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
+                                </div>
+                                <span className="text-[10px] text-stone-500 group-hover/j:text-stone-300 transition-colors">{name || '—'}</span>
+                              </button>
+                            )
+                          })()}
+                          {(() => {
+                            const o = reg.owner || {}
+                            const name = reg.ownerName || o.fullName
+                            return (
+                              <button
+                                onClick={e => { e.stopPropagation(); setSelectedPerson({ ...o, fullName: name, _type: 'owner' }) }}
+                                className="flex items-center gap-1.5 group/o hover:opacity-80 transition-opacity text-left w-fit"
+                              >
+                                <div className="w-5 h-5 rounded-full bg-stone-700 border border-stone-600 overflow-hidden flex items-center justify-center text-[9px] shrink-0">
+                                  {o.imageUrl ? <img src={o.imageUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-stone-400 font-bold text-[8px]">{(name || '?')[0]}</span>}
+                                </div>
+                                <span className="text-[10px] text-stone-500 group-hover/o:text-stone-300 transition-colors">{name || '—'}</span>
+                              </button>
+                            )
+                          })()}
                         </div>
                       </div>
 
@@ -270,6 +353,8 @@ export default function PlaceBet() {
 
         </div>
       </div>
+
+      <PersonModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />
     </SpectatorLayout>
   )
 }
