@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
+import { getRacecourses } from '../../api/racecourses'
 
 const STATUS_OPTS = ['BettingOpen', 'BettingClosed', 'Live', 'Finished']
 
@@ -24,7 +25,9 @@ function StatusBadge({ status }) {
 
 const PAGE_SIZE = 10
 
-function fmt(dt) {
+const todayISO = () => new Date().toISOString().slice(0, 10)
+
+function fmtDateTime(dt) {
   if (!dt) return '—'
   const d = new Date(dt)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
@@ -33,15 +36,33 @@ function fmt(dt) {
 
 export default function AdminBets() {
   const navigate = useNavigate()
-  const [status, setStatus]   = useState('BettingOpen')
-  const [races, setRaces]     = useState([])
-  const [total, setTotal]     = useState(0)
-  const [page, setPage]       = useState(1)
-  const [loading, setLoading] = useState(true)
 
-  const load = useCallback((pg, st) => {
+  const [status, setStatus]         = useState('BettingOpen')
+  const [races, setRaces]           = useState([])
+  const [total, setTotal]           = useState(0)
+  const [page, setPage]             = useState(1)
+  const [loading, setLoading]       = useState(true)
+  const [racecourses, setRacecourses] = useState([])
+
+  // filter state (draft — applied on button click)
+  const [draftCourse, setDraftCourse] = useState('')
+  const [draftDate, setDraftDate]     = useState(todayISO())
+  // applied filter
+  const [appliedCourse, setAppliedCourse] = useState('')
+  const [appliedDate, setAppliedDate]     = useState('')
+
+  useEffect(() => {
+    getRacecourses()
+      .then(r => setRacecourses(r.data.data || r.data || []))
+      .catch(() => {})
+  }, [])
+
+  const load = useCallback((pg, st, courseId, date) => {
     setLoading(true)
-    getRacesPaged({ page: pg, pageSize: PAGE_SIZE, status: st })
+    const params = { page: pg, pageSize: PAGE_SIZE, status: st }
+    if (courseId) params.racecourseId = courseId
+    if (date)     params.date         = date
+    getRacesPaged(params)
       .then(r => {
         const d = r.data.data
         setRaces(d?.items || [])
@@ -51,11 +72,23 @@ export default function AdminBets() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { load(page, status) }, [load, page, status])
+  useEffect(() => { load(page, status, appliedCourse, appliedDate) }, [load, page, status, appliedCourse, appliedDate])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   function changeStatus(s) { setStatus(s); setPage(1) }
+
+  function applyFilters() {
+    setAppliedCourse(draftCourse)
+    setAppliedDate(draftDate)
+    setPage(1)
+  }
+
+  const fmtDate = (iso) => {
+    if (!iso) return ''
+    const d = new Date(iso + 'T00:00:00')
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+  }
 
   return (
     <DashboardLayout>
@@ -65,6 +98,60 @@ export default function AdminBets() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bet Management</h1>
           <p className="text-sm text-gray-500 mt-1">Monitor race pools and betting activity.</p>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+          {/* Course Selection */}
+          <div className="flex-1 min-w-0">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Course Selection
+            </label>
+            <div className="relative">
+              <select
+                value={draftCourse}
+                onChange={e => setDraftCourse(e.target.value)}
+                className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 pr-8"
+              >
+                <option value="">All Racecourses</option>
+                {racecourses.map(c => (
+                  <option key={c.racecourseId || c.id} value={c.racecourseId || c.id}>
+                    {c.racecourseName || c.name}
+                  </option>
+                ))}
+              </select>
+              <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" style={{ fontSize: '16px' }}>
+                expand_more
+              </span>
+            </div>
+          </div>
+
+          {/* Date Range */}
+          <div className="flex-1 min-w-0">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Date Range
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                value={draftDate}
+                onChange={e => setDraftDate(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
+              />
+            </div>
+            {draftDate && (
+              <p className="text-[10px] text-gray-400 mt-1">{fmtDate(draftDate)}</p>
+            )}
+          </div>
+
+          {/* Apply button */}
+          <button
+            onClick={applyFilters}
+            className="sm:self-end px-6 py-2.5 bg-[#facc15] hover:bg-yellow-400 text-gray-900 font-bold text-sm rounded-xl transition-colors whitespace-nowrap flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>filter_alt</span>
+            Apply Filters
+          </button>
         </div>
 
         {/* Status tabs */}
@@ -104,7 +191,7 @@ export default function AdminBets() {
                   <StatusBadge status={r.status} />
                   <span className="text-xs text-gray-400 flex items-center gap-1">
                     <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>schedule</span>
-                    {fmt(r.startTime)}
+                    {fmtDateTime(r.startTime)}
                   </span>
                 </div>
 
@@ -121,7 +208,10 @@ export default function AdminBets() {
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
                     <div className="text-right">
-                      <p className="text-gray-900 font-extrabold text-base">{(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')}<span className="text-gray-400 font-normal text-xs ml-1">VND</span></p>
+                      <p className="text-gray-900 font-extrabold text-base">
+                        {(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')}
+                        <span className="text-gray-400 font-normal text-xs ml-1">VND</span>
+                      </p>
                       <p className="text-gray-400 text-xs">{r.betCount ?? 0} bets</p>
                     </div>
                     <span className="text-gray-300 text-lg font-light">›</span>
