@@ -528,7 +528,7 @@ export default function MySchedule() {
                         const h = item.horse || {}
                         const r = item.race  || {}
                         const ownerOk  = item.ownerConfirmation === true ? true : item.ownerConfirmation === false ? false : null
-                        const jockeyOk = item.jockeyConfirmation === true ? true : item.jockeyId ? null : null
+                        const jockeyOk = item.jockeyConfirmation === true ? true : item.jockeyConfirmation === false ? false : item.jockeyId ? null : null
                         return (
                           <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                             {/* Avatar */}

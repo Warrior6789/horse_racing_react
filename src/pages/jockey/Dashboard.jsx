@@ -52,10 +52,9 @@ export default function JockeyDashboard() {
   const [regs,       setRegs]       = useState([])
   const [publicRace, setPublicRace] = useState(null)
   const [loading,    setLoading]    = useState(true)
-  const [acting,          setActing]          = useState(null)
-  const [refreshKey,      setRefreshKey]      = useState(0)
-  const [selectedOwner,   setSelectedOwner]   = useState(null)
-  const [localAcceptedRaceIds, setLocalAcceptedRaceIds] = useState(new Set())
+  const [acting,        setActing]        = useState(null)
+  const [refreshKey,    setRefreshKey]    = useState(0)
+  const [selectedOwner, setSelectedOwner] = useState(null)
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
 
@@ -90,11 +89,7 @@ export default function JockeyDashboard() {
     setActing(id)
     try {
       if (action === 'accept') {
-        const reg = regs.find(r => r.registrationId === id)
-        const raceId = reg?.race?.raceId || reg?.raceId
-        console.log('[accept] reg:', reg, '| raceId:', raceId)
         await acceptRegistration(id)
-        if (raceId) setLocalAcceptedRaceIds(prev => new Set([...prev, raceId]))
       } else {
         await rejectRegistration(id)
       }
@@ -107,13 +102,9 @@ export default function JockeyDashboard() {
   const totalRaces = profile?.totalRaces ?? 0
   const winRate    = totalRaces > 0 ? `${Math.round((totalWins / totalRaces) * 100)}%` : '0%'
 
-  const confirmed     = regs.filter(r => r.jockeyConfirmation === true)
-  const acceptedRaceIds = new Set([
-    ...confirmed.map(r => r.race?.raceId || r.raceId).filter(Boolean),
-    ...localAcceptedRaceIds,
-  ])
-  console.log('[pending] localAcceptedRaceIds:', [...localAcceptedRaceIds], '| acceptedRaceIds:', [...acceptedRaceIds])
-  const pending       = regs.filter(r =>
+  const confirmed       = regs.filter(r => r.jockeyConfirmation === true)
+  const acceptedRaceIds = new Set(confirmed.map(r => r.race?.raceId || r.raceId).filter(Boolean))
+  const pending         = regs.filter(r =>
     (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
     !acceptedRaceIds.has(r.race?.raceId || r.raceId)
   )
