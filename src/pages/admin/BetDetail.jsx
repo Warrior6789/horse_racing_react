@@ -122,6 +122,24 @@ export default function BetDetail() {
             </div>
           ) : (
             <>
+              {/* Total Pool card */}
+              {(() => {
+                const totalAmt = pools.reduce((s, p) => s + (p.totalAmount ?? 0), 0)
+                const totalBets = pools.reduce((s, p) => s + (p.betCount ?? 0), 0)
+                return (
+                  <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Pool</p>
+                      <p className="text-3xl font-extrabold text-white">{totalAmt.toLocaleString('en-US')}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{totalBets} bets · VND</p>
+                    </div>
+                    <div className="p-3 bg-white/10 text-white rounded-xl">
+                      <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>paid</span>
+                    </div>
+                  </div>
+                )
+              })()}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {POOL_CARDS.map(({ label, icon, iconColor, bgIcon }) => {
                   const p = poolByType(label)
@@ -129,7 +147,7 @@ export default function BetDetail() {
                     <div key={label} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                       <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-                        <p className="text-2xl font-extrabold text-gray-900">{(p.totalAmount ?? 0).toLocaleString('vi-VN')}</p>
+                        <p className="text-2xl font-extrabold text-gray-900">{(p.totalAmount ?? 0).toLocaleString('en-US')}</p>
                         <p className="text-xs text-gray-400 mt-0.5">{p.betCount ?? 0} bets · VND</p>
                       </div>
                       <div className={`p-3 ${bgIcon} ${iconColor} rounded-xl`}>
