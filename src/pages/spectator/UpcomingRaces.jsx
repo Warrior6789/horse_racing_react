@@ -253,12 +253,15 @@ function PersonModal({ person, onClose }) {
             ))}
           </div>
         )}
-        {person.weight && (
-          <div className="flex justify-between items-center py-1.5 border-b border-stone-800">
-            <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">Weight</span>
-            <span className="text-sm font-bold text-stone-200">{person.weight} kg</span>
+        {[
+          { label: 'Weight', value: person.weight ? `${person.weight} kg` : null },
+          { label: 'Height', value: person.height ? `${person.height} cm` : null },
+        ].filter(r => r.value).map(({ label, value }) => (
+          <div key={label} className="flex justify-between items-center py-1.5 border-b border-stone-800">
+            <span className="text-xs font-bold text-stone-500 uppercase tracking-wide">{label}</span>
+            <span className="text-sm font-bold text-stone-200">{value}</span>
           </div>
-        )}
+        ))}
       </div>
     </div>
   )
@@ -386,39 +389,38 @@ function RaceDetailScreen({ race, mode, canBetByRole, onClose, onBetSuccess }) {
                   <p className="text-[10px] text-stone-600 mt-0.5 mb-2">
                     {reg.horse?.breed || '—'} · {reg.horse?.age ? `${reg.horse.age}yo` : '—'}
                   </p>
-                  <div className="flex items-center gap-2">
-                    {/* Jockey avatar */}
+                  <div className="flex flex-col gap-1.5">
+                    {/* Jockey */}
                     {(() => {
                       const j = reg.jockey || {}
                       const name = reg.jockeyName || j.fullName
                       return (
                         <button
                           onClick={() => setSelectedPerson({ ...j, fullName: name || j.fullName, _type: 'jockey' })}
-                          className="flex items-center gap-1.5 group/j hover:opacity-80 transition-opacity"
+                          className="flex items-center gap-1.5 group/j hover:opacity-80 transition-opacity text-left"
                           title={`Jockey: ${name || '—'}`}
                         >
-                          <div className="w-6 h-6 rounded-full bg-stone-700 border border-stone-600 overflow-hidden flex items-center justify-center text-[10px] shrink-0">
+                          <div className="w-5 h-5 rounded-full bg-stone-700 border border-stone-600 overflow-hidden flex items-center justify-center text-[9px] shrink-0">
                             {j.imageUrl ? <img src={j.imageUrl} alt="" className="w-full h-full object-cover" /> : '🏇'}
                           </div>
-                          <span className="text-[10px] text-stone-500 group-hover/j:text-stone-300 transition-colors truncate max-w-[60px]">{name || '—'}</span>
+                          <span className="text-[10px] text-stone-500 group-hover/j:text-stone-300 transition-colors truncate">{name || '—'}</span>
                         </button>
                       )
                     })()}
-                    <span className="text-stone-700 text-[10px]">·</span>
-                    {/* Owner avatar */}
+                    {/* Owner */}
                     {(() => {
                       const o = reg.owner || {}
                       const name = reg.ownerName || o.fullName
                       return (
                         <button
                           onClick={() => setSelectedPerson({ ...o, fullName: name || o.fullName, _type: 'owner' })}
-                          className="flex items-center gap-1.5 group/o hover:opacity-80 transition-opacity"
+                          className="flex items-center gap-1.5 group/o hover:opacity-80 transition-opacity text-left"
                           title={`Owner: ${name || '—'}`}
                         >
-                          <div className="w-6 h-6 rounded-full bg-stone-700 border border-stone-600 overflow-hidden flex items-center justify-center text-[10px] shrink-0">
-                            {o.imageUrl ? <img src={o.imageUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-stone-400 font-bold">{(name || '?')[0]}</span>}
+                          <div className="w-5 h-5 rounded-full bg-stone-700 border border-stone-600 overflow-hidden flex items-center justify-center text-[9px] shrink-0">
+                            {o.imageUrl ? <img src={o.imageUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-stone-400 font-bold text-[8px]">{(name || '?')[0]}</span>}
                           </div>
-                          <span className="text-[10px] text-stone-500 group-hover/o:text-stone-300 transition-colors truncate max-w-[60px]">{name || '—'}</span>
+                          <span className="text-[10px] text-stone-500 group-hover/o:text-stone-300 transition-colors truncate">{name || '—'}</span>
                         </button>
                       )
                     })()}
