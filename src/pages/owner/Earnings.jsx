@@ -33,14 +33,12 @@ export default function OwnerEarnings() {
     getHorses({ page: 1, pageSize: 100 })
       .then(async r => {
         const list = r.data.data?.items || []
-        console.log('[Earnings] horse[0]:', JSON.stringify(list[0]))
         setHorses(list)
         const stats = await Promise.all(
           list.map(h =>
-            getHorsePerformance(h.horseId)
+            getHorsePerformance(h.id)
               .then(res => {
                 const d = res.data.data
-                console.log('[Earnings] horse:', h.horseName, 'perf:', JSON.stringify(d))
                 return { horse: h, totalRaces: d?.totalRaces || 0, totalWins: d?.totalWins || 0, totalEarned: d?.totalEarned || 0 }
               })
               .catch(() => ({ horse: h, totalRaces: 0, totalWins: 0, totalEarned: 0 }))
@@ -110,7 +108,7 @@ export default function OwnerEarnings() {
                 </thead>
                 <tbody className="divide-y divide-gray-800/80">
                   {horseStats.map(({ horse, totalRaces, totalWins, totalEarned }) => (
-                    <tr key={horse.horseId} className="hover:bg-gray-800/40 transition-colors group">
+                    <tr key={horse.id} className="hover:bg-gray-800/40 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-sm shrink-0">
