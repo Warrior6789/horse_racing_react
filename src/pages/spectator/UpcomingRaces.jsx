@@ -239,7 +239,7 @@ function PersonModal({ person, onClose }) {
             {person.phone && <p className="text-stone-400 text-xs mt-0.5">📞 {person.phone}</p>}
           </div>
         </div>
-        {person._type === 'jockey' && person.totalRaces > 0 && (
+        {person._type === 'jockey' && (
           <div className="grid grid-cols-3 gap-3 mb-4">
             {[
               { label: 'Races', value: person.totalRaces },
