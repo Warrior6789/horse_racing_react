@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { History, Trophy, MapPin, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { History, Trophy, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getJockeyMyRequestsPaged } from '../../api/registrations'
 import { getMyJockeyRewards } from '../../api/jockeyProfiles'
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 10
 
 const FINISHED_STATUSES = ['completed', 'finished', 'done']
 const isFinished = (reg) => {
@@ -13,19 +13,27 @@ const isFinished = (reg) => {
   return FINISHED_STATUSES.some(f => s.includes(f))
 }
 
-const posColor = (pos) => {
-  if (pos === 1) return 'bg-[#facc15] text-[#110e0b]'
-  if (pos === 2) return 'bg-stone-300 text-black'
-  if (pos === 3) return 'bg-amber-700 text-white'
-  return 'bg-gray-800 text-gray-400'
+const getPosColor = (pos) => {
+  if (pos === 1) return 'bg-yellow-500 text-black'
+  if (pos === 2) return 'bg-gray-300 text-black'
+  if (pos === 3) return 'bg-orange-700 text-white'
+  return 'bg-gray-700 text-gray-300'
+}
+
+const posLabel = (pos) => {
+  if (pos === 1) return '1st'
+  if (pos === 2) return '2nd'
+  if (pos === 3) return '3rd'
+  if (pos) return `${pos}th`
+  return '—'
 }
 
 export default function JockeyRaceHistory() {
   const navigate = useNavigate()
-  const [regs,       setRegs]       = useState([])
-  const [rewardMap,  setRewardMap]  = useState({})
-  const [loading,    setLoading]    = useState(true)
-  const [page,       setPage]       = useState(1)
+  const [regs,      setRegs]      = useState([])
+  const [rewardMap, setRewardMap] = useState({})
+  const [loading,   setLoading]   = useState(true)
+  const [page,      setPage]      = useState(1)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -35,8 +43,8 @@ export default function JockeyRaceHistory() {
         getMyJockeyRewards({ page: 1, pageSize: 500 }).catch(() => null),
       ])
       const all = regRes.data.data?.items || []
-      // Only confirmed + finished races
-      const done = all.filter(r => r.jockeyConfirmation === true && isFinished(r))
+      const done = all
+        .filter(r => r.jockeyConfirmation === true && isFinished(r))
         .sort((a, b) => new Date(b.race?.startTime || 0) - new Date(a.race?.startTime || 0))
       setRegs(done)
 
@@ -55,13 +63,13 @@ export default function JockeyRaceHistory() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const totalPages = Math.max(1, Math.ceil(regs.length / PAGE_SIZE))
-  const safePage   = Math.min(page, totalPages)
-  const pageItems  = regs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+  const totalPages  = Math.max(1, Math.ceil(regs.length / PAGE_SIZE))
+  const safePage    = Math.min(page, totalPages)
+  const pageItems   = regs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
-  const totalRaces = regs.length
-  const wins       = regs.filter(r => r.finalPosition === 1 || r.position === 1).length
-  const winRate    = totalRaces > 0 ? Math.round((wins / totalRaces) * 100) : 0
+  const totalRaces  = regs.length
+  const wins        = regs.filter(r => (r.finalPosition ?? r.position) === 1).length
+  const winRate     = totalRaces > 0 ? Math.round((wins / totalRaces) * 100) : 0
   const totalEarned = Object.values(rewardMap).reduce((s, v) => s + v, 0)
 
   return (
@@ -77,11 +85,11 @@ export default function JockeyRaceHistory() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Races Completed', value: totalRaces,                    icon: History  },
-            { label: 'Wins',            value: wins,                          icon: Trophy   },
-            { label: 'Win Rate',        value: `${winRate}%`,                 icon: Trophy   },
-            { label: 'Total Earned',    value: totalEarned > 0 ? `${totalEarned.toLocaleString()} VND` : '—', icon: Trophy },
-          ].map(({ label, value, icon: Icon }) => (
+            { label: 'Races Completed', value: totalRaces },
+            { label: 'Wins',            value: wins },
+            { label: 'Win Rate',        value: `${winRate}%` },
+            { label: 'Total Earned',    value: totalEarned > 0 ? `${totalEarned.toLocaleString()} VND` : '—' },
+          ].map(({ label, value }) => (
             <div key={label} className="bg-[#1a2130] p-5 rounded-xl border border-gray-700/50">
               <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-3">{label}</p>
               <p className="text-2xl font-black text-white">{loading ? '—' : value}</p>
@@ -90,8 +98,8 @@ export default function JockeyRaceHistory() {
         </div>
 
         {/* Table */}
-        <div className="bg-[#161a23] rounded-xl border border-gray-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+        <div className="bg-[#1a1814] rounded-xl border border-gray-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <History size={15} className="text-gray-500" />
               <h2 className="text-sm font-bold text-gray-200">Past Races</h2>
@@ -104,84 +112,105 @@ export default function JockeyRaceHistory() {
               <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
             </div>
           ) : regs.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">
-              No completed races yet.
-            </div>
+            <div className="text-center py-16 text-gray-500 text-sm">No completed races yet.</div>
           ) : (
             <>
-              <div className="divide-y divide-gray-800/60">
-                {pageItems.map((reg) => {
-                  const race  = reg.race  || {}
-                  const horse = reg.horse || {}
-                  const pos   = reg.finalPosition ?? reg.position ?? null
-                  const reward = rewardMap[reg.registrationId] ?? rewardMap[race.raceId] ?? null
-                  const raceId = race.raceId
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-gray-400 text-[11px] font-bold uppercase tracking-wider border-b border-gray-700">
+                      <th className="px-6 py-3">Date</th>
+                      <th className="px-6 py-3">Race Event</th>
+                      <th className="px-6 py-3">Horse</th>
+                      <th className="px-6 py-3">Track &amp; Condition</th>
+                      <th className="px-6 py-3">Pos</th>
+                      <th className="px-6 py-3">Earnings</th>
+                      <th className="px-6 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageItems.map((reg) => {
+                      const race   = reg.race  || {}
+                      const horse  = reg.horse || {}
+                      const pos    = reg.finalPosition ?? reg.position ?? null
+                      const reward = rewardMap[reg.registrationId] ?? rewardMap[race.raceId] ?? null
 
-                  return (
-                    <div key={reg.registrationId} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors">
+                      return (
+                        <tr key={reg.registrationId} className="border-b border-gray-800 hover:bg-gray-800/40 transition-colors">
+                          {/* Date */}
+                          <td className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap">
+                            {race.startTime
+                              ? new Date(race.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                              : '—'}
+                          </td>
 
-                      {/* Position badge */}
-                      <div className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-black ${pos ? posColor(pos) : 'bg-gray-800 text-gray-600'}`}>
-                        {pos ?? '—'}
-                      </div>
+                          {/* Race Event */}
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-yellow-500 text-sm">
+                              {race.raceName || `Race #${race.raceNumber || '—'}`}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-0.5">
+                              {race.trackLength ? `${race.trackLength}m` : '—'}
+                            </div>
+                          </td>
 
-                      {/* Horse avatar */}
-                      <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-lg shrink-0">
-                        {horse.imageUrl
-                          ? <img src={horse.imageUrl} alt="" className="w-full h-full object-cover" />
-                          : '🐎'}
-                      </div>
+                          {/* Horse */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-base shrink-0">
+                                {horse.imageUrl
+                                  ? <img src={horse.imageUrl} alt="" className="w-full h-full object-cover" />
+                                  : '🐎'}
+                              </div>
+                              <div>
+                                <span className="font-semibold text-sm text-white">{horse.horseName || '—'}</span>
+                                {(horse.breed || horse.age) && (
+                                  <span className="text-gray-500 text-xs font-normal ml-1.5">
+                                    ({[horse.breed, horse.age ? `${horse.age}y` : null].filter(Boolean).join(' • ')})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-white truncate">
-                          {race.raceName || `Race #${race.raceNumber || '—'}`}
-                        </p>
-                        <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                          <span className="text-[11px] text-gray-500 truncate">🐎 {horse.horseName || '—'}</span>
-                          {race.racecourseName && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-gray-600">
-                              <MapPin size={9} /> {race.racecourseName}
+                          {/* Track & Condition */}
+                          <td className="px-6 py-4 text-sm text-gray-300">
+                            <div>{race.racecourseName || '—'}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{race.surface || race.trackCondition || ''}</div>
+                          </td>
+
+                          {/* Position */}
+                          <td className="px-6 py-4">
+                            <span className={`px-2.5 py-1 rounded text-xs font-bold ${pos ? getPosColor(pos) : 'bg-gray-700 text-gray-500'}`}>
+                              {posLabel(pos)}
                             </span>
-                          )}
-                        </div>
-                      </div>
+                          </td>
 
-                      {/* Date */}
-                      <div className="text-right shrink-0 hidden sm:block">
-                        <p className="text-xs text-gray-400 font-medium">
-                          {race.startTime
-                            ? new Date(race.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : '—'}
-                        </p>
-                        <p className="text-[10px] text-gray-600 mt-0.5">
-                          {race.startTime
-                            ? new Date(race.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                            : ''}
-                        </p>
-                      </div>
+                          {/* Earnings */}
+                          <td className="px-6 py-4 font-mono text-sm">
+                            {reward != null
+                              ? <span className="text-yellow-400 font-bold">+{reward.toLocaleString()} VND</span>
+                              : <span className="text-gray-600">—</span>
+                            }
+                          </td>
 
-                      {/* Reward */}
-                      <div className="text-right shrink-0 w-28">
-                        {reward != null
-                          ? <p className="text-sm font-black text-[#facc15]">+{reward.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">VND</span></p>
-                          : <p className="text-sm text-gray-600">—</p>
-                        }
-                      </div>
-
-                      {/* Results link */}
-                      {raceId && (
-                        <button
-                          onClick={() => navigate(`/jockey/races/${raceId}/results`)}
-                          className="shrink-0 p-2 rounded-lg text-gray-500 hover:text-yellow-400 hover:bg-gray-800 transition-colors"
-                          title="View Results"
-                        >
-                          <ExternalLink size={15} />
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
+                          {/* Results link */}
+                          <td className="px-6 py-4">
+                            {race.raceId && (
+                              <button
+                                onClick={() => navigate(`/jockey/races/${race.raceId}/results`)}
+                                className="p-1.5 rounded-lg text-gray-500 hover:text-yellow-400 hover:bg-gray-700 transition-colors"
+                                title="View Results"
+                              >
+                                <ExternalLink size={14} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
 
               {/* Pagination */}
@@ -190,17 +219,17 @@ export default function JockeyRaceHistory() {
                   <p className="text-gray-500 text-xs">Page {safePage} of {totalPages}</p>
                   <div className="flex gap-1">
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
-                      className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40">
+                      className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40">
                       <ChevronLeft size={14} />
                     </button>
                     {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
                       <button key={n} onClick={() => setPage(n)}
-                        className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${n === safePage ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800'}`}>
+                        className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold ${n === safePage ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800'}`}>
                         {n}
                       </button>
                     ))}
                     <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
-                      className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40">
+                      className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40">
                       <ChevronRight size={14} />
                     </button>
                   </div>
