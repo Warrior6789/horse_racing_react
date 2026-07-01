@@ -129,7 +129,7 @@ export default function BetDetail() {
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registration Fees Collected</p>
                     <p className="text-3xl font-extrabold text-white">{(race?.prizePool ?? 0).toLocaleString('en-US')}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Phí đăng ký chủ ngựa còn hiệu lực · VND</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Active registration fees from owners · VND</p>
                   </div>
                   <div className="p-3 bg-white/10 text-white rounded-xl">
                     <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>savings</span>
@@ -144,7 +144,7 @@ export default function BetDetail() {
                       <div>
                         <p className="text-xs font-bold text-blue-300/60 uppercase tracking-wider mb-1">Total Bet Pool</p>
                         <p className="text-3xl font-extrabold text-white">{totalAmt.toLocaleString('en-US')}</p>
-                        <p className="text-xs text-blue-300/50 mt-0.5">{totalBets} lượt cược từ spectator · VND</p>
+                        <p className="text-xs text-blue-300/50 mt-0.5">{totalBets} bets from spectators · VND</p>
                       </div>
                       <div className="p-3 bg-white/10 text-blue-300 rounded-xl">
                         <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>casino</span>
