@@ -30,10 +30,11 @@ const posLabel = (pos) => {
 
 export default function JockeyRaceHistory() {
   const navigate = useNavigate()
-  const [regs,      setRegs]      = useState([])
-  const [rewardMap, setRewardMap] = useState({})
-  const [loading,   setLoading]   = useState(true)
-  const [page,      setPage]      = useState(1)
+  const [regs,         setRegs]         = useState([])
+  const [rewardMap,    setRewardMap]    = useState({})
+  const [totalEarned,  setTotalEarned]  = useState(0)
+  const [loading,      setLoading]      = useState(true)
+  const [page,         setPage]         = useState(1)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -49,9 +50,12 @@ export default function JockeyRaceHistory() {
       setRegs(done)
 
       if (rewardRes) {
-        const items = rewardRes.data.data?.rewards?.items || rewardRes.data.data?.items || []
+        const d = rewardRes.data.data
+        setTotalEarned(d?.totalRewardAmount ?? 0)
+        const items = d?.rewards?.items || []
         const map = {}
         items.forEach(item => {
+          // prefer registrationId for exact match, fallback raceId
           const key = item.registrationId || item.raceId
           if (key) map[key] = (map[key] || 0) + (item.amount || 0)
         })
@@ -67,10 +71,9 @@ export default function JockeyRaceHistory() {
   const safePage    = Math.min(page, totalPages)
   const pageItems   = regs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
-  const totalRaces  = regs.length
-  const wins        = regs.filter(r => (r.finalPosition ?? r.position) === 1).length
-  const winRate     = totalRaces > 0 ? Math.round((wins / totalRaces) * 100) : 0
-  const totalEarned = Object.values(rewardMap).reduce((s, v) => s + v, 0)
+  const totalRaces = regs.length
+  const wins       = regs.filter(r => (r.finalPosition ?? r.position) === 1).length
+  const winRate    = totalRaces > 0 ? Math.round((wins / totalRaces) * 100) : 0
 
   return (
     <JockeyLayout>
