@@ -4,7 +4,6 @@ import SpectatorLayout from '../../components/SpectatorLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'
 import { getMyBetsPaged } from '../../api/bets'
-import { getActiveConversionRate } from '../../api/config'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
 
@@ -51,7 +50,6 @@ export default function WalletPage() {
   const [accountHolderName, setAccountHolderName] = useState('')
   const [msg, setMsg]                     = useState({ type: '', text: '' })
   const [actionLoading, setActionLoading] = useState(false)
-  const [conversionRate, setConversionRate] = useState(null)
   const [toast, setToast] = useState(null)
 
   const fetchData = useCallback((p) => {
@@ -109,11 +107,6 @@ export default function WalletPage() {
     onBalanceUpdated:     handleBalanceUpdated,
   })
 
-  useEffect(() => {
-    getActiveConversionRate()
-      .then(r => setConversionRate(r.data?.data?.rateValue ?? null))
-      .catch(() => {})
-  }, [])
 
   const handleDeposit = async () => {
     if (!amount || Number(amount) <= 0) return
@@ -328,34 +321,13 @@ export default function WalletPage() {
       {/* DEPOSIT MODAL */}
       {depositModal && (
         <Modal title="Deposit Funds" onClose={() => setDepositModal(false)}>
-          {/* Conversion rate info */}
-          {conversionRate != null && (
-            <div className="flex items-center justify-between bg-[#110e0b] border border-stone-800 rounded-xl px-4 py-3 mb-4">
-              <span className="text-[11px] text-stone-400 font-semibold">Conversion rate</span>
-              <span className="text-[11px] font-bold text-[#f7e0a3]">
-                {Math.round(1 / conversionRate).toLocaleString()} VND = 1 coin
-              </span>
-            </div>
-          )}
-
           <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5">Amount (VND)</label>
           <input
             type="number" min="1" placeholder="50000"
             value={amount} onChange={e => setAmount(e.target.value)}
             className="w-full bg-[#110e0b] border border-stone-700 rounded-xl px-4 py-3 text-sm text-stone-200 outline-none focus:border-[#f7e0a3]/40 transition-colors placeholder:text-stone-600"
           />
-
-          {/* Live coin preview */}
-          {conversionRate != null && Number(amount) > 0 && (
-            <div className="mt-2 mb-4 flex items-center justify-between px-1">
-              <span className="text-[11px] text-stone-500">You will receive</span>
-              <span className="text-sm font-black text-[#f7e0a3]">
-                ≈ {Math.floor(Number(amount) * conversionRate).toLocaleString()} VND
-              </span>
-            </div>
-          )}
-          {(conversionRate == null || Number(amount) <= 0) && <div className="mb-4" />}
-
+          <div className="mb-4" />
           {msg.type === 'error' && <p className="text-xs text-red-400 mb-3">{msg.text}</p>}
           <button onClick={handleDeposit} disabled={actionLoading}
             className="w-full bg-[#f7e0a3] text-[#110e0b] font-bold py-3 rounded-xl text-sm hover:bg-[#ebd292] transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
@@ -368,34 +340,13 @@ export default function WalletPage() {
       {/* WITHDRAW MODAL */}
       {withdrawModal && (
         <Modal title="Request Withdrawal" onClose={() => setWithdrawModal(false)}>
-          {/* Conversion rate info */}
-          {conversionRate != null && (
-            <div className="flex items-center justify-between bg-[#110e0b] border border-stone-800 rounded-xl px-4 py-3 mb-4">
-              <span className="text-[11px] text-stone-400 font-semibold">Conversion rate</span>
-              <span className="text-[11px] font-bold text-[#f7e0a3]">
-                {Math.round(1 / conversionRate).toLocaleString()} VND = 1 coin
-              </span>
-            </div>
-          )}
-
           <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5">Amount (VND)</label>
           <input
             type="number" min="1" placeholder="100"
             value={amount} onChange={e => setAmount(e.target.value)}
             className="w-full bg-[#110e0b] border border-stone-700 rounded-xl px-4 py-3 text-sm text-stone-200 outline-none focus:border-[#f7e0a3]/40 transition-colors placeholder:text-stone-600"
           />
-
-          {/* Live VND preview */}
-          {conversionRate != null && Number(amount) > 0 && (
-            <div className="mt-2 mb-4 flex items-center justify-between px-1">
-              <span className="text-[11px] text-stone-500">You will receive</span>
-              <span className="text-sm font-black text-[#f7e0a3]">
-                ≈ {Math.round(Number(amount) / conversionRate).toLocaleString()} VND
-              </span>
-            </div>
-          )}
-          {(conversionRate == null || Number(amount) <= 0) && <div className="mb-4" />}
-
+          <div className="mb-4" />
           <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1.5">Bank Name</label>
           <input type="text" placeholder="Vietcombank" value={bankName} onChange={e => setBankName(e.target.value)}
             className="w-full bg-[#110e0b] border border-stone-700 rounded-xl px-4 py-3 text-sm text-stone-200 outline-none focus:border-[#f7e0a3]/40 transition-colors placeholder:text-stone-600 mb-3" />

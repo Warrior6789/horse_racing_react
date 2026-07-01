@@ -3,7 +3,6 @@ import { Wallet, WalletCards, ArrowDownLeft, ArrowUpRight, Plus, X, TrendingDown
 import JockeyLayout from '../../components/JockeyLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'
-import { getActiveConversionRate } from '../../api/config'
 import { getJockeyMyRequests } from '../../api/registrations'
 import { getMyJockeyProfile, getMyJockeyRewards } from '../../api/jockeyProfiles'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -48,7 +47,6 @@ export default function JockeyWallet() {
   const [accountHolderName, setAccountHolderName] = useState('')
   const [msg, setMsg]                     = useState({ type: '', text: '' })
   const [actionLoading, setActionLoading] = useState(false)
-  const [conversionRate, setConversionRate] = useState(null)
 
   const [allTx, setAllTx] = useState([])
   const [races, setRaces] = useState([])
@@ -118,11 +116,6 @@ export default function JockeyWallet() {
     ])
   }, [])
 
-  useEffect(() => {
-    getActiveConversionRate()
-      .then(r => setConversionRate(r.data?.data?.rateValue ?? null))
-      .catch(() => {})
-  }, [])
 
   const handleDeposit = async () => {
     if (!amount || Number(amount) <= 0) return
@@ -362,23 +355,9 @@ export default function JockeyWallet() {
       {/* Deposit Modal */}
       {depositModal && (
         <Modal title="Deposit Funds" onClose={() => setDepositModal(false)}>
-          {conversionRate != null && (
-            <div className="flex items-center justify-between bg-[#0f1115] border border-gray-800 rounded-xl px-4 py-3 mb-4">
-              <span className="text-[11px] text-gray-400 font-semibold">Conversion rate</span>
-              <span className="text-[11px] font-bold text-yellow-400">
-                {Math.round(1 / conversionRate).toLocaleString()} VND = 1 coin
-              </span>
-            </div>
-          )}
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Amount (VND)</label>
           <input type="number" min="1" placeholder="50000" value={amount} onChange={e => setAmount(e.target.value)} className={inputCls} />
-          {conversionRate != null && Number(amount) > 0 && (
-            <div className="mt-2 mb-4 flex items-center justify-between px-1">
-              <span className="text-[11px] text-gray-500">You will receive</span>
-              <span className="text-sm font-black text-yellow-400">≈ {Math.floor(Number(amount) * conversionRate).toLocaleString()} coins</span>
-            </div>
-          )}
-          {(conversionRate == null || Number(amount) <= 0) && <div className="mb-4" />}
+          <div className="mb-4" />
           {msg.type === 'error' && <p className="text-xs text-red-400 mb-3">{msg.text}</p>}
           <button onClick={handleDeposit} disabled={actionLoading}
             className="w-full bg-[#facc15] hover:bg-[#eab308] text-black font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
@@ -391,23 +370,9 @@ export default function JockeyWallet() {
       {/* Withdraw Modal */}
       {withdrawModal && (
         <Modal title="Request Withdrawal" onClose={() => setWithdrawModal(false)}>
-          {conversionRate != null && (
-            <div className="flex items-center justify-between bg-[#0f1115] border border-gray-800 rounded-xl px-4 py-3 mb-4">
-              <span className="text-[11px] text-gray-400 font-semibold">Conversion rate</span>
-              <span className="text-[11px] font-bold text-yellow-400">
-                {Math.round(1 / conversionRate).toLocaleString()} VND = 1 coin
-              </span>
-            </div>
-          )}
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Amount (VND)</label>
           <input type="number" min="1" placeholder="100" value={amount} onChange={e => setAmount(e.target.value)} className={inputCls} />
-          {conversionRate != null && Number(amount) > 0 && (
-            <div className="mt-2 mb-4 flex items-center justify-between px-1">
-              <span className="text-[11px] text-gray-500">You will receive</span>
-              <span className="text-sm font-black text-yellow-400">≈ {Math.round(Number(amount) / conversionRate).toLocaleString()} VND</span>
-            </div>
-          )}
-          {(conversionRate == null || Number(amount) <= 0) && <div className="mb-4" />}
+          <div className="mb-4" />
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Bank Name</label>
           <input type="text" placeholder="Vietcombank" value={bankName} onChange={e => setBankName(e.target.value)} className={`${inputCls} mb-3`} />
           <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Account Number</label>
