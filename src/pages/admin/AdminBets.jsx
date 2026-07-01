@@ -6,11 +6,21 @@ import { getRacesPaged } from '../../api/races'
 
 const STATUS_OPTS = ['BettingOpen', 'BettingClosed', 'Live', 'Finished']
 
-const STATUS_CLS = {
-  BettingOpen:   'bg-emerald-900/30 text-emerald-400 border border-emerald-700/40',
-  BettingClosed: 'bg-orange-900/30 text-orange-400 border border-orange-700/40',
-  Live:          'bg-red-900/30 text-red-400 border border-red-700/40',
-  Finished:      'bg-gray-700/40 text-gray-400 border border-gray-600/40',
+const RACE_STATUS = {
+  BettingOpen:   { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20', dot: true,  label: 'Betting Open'   },
+  BettingClosed: { cls: 'bg-orange-50 text-orange-700 ring-orange-500/20',    dot: false, label: 'Betting Closed' },
+  Live:          { cls: 'bg-red-50 text-red-600 ring-red-500/20',             dot: true,  label: 'Live'           },
+  Finished:      { cls: 'bg-gray-100 text-gray-500 ring-gray-400/20',         dot: false, label: 'Finished'       },
+}
+
+function StatusBadge({ status }) {
+  const s = RACE_STATUS[status] || { cls: 'bg-gray-100 text-gray-500 ring-gray-400/20', label: status }
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${s.cls}`}>
+      {s.dot && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse" />}
+      {s.label}
+    </span>
+  )
 }
 
 const PAGE_SIZE = 10
@@ -30,7 +40,7 @@ export default function AdminBets() {
   const [page, setPage]       = useState(1)
   const [loading, setLoading] = useState(true)
 
-  const fetch = useCallback((pg, st) => {
+  const load = useCallback((pg, st) => {
     setLoading(true)
     getRacesPaged({ page: pg, pageSize: PAGE_SIZE, status: st })
       .then(r => {
@@ -42,35 +52,34 @@ export default function AdminBets() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetch(page, status) }, [fetch, page, status])
+  useEffect(() => { load(page, status) }, [load, page, status])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  function changeStatus(s) {
-    setStatus(s)
-    setPage(1)
-  }
+  function changeStatus(s) { setStatus(s); setPage(1) }
 
   return (
     <DashboardLayout>
-      <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      <div className="space-y-8">
 
         {/* Header */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-[#facc15] mb-1">Bets</h1>
-          <p className="text-gray-400 text-sm">Race pool & bet management overview.</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Bet Management</h1>
+            <p className="text-sm text-gray-500 mt-1">Monitor race pools and betting activity.</p>
+          </div>
         </div>
 
-        {/* Status filter */}
-        <div className="flex flex-wrap gap-2">
+        {/* Status tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
           {STATUS_OPTS.map(s => (
             <button
               key={s}
               onClick={() => changeStatus(s)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
                 status === s
-                  ? 'bg-[#facc15] text-black border-[#facc15]'
-                  : 'border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-400 hover:text-gray-600'
               }`}
             >
               {s.replace(/([A-Z])/g, ' $1').trim()}
@@ -79,55 +88,52 @@ export default function AdminBets() {
         </div>
 
         {/* Table */}
-        <div className="bg-[#161a23] rounded-xl border border-gray-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-gray-200">Race List</h2>
-            <span className="text-[11px] text-gray-500">{total} races</span>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 bg-gray-950 rounded-full" />
+              <h2 className="text-sm font-bold text-gray-900">Races</h2>
+              <span className="text-xs text-gray-400 font-medium">({total} total)</span>
+            </div>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center h-48">
-              <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
+              <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
             </div>
           ) : races.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">No races found.</div>
+            <div className="text-center py-16 text-sm font-semibold text-gray-400">No races found.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left whitespace-nowrap">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-800 bg-[#16181d]/50">
+                  <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                     {['Race', 'Racecourse', 'Status', 'Start Time', 'Total Pool', 'Bet Count'].map(col => (
-                      <th key={col} className="px-6 py-4 font-bold">{col}</th>
+                      <th key={col} className="py-4 px-4">{col}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/80">
+                <tbody className="divide-y divide-gray-100 text-sm">
                   {races.map(r => (
                     <tr
                       key={r.raceId}
                       onClick={() => navigate(`/admin/bets/${r.raceId}`)}
-                      className="hover:bg-gray-800/40 transition-colors cursor-pointer"
+                      className="hover:bg-gray-50/60 transition-colors cursor-pointer"
                     >
-                      <td className="px-6 py-4">
-                        <p className="text-white font-bold text-sm">{r.raceName || `Race #${r.raceNumber}`}</p>
-                        <p className="text-gray-500 text-[10px]">#{r.raceNumber}</p>
+                      <td className="py-4 px-4">
+                        <span className="font-bold text-gray-900">#{r.raceNumber}</span>
+                        {r.raceName && <p className="text-[11px] text-gray-400 mt-0.5 max-w-[160px] truncate">{r.raceName}</p>}
                       </td>
-                      <td className="px-6 py-4 text-gray-300 text-sm">{r.racecourseName || '—'}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${STATUS_CLS[r.status] || 'text-gray-400'}`}>
-                          {r.status}
-                        </span>
+                      <td className="py-4 px-4 text-xs text-gray-600 font-medium">{r.racecourseName || '—'}</td>
+                      <td className="py-4 px-4 whitespace-nowrap"><StatusBadge status={r.status} /></td>
+                      <td className="py-4 px-4 text-xs text-gray-500 whitespace-nowrap">{fmt(r.startTime)}</td>
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <span className="font-bold text-gray-900 text-sm">{(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')}</span>
+                        <span className="text-gray-400 text-xs ml-1">VND</span>
                       </td>
-                      <td className="px-6 py-4 text-gray-400 text-sm">{fmt(r.startTime)}</td>
-                      <td className="px-6 py-4">
-                        <span className="text-emerald-400 font-bold text-sm">
-                          {(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')}
-                        </span>
-                        <span className="text-gray-500 text-xs ml-1">VND</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-white font-bold text-sm">{r.betCount ?? 0}</span>
-                        <span className="text-gray-500 text-xs ml-1">bets</span>
+                      <td className="py-4 px-4">
+                        <span className="font-bold text-gray-900 text-sm">{r.betCount ?? 0}</span>
+                        <span className="text-gray-400 text-xs ml-1">bets</span>
                       </td>
                     </tr>
                   ))}
@@ -138,21 +144,21 @@ export default function AdminBets() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
-              <p className="text-gray-500 text-xs">Page {page} of {totalPages}</p>
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+              <p className="text-xs text-gray-400">Page {page} of {totalPages}</p>
               <div className="flex gap-1">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40">
+                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                   <ChevronLeft size={14} />
                 </button>
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
                   <button key={p} onClick={() => setPage(p)}
-                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${p === page ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${p === page ? 'bg-gray-950 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
                     {p}
                   </button>
                 ))}
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40">
+                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors">
                   <ChevronRight size={14} />
                 </button>
               </div>
