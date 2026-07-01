@@ -36,6 +36,7 @@ export default function JockeyRequests() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [selectedOwner, setSelectedOwner] = useState(null)
+  const [selectedHorse, setSelectedHorse] = useState(null)
 
   const fetchData = useCallback((p = 1) => {
     setLoading(true)
@@ -161,12 +162,12 @@ export default function JockeyRequests() {
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
+                          <button onClick={() => setSelectedHorse(horse)} className="flex items-center gap-2 hover:opacity-80 transition-opacity text-left">
                             <div className="w-7 h-7 rounded-md bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-xs shrink-0">
                               {horse.imageUrl ? <img src={horse.imageUrl} alt="" className="w-full h-full object-cover" /> : '🐎'}
                             </div>
-                            <span className="text-gray-300 text-sm font-medium">{horse.horseName || '—'}</span>
-                          </div>
+                            <span className="text-gray-300 text-sm font-medium hover:text-white transition-colors">{horse.horseName || '—'}</span>
+                          </button>
                         </td>
                         <td className="px-6 py-4 text-gray-300 text-sm font-bold">
                           {item.gateNumber ? `#${item.gateNumber}` : '—'}
@@ -227,6 +228,42 @@ export default function JockeyRequests() {
           )}
         </div>
       </div>
+
+      {/* Horse Detail Modal */}
+      {selectedHorse && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedHorse(null)}>
+          <div className="bg-[#161a23] border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-bold text-white">Horse Info</h3>
+              <button onClick={() => setSelectedHorse(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
+            </div>
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-20 h-20 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-4xl shrink-0">
+                {selectedHorse.imageUrl
+                  ? <img src={selectedHorse.imageUrl} alt="" className="w-full h-full object-cover" />
+                  : '🐎'}
+              </div>
+              <div>
+                <p className="font-bold text-white text-lg leading-tight">{selectedHorse.horseName || '—'}</p>
+                {selectedHorse.breed && <p className="text-gray-400 text-xs mt-0.5">{selectedHorse.breed}</p>}
+              </div>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: 'Age',    value: selectedHorse.age    ? `${selectedHorse.age} years old` : '—' },
+                { label: 'Weight', value: selectedHorse.weight ? `${selectedHorse.weight} kg`     : '—' },
+                { label: 'Height', value: selectedHorse.height ? `${selectedHorse.height} cm`     : '—' },
+                { label: 'Color',  value: selectedHorse.color  || '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-800">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{label}</span>
+                  <span className="text-sm font-bold text-gray-200">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Owner Detail Modal */}
       {selectedOwner && (
