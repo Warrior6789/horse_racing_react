@@ -194,12 +194,15 @@ export default function AdminBets() {
                   className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] items-center px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors gap-x-2"
                 >
                   {/* Race */}
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center shrink-0 font-bold text-[10px]">
-                      #{r.raceNumber}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
+                      {r.imageUrl
+                        ? <img src={r.imageUrl} alt="" className="w-full h-full object-cover" />
+                        : <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '18px' }}>sports</span>
+                      }
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-gray-900 text-sm truncate">{r.raceName || `Race #${r.raceNumber}`}</p>
+                      <p className="font-bold text-gray-900 text-sm truncate">#{r.raceNumber} — {r.raceName || `Race #${r.raceNumber}`}</p>
                       <p className="text-gray-400 text-xs truncate">{r.racecourseName || '—'}</p>
                     </div>
                   </div>
