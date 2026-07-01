@@ -211,7 +211,7 @@ export default function AdminBets() {
                   {/* Total Betting */}
                   <div>
                     <p className="font-bold text-gray-900 text-sm">
-                      {(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')}
+                      {(r.totalPoolAmount ?? 0).toLocaleString('en-US')}
                       <span className="text-gray-400 font-normal text-xs ml-1">VND</span>
                     </p>
                     <p className="text-gray-400 text-xs">{r.betCount ?? 0} bets</p>
