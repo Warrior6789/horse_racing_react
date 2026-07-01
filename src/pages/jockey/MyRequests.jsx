@@ -152,7 +152,7 @@ export default function JockeyRequests() {
                         </td>
                         <td className="px-6 py-4">
                           <button onClick={() => setSelectedHorse(horse)} className="flex items-center gap-2 hover:opacity-80 transition-opacity text-left">
-                            <div className="w-7 h-7 rounded-md bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-xs shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-xs shrink-0">
                               {horse.imageUrl ? <img src={horse.imageUrl} alt="" className="w-full h-full object-cover" /> : '🐎'}
                             </div>
                             <span className="text-gray-300 text-sm font-medium hover:text-white transition-colors">{horse.horseName || '—'}</span>
@@ -229,7 +229,7 @@ export default function JockeyRequests() {
               <button onClick={() => setSelectedHorse(null)} className="text-gray-500 hover:text-gray-300 transition-colors">✕</button>
             </div>
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-20 h-20 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-4xl shrink-0">
+              <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-4xl shrink-0">
                 {selectedHorse.imageUrl
                   ? <img src={selectedHorse.imageUrl} alt="" className="w-full h-full object-cover" />
                   : '🐎'}

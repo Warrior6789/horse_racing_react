@@ -129,7 +129,7 @@ function BetSlipModal({ race, reg, onClose, onSuccess }) {
             {/* Horse Info */}
             <div className="bg-[#110e0b] p-4 rounded-xl mb-6 border border-stone-800/60">
               <div className="flex gap-3 items-center">
-                <div className="w-12 h-12 rounded-lg bg-stone-800 overflow-hidden shrink-0 flex items-center justify-center text-xl">
+                <div className="w-12 h-12 rounded-full bg-stone-800 overflow-hidden shrink-0 flex items-center justify-center text-xl">
                   {reg.horse?.imageUrl
                     ? <img src={reg.horse.imageUrl} alt="" className="w-full h-full object-cover" />
                     : '🐎'}

@@ -92,7 +92,7 @@ function SetResultModal({ race, onClose, onSuccess }) {
           <div className="space-y-2">
             {regs.map(reg => (
               <div key={reg.registrationId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="w-9 h-9 rounded-lg bg-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-lg">
+                <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-lg">
                   {reg.horse?.imageUrl
                     ? <img src={reg.horse.imageUrl} alt="" className="w-full h-full object-cover" />
                     : '🐎'}

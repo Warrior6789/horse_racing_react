@@ -186,7 +186,7 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
                     </div>
 
                     {/* Horse image */}
-                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-stone-800 shrink-0 flex items-center justify-center text-lg">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-800 shrink-0 flex items-center justify-center text-lg">
                       {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : '🐎'}
                     </div>
 

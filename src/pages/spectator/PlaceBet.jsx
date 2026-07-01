@@ -199,7 +199,7 @@ export default function PlaceBet() {
                       </div>
 
                       {/* Horse image */}
-                      <div className="w-12 h-12 rounded-lg bg-stone-800 border border-stone-700 overflow-hidden flex items-center justify-center text-xl shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-stone-800 border border-stone-700 overflow-hidden flex items-center justify-center text-xl shrink-0">
                         {reg.horse?.imageUrl
                           ? <img src={reg.horse.imageUrl} alt="" className="w-full h-full object-cover" />
                           : '🐎'}
@@ -282,7 +282,7 @@ export default function PlaceBet() {
                 <>
                   {/* Selected horse */}
                   <div className="bg-[#110e0b] rounded-xl p-3 mb-5 border border-stone-800/60 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-stone-800 overflow-hidden flex items-center justify-center text-lg shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-stone-800 overflow-hidden flex items-center justify-center text-lg shrink-0">
                       {selectedReg.horse?.imageUrl
                         ? <img src={selectedReg.horse.imageUrl} alt="" className="w-full h-full object-cover" />
                         : '🐎'}

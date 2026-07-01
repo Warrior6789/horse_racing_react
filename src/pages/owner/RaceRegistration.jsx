@@ -50,7 +50,7 @@ function HorseCard({ horse, selected, onSelect }) {
           ? 'bg-[#facc15]/5 border-[#facc15] shadow-[0_0_12px_rgba(250,204,21,0.15)]'
           : 'bg-[#0f1117] border-gray-800/80 hover:border-gray-600'}`}
     >
-      <div className="w-14 h-14 bg-gray-800 rounded-lg overflow-hidden border border-gray-700 shrink-0 flex items-center justify-center text-2xl">
+      <div className="w-14 h-14 bg-gray-800 rounded-full overflow-hidden border border-gray-700 shrink-0 flex items-center justify-center text-2xl">
         {horse.imageUrl
           ? <img src={horse.imageUrl} alt="" className="w-full h-full object-cover" />
           : '🐎'}
@@ -612,7 +612,7 @@ export default function RaceRegistration() {
                 return (
                   <div className="bg-[#facc15]/5 border border-[#facc15]/50 rounded-xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-gray-800 rounded-lg border border-[#facc15]/30 overflow-hidden shrink-0 flex items-center justify-center text-2xl">
+                      <div className="w-14 h-14 bg-gray-800 rounded-full border border-[#facc15]/30 overflow-hidden shrink-0 flex items-center justify-center text-2xl">
                         {h.imageUrl ? <img src={h.imageUrl} alt="" className="w-full h-full object-cover" /> : '🐎'}
                       </div>
                       <div>

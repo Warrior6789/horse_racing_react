@@ -311,7 +311,7 @@ export default function MyHorses() {
                           return (
                             <tr key={hId} className="hover:bg-white/[0.02] transition-colors group">
                               <td className="px-6 py-4">
-                                <div className="w-12 h-12 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl">
+                                <div className="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl">
                                   {h.imageUrl
                                     ? <img src={h.imageUrl} alt="" className="w-full h-full object-cover" />
                                     : '🐴'}

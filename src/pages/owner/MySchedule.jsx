@@ -533,7 +533,7 @@ export default function MySchedule() {
                           <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                             {/* Avatar */}
                             <td className="px-4 py-3">
-                              <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl shrink-0">
+                              <div className="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-2xl shrink-0">
                                 {h.imageUrl
                                   ? <img src={h.imageUrl} alt="" className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display='none' }} />
                                   : '🐎'}

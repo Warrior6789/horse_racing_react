@@ -111,7 +111,7 @@ export default function OwnerEarnings() {
                     <tr key={horse.horseId} className="hover:bg-gray-800/40 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-sm shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-sm shrink-0">
                             {horse.imageUrl ? <img src={horse.imageUrl} alt="" className="w-full h-full object-cover" /> : '🐎'}
                           </div>
                           <div>
