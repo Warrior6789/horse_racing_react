@@ -312,6 +312,39 @@ export default function BetDetail() {
               <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
             </div>
           ) : (
+            <>
+              {/* Prize stat cards */}
+              {prize?.items?.length > 0 && (() => {
+                const PRIZE_CARDS = [
+                  { pos: 1, label: '1st Place', icon: 'emoji_events',     iconColor: 'text-amber-600',  bgIcon: 'bg-amber-50'  },
+                  { pos: 2, label: '2nd Place', icon: 'workspace_premium', iconColor: 'text-slate-500',  bgIcon: 'bg-slate-100' },
+                  { pos: 3, label: '3rd Place', icon: 'military_tech',     iconColor: 'text-orange-600', bgIcon: 'bg-orange-50' },
+                ]
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {PRIZE_CARDS.map(({ pos, label, icon, iconColor, bgIcon }) => {
+                      const item = prize.items.find(i => i.position === pos)
+                      return (
+                        <div key={pos} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                            <p className="text-2xl font-extrabold text-gray-900">
+                              {item ? (item.positionPrize ?? 0).toLocaleString('en-US') : '—'}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {item ? item.horseName : 'No result yet'} · VND
+                            </p>
+                          </div>
+                          <div className={`p-3 ${bgIcon} ${iconColor} rounded-xl`}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{icon}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               {!prize?.items?.length ? (
                 <div className="text-center py-16 text-sm font-semibold text-gray-400">Chưa có kết quả để tính thưởng.</div>
@@ -355,6 +388,7 @@ export default function BetDetail() {
                 </div>
               )}
             </div>
+            </>
           )}
         </section>
 
