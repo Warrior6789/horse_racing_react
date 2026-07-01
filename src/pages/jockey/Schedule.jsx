@@ -35,13 +35,16 @@ export default function JockeySchedule() {
   const [calYear,  setCalYear]  = useState(today.getFullYear())
   const [calMonth, setCalMonth] = useState(today.getMonth())
 
-  const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
-  useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
+  const handleUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
+  useRaceHub(null, { onRacesUpdated: handleUpdated, onRegistrationsUpdated: handleUpdated })
 
   useEffect(() => {
     Promise.all([
       getJockeyMyRequests()
-        .then(r => setRegs((r.data.data || []).filter(reg => reg.jockeyConfirmation === true)))
+        .then(r => {
+          const d = r.data.data
+          setRegs(Array.isArray(d) ? d : d?.items || [])
+        })
         .catch(() => {}),
       getMyJockeyProfile()
         .then(r => setProfile(r.data.data))
@@ -65,14 +68,15 @@ export default function JockeySchedule() {
   const firstDay = new Date(calYear, calMonth, 1).getDay()
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
 
-  // Race days in current month (set of day numbers)
+  // Race days in current month — raw string parse avoids timezone shift
   const raceDays = new Set(
     regs
+      .filter(reg => reg.jockeyConfirmation !== false && reg.race?.startTime)
       .filter(reg => {
-        const d = reg.race?.startTime ? new Date(reg.race.startTime) : null
-        return d && d.getFullYear() === calYear && d.getMonth() === calMonth
+        const [y, mo] = reg.race.startTime.slice(0, 10).split('-').map(Number)
+        return y === calYear && (mo - 1) === calMonth
       })
-      .map(reg => new Date(reg.race.startTime).getDate())
+      .map(reg => parseInt(reg.race.startTime.slice(8, 10), 10))
   )
 
   const totalRaces = profile?.totalRaces ?? 0
@@ -84,7 +88,7 @@ export default function JockeySchedule() {
   const recentRaces = regs.filter(r => r.race?.startTime && new Date(r.race.startTime) >= thirtyDaysAgo)
 
   const upcoming = [...regs]
-    .filter(r => r.race?.startTime && (new Date(r.race.startTime) > now || r.race?.status === 'Live'))
+    .filter(r => r.jockeyConfirmation === true && r.race?.startTime && (new Date(r.race.startTime) > now || r.race?.status === 'Live'))
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))
 
   const fmtDate = str => str
