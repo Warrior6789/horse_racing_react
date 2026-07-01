@@ -55,6 +55,7 @@ export default function BetDetail() {
   const [loadingPool, setLoadingPool]   = useState(true)
   const [loadingPrize, setLoadingPrize] = useState(true)
   const [betPage, setBetPage]           = useState(1)
+  const [matrixPage, setMatrixPage]     = useState(1)
 
   const fetchPool = useCallback(() => {
     setLoadingPool(true)
@@ -142,6 +143,7 @@ export default function BetDetail() {
               {/* Horse × BetType Matrix */}
               {bets.length > 0 && (() => {
                 const BET_TYPES = ['Win', 'Place', 'Show']
+                const MATRIX_PAGE_SIZE = 5
                 const horses = [...new Map(bets.map(b => [b.horseId || b.horseName, b.horseName])).values()]
                 const matrix = horses.map(name => {
                   const row = { name }
@@ -162,11 +164,15 @@ export default function BetDetail() {
                   footer[t] = { amt: matched.reduce((s, b) => s + (b.betAmount ?? 0), 0), cnt: matched.length }
                 })
                 footer.total = { amt: bets.reduce((s, b) => s + (b.betAmount ?? 0), 0), cnt: bets.length }
+                const mTotalPages = Math.max(1, Math.ceil(matrix.length / MATRIX_PAGE_SIZE))
+                const mPage = Math.min(matrixPage, mTotalPages)
+                const mItems = matrix.slice((mPage - 1) * MATRIX_PAGE_SIZE, mPage * MATRIX_PAGE_SIZE)
                 return (
                   <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                       <div className="w-1 h-5 bg-gray-950 rounded-full" />
                       <h3 className="text-sm font-bold text-gray-900">Horse Bet Distribution</h3>
+                      <span className="text-xs text-gray-400 font-medium">({matrix.length} horses)</span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
@@ -178,17 +184,13 @@ export default function BetDetail() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-sm">
-                          {matrix.map(row => (
+                          {mItems.map(row => (
                             <tr key={row.name} className="hover:bg-gray-50/60 transition-colors">
                               <td className="py-3 px-4 font-semibold text-gray-900">{row.name}</td>
                               {BET_TYPES.map(t => (
                                 <td key={t} className="py-3 px-4">
-                                  {row[t].cnt > 0 ? (
-                                    <>
-                                      <p className="font-bold text-gray-900 text-sm">{row[t].amt.toLocaleString('en-US')}</p>
-                                      <p className="text-gray-400 text-xs">({row[t].cnt} bets)</p>
-                                    </>
-                                  ) : <span className="text-gray-300">—</span>}
+                                  <p className="font-bold text-gray-900 text-sm">{row[t].amt.toLocaleString('en-US')}</p>
+                                  <p className="text-gray-400 text-xs">({row[t].cnt} bets)</p>
                                 </td>
                               ))}
                               <td className="py-3 px-4">
@@ -215,6 +217,21 @@ export default function BetDetail() {
                         </tfoot>
                       </table>
                     </div>
+                    {mTotalPages > 1 && (
+                      <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between">
+                        <p className="text-xs text-gray-400">Page {mPage} of {mTotalPages}</p>
+                        <div className="flex gap-2">
+                          <button onClick={() => setMatrixPage(p => Math.max(1, p - 1))} disabled={mPage === 1}
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            ‹ Prev
+                          </button>
+                          <button onClick={() => setMatrixPage(p => Math.min(mTotalPages, p + 1))} disabled={mPage === mTotalPages}
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            Next ›
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               })()}
