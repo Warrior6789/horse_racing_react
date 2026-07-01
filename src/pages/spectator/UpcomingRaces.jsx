@@ -556,7 +556,7 @@ function RaceRow({ race, canBetByRole = true, onAction, query = '' }) {
           <div className="flex flex-col items-end gap-2 w-full xl:w-auto">
             <button
               onClick={() => {
-                const mode = state === 'open' && canBetByRole ? 'bet' : state === 'progress' ? 'live' : state === 'finished' ? 'results' : 'details'
+                const mode = state === 'open' ? 'bet' : state === 'progress' ? 'live' : state === 'finished' ? 'results' : 'details'
                 onAction(race, mode)
               }}
               className={`w-full xl:w-36 py-2.5 rounded-lg text-sm font-bold transition-colors ${
@@ -780,6 +780,7 @@ export default function UpcomingRaces() {
             <RaceRow key={race.raceId} race={race} canBetByRole={canBetByRole} query={search} onAction={(r, m) => {
               if (m === 'results') { navigate(`/spectator/races/${r.raceId}/results`); return }
               if (m === 'live')    { navigate(`/spectator/races/${r.raceId}/live`);    return }
+              if (m === 'bet')     { navigate(`/spectator/races/${r.raceId}/bet`);     return }
               setArenaRace(r); setArenaMode(m)
             }} />
           ))

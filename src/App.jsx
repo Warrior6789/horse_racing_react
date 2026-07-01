@@ -10,6 +10,7 @@ import PaymentCancel from './pages/payment/Cancel'
 
 import SpectatorDashboard from './pages/spectator/Dashboard'
 import UpcomingRaces from './pages/spectator/UpcomingRaces'
+import PlaceBet from './pages/spectator/PlaceBet'
 import LiveRace from './pages/spectator/LiveRace'
 import MyBets from './pages/spectator/MyBets'
 import Wallet from './pages/spectator/Wallet'
@@ -69,6 +70,7 @@ export default function App() {
           {/* Spectator */}
           <Route path="/spectator/dashboard" element={<PrivateRoute><SpectatorDashboard /></PrivateRoute>} />
           <Route path="/spectator/races" element={<PrivateRoute><UpcomingRaces /></PrivateRoute>} />
+          <Route path="/spectator/races/:raceId/bet"     element={<PrivateRoute><PlaceBet /></PrivateRoute>} />
           <Route path="/spectator/races/:raceId/live"    element={<PrivateRoute><LiveRace /></PrivateRoute>} />
           <Route path="/spectator/races/:raceId/results" element={<PrivateRoute><RaceResult backUrl="/spectator/races" /></PrivateRoute>} />
           <Route path="/spectator/bets"    element={<PrivateRoute><MyBets /></PrivateRoute>} />
