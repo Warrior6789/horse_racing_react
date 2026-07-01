@@ -127,7 +127,7 @@ export default function JockeyRaceHistory() {
                         {/* Horse */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-base shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-base shrink-0">
                               {item.horseImageUrl
                                 ? <img src={item.horseImageUrl} alt="" className="w-full h-full object-cover" />
                                 : '🐎'}
