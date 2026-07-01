@@ -4,7 +4,7 @@ import JockeyLayout from '../../components/JockeyLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'
 import { getJockeyMyRequests } from '../../api/registrations'
-import { getMyJockeyProfile, getMyJockeyRewards } from '../../api/jockeyProfiles'
+import { getMyJockeyRewards } from '../../api/jockeyProfiles'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
 
@@ -58,11 +58,7 @@ export default function JockeyWallet() {
     Promise.all([
       getBalance()
         .then(r => setBalance(r.data.data?.balance ?? r.data.data?.walletBalance ?? 0))
-        .catch(() =>
-          getMyJockeyProfile()
-            .then(r => setBalance(r.data.data?.balance ?? r.data.data?.walletBalance ?? 0))
-            .catch(() => {})
-        ),
+        .catch(() => {}),
       getTransactions({ page: 1, pageSize: 500 }).then(r => {
         const all = r.data.data?.items || []
         setAllTx(all)
