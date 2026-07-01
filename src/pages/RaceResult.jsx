@@ -65,14 +65,25 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
       getMyBetsPaged({ page: 1, pageSize: 50 }).catch(() => null),
     ]).then(([raceRes, resultsRes, regsRes, betsRes]) => {
       setRace(raceRes.data.data || raceRes.data)
-      if (resultsRes) setResults(resultsRes.data.data || [])
-      if (regsRes)    setRegs(regsRes.data.data || [])
+      if (resultsRes) {
+        const rd = resultsRes.data.data
+        setResults(Array.isArray(rd) ? rd : rd?.items || [])
+      }
+      if (regsRes) {
+        const rd = regsRes.data.data
+        const arr = Array.isArray(rd) ? rd : rd?.items || []
+        console.log('[RaceResult] regs[0]:', JSON.stringify(arr[0]))
+        setRegs(arr)
+      }
       if (betsRes)    setBets(betsRes.data.data?.items || [])
     }).catch(() => {}).finally(() => setLoading(false))
   }, [raceId])
 
   // Build a lookup from registrationId → full reg data (jockey, owner, horse)
   const regMap = Object.fromEntries(regs.map(r => [r.registrationId, r]))
+
+  console.log('[RaceResult] results[0]:', JSON.stringify(results[0]))
+  console.log('[RaceResult] regMap keys:', Object.keys(regMap).slice(0,3))
 
   const standings = [...results]
     .sort((a, b) => (a.finalPosition ?? a.rank ?? a.position ?? 99)
