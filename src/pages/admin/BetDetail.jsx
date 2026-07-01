@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacePool, getRacePrizePreview, getRace } from '../../api/races'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -61,6 +62,8 @@ export default function BetDetail() {
   const [prize, setPrize]             = useState(null)
   const [loadingPool, setLoadingPool]   = useState(true)
   const [loadingPrize, setLoadingPrize] = useState(true)
+  const [betPage, setBetPage]           = useState(1)
+  const BET_PAGE_SIZE = 10
 
   const fetchPool = useCallback(() => {
     setLoadingPool(true)
@@ -90,8 +93,10 @@ export default function BetDetail() {
 
   useRaceHub(raceId, { onPoolUpdate: handlePoolUpdate })
 
-  const pools = pool?.pools || []
-  const bets  = pool?.bets  || []
+  const pools      = pool?.pools || []
+  const bets       = pool?.bets  || []
+  const betTotalPages = Math.max(1, Math.ceil(bets.length / BET_PAGE_SIZE))
+  const betItems      = bets.slice((betPage - 1) * BET_PAGE_SIZE, betPage * BET_PAGE_SIZE)
 
   const poolByType = (type) => pools.find(p => p.betType === type) || {}
 
@@ -152,43 +157,66 @@ export default function BetDetail() {
                 {bets.length === 0 ? (
                   <div className="text-center py-16 text-sm font-semibold text-gray-400">No bets placed yet.</div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                          {['Bettor', 'Horse', 'Bet Type', 'Amount', 'Status', 'Payout Ratio', 'Placed At'].map(col => (
-                            <th key={col} className="py-3 px-4">{col}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 text-sm">
-                        {bets.map((b, i) => (
-                          <tr key={b.betId || i} className="hover:bg-gray-50/60 transition-colors">
-                            <td className="py-3 px-4 font-medium text-gray-900">{b.spectatorName || '—'}</td>
-                            <td className="py-3 px-4 text-gray-600">{b.horseName || '—'}</td>
-                            <td className="py-3 px-4">
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${BET_TYPE_CLS[b.betType] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
-                                {b.betType}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              <span className="font-bold text-gray-900">{(b.betAmount ?? 0).toLocaleString('vi-VN')}</span>
-                              <span className="text-gray-400 text-xs ml-1">VND</span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${BET_STATUS_CLS[b.status] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
-                                {b.status || '—'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-gray-600 text-sm">
-                              {b.payoutRatio != null ? `×${b.payoutRatio}` : '—'}
-                            </td>
-                            <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{fmt(b.createdAt)}</td>
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                            {['Bettor', 'Horse', 'Bet Type', 'Amount', 'Status', 'Payout Ratio', 'Placed At'].map(col => (
+                              <th key={col} className="py-3 px-4">{col}</th>
+                            ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 text-sm">
+                          {betItems.map((b, i) => (
+                            <tr key={b.betId || i} className="hover:bg-gray-50/60 transition-colors">
+                              <td className="py-3 px-4 font-medium text-gray-900">{b.spectatorName || '—'}</td>
+                              <td className="py-3 px-4 text-gray-600">{b.horseName || '—'}</td>
+                              <td className="py-3 px-4">
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${BET_TYPE_CLS[b.betType] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
+                                  {b.betType}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <span className="font-bold text-gray-900">{(b.betAmount ?? 0).toLocaleString('vi-VN')}</span>
+                                <span className="text-gray-400 text-xs ml-1">VND</span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${BET_STATUS_CLS[b.status] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
+                                  {b.status || '—'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-gray-600 text-sm">
+                                {b.payoutRatio != null ? `×${b.payoutRatio}` : '—'}
+                              </td>
+                              <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{fmt(b.createdAt)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {betTotalPages > 1 && (
+                      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <p className="text-xs text-gray-400">Page {betPage} of {betTotalPages}</p>
+                        <div className="flex gap-1">
+                          <button onClick={() => setBetPage(p => Math.max(1, p - 1))} disabled={betPage === 1}
+                            className="w-7 h-7 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            <ChevronLeft size={14} />
+                          </button>
+                          {Array.from({ length: Math.min(betTotalPages, 5) }, (_, i) => i + 1).map(p => (
+                            <button key={p} onClick={() => setBetPage(p)}
+                              className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${p === betPage ? 'bg-gray-950 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                              {p}
+                            </button>
+                          ))}
+                          <button onClick={() => setBetPage(p => Math.min(betTotalPages, p + 1))} disabled={betPage === betTotalPages}
+                            className="w-7 h-7 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </>
