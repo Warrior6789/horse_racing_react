@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Clock, AlertCircle, Trophy, CalendarDays, ChevronLeft, ChevronRight, Phone } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, Trophy, CalendarDays, ChevronLeft, ChevronRight, Phone } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getJockeyMyRequestsPaged, acceptRegistration, rejectRegistration } from '../../api/registrations'
 import { getBalance } from '../../api/payments'
@@ -124,7 +124,7 @@ export default function JockeyRequests() {
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-800 bg-[#16181d]/50">
-                    {['Race Info', 'Owner', 'Horse', 'Gate', 'Date', 'Status'].map(col => (
+                    {['Race Info', 'Owner', 'Horse', 'Gate', 'Date', 'Status', 'Actions'].map(col => (
                       <th key={col} className="px-6 py-4 font-bold">{col}</th>
                     ))}
                   </tr>
@@ -184,6 +184,28 @@ export default function JockeyRequests() {
                           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_CLS[status] || STATUS_CLS.Pending}`}>
                             {status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {isPending ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handle(item.registrationId, 'accept')}
+                                disabled={isActing}
+                                className="flex items-center gap-1 bg-green-900/30 hover:bg-green-900/50 text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                              >
+                                <Check size={13} /> Accept
+                              </button>
+                              <button
+                                onClick={() => handle(item.registrationId, 'reject')}
+                                disabled={isActing}
+                                className="flex items-center gap-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                              >
+                                <X size={13} /> Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-gray-600 text-xs">—</span>
+                          )}
                         </td>
                       </tr>
                     )
