@@ -43,9 +43,11 @@ export default function JockeySchedule() {
       getJockeyMyRequests()
         .then(r => {
           const d = r.data.data
-          setRegs(Array.isArray(d) ? d : d?.items || [])
+          const items = Array.isArray(d) ? d : d?.items || []
+          console.log('[Schedule] regs count:', items.length, '| first item:', items[0])
+          setRegs(items)
         })
-        .catch(() => {}),
+        .catch(e => console.error('[Schedule] fetch error:', e)),
       getMyJockeyProfile()
         .then(r => setProfile(r.data.data))
         .catch(() => {}),
