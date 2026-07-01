@@ -171,8 +171,8 @@ export default function AdminBets() {
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-[2fr_1.5fr_1fr_1.5fr_24px] px-5 py-3 bg-gray-950">
-            {['Race', 'Scheduled Start', 'Status', 'Total Betting', ''].map(col => (
+          <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] px-5 py-3 bg-gray-950">
+            {['Race', 'Scheduled Start', 'Status', 'Total Pool', 'Bets', ''].map(col => (
               <span key={col} className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80">{col}</span>
             ))}
           </div>
@@ -189,7 +189,7 @@ export default function AdminBets() {
                 <div
                   key={r.raceId}
                   onClick={() => navigate(`/admin/bets/${r.raceId}`)}
-                  className="grid grid-cols-[2fr_1.5fr_1fr_1.5fr_24px] items-center px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors gap-x-2"
+                  className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] items-center px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors gap-x-2"
                 >
                   {/* Race */}
                   <div className="flex items-center gap-2 min-w-0">
@@ -208,13 +208,18 @@ export default function AdminBets() {
                   {/* Status */}
                   <div><StatusBadge status={r.status} /></div>
 
-                  {/* Total Betting */}
+                  {/* Total Pool */}
                   <div>
                     <p className="font-bold text-gray-900 text-sm">
                       {(r.totalPoolAmount ?? 0).toLocaleString('en-US')}
                       <span className="text-gray-400 font-normal text-xs ml-1">VND</span>
                     </p>
-                    <p className="text-gray-400 text-xs">{r.betCount ?? 0} bets</p>
+                  </div>
+
+                  {/* Bets */}
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">{r.betCount ?? 0}</p>
+                    <p className="text-gray-400 text-xs">bets</p>
                   </div>
 
                   {/* Arrow */}
