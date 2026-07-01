@@ -65,8 +65,8 @@ export default function BetDetail() {
   const fetchPool = useCallback(() => {
     setLoadingPool(true)
     getRacePool(raceId)
-      .then(r => setPool(r.data.data))
-      .catch(() => setPool(null))
+      .then(r => { console.log('[BetDetail] pool raw:', JSON.stringify(r.data)); setPool(r.data.data) })
+      .catch(e => { console.log('[BetDetail] pool error:', e?.response?.status, JSON.stringify(e?.response?.data)); setPool(null) })
       .finally(() => setLoadingPool(false))
   }, [raceId])
 
