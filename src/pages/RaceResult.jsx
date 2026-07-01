@@ -71,10 +71,13 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
     }).catch(() => {}).finally(() => setLoading(false))
   }, [raceId])
 
-  const standings = [...results].sort(
-    (a, b) => (a.finalPosition ?? a.rank ?? a.position ?? 99)
-            - (b.finalPosition ?? b.rank ?? b.position ?? 99)
-  )
+  // Build a lookup from registrationId → full reg data (jockey, owner, horse)
+  const regMap = Object.fromEntries(regs.map(r => [r.registrationId, r]))
+
+  const standings = [...results]
+    .sort((a, b) => (a.finalPosition ?? a.rank ?? a.position ?? 99)
+                  - (b.finalPosition ?? b.rank ?? b.position ?? 99))
+    .map(item => ({ ...regMap[item.registrationId], ...item }))
 
   // fallback: if no API results, use registrations as unranked list
   const displayList = standings.length > 0 ? standings : regs.map((r, i) => ({ ...r, finalPosition: i + 1 }))
@@ -153,13 +156,14 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
           ) : (
             <div className="divide-y divide-stone-800/60">
               {displayList.map((item, i) => {
-                const pos    = item.finalPosition ?? item.rank ?? item.position ?? (i + 1)
-                const horse  = item.horse  || {}
-                const name   = horse.horseName || item.horseName || `Horse #${item.gateNumber ?? '?'}`
-                const jockey = item.jockeyName || item.jockey?.fullName || horse.jockeyName || '—'
-                const gate   = item.gateNumber ?? '?'
-                const img    = horse.imageUrl || item.imageUrl
-                const time   = item.finishTime || item.raceTime || null
+                const pos     = item.finalPosition ?? item.rank ?? item.position ?? (i + 1)
+                const horse   = item.horse  || {}
+                const name    = horse.horseName || item.horseName || `Horse #${item.gateNumber ?? '?'}`
+                const jockey  = item.jockeyName || item.jockey?.fullName || '—'
+                const owner   = item.ownerName  || item.owner?.fullName  || '—'
+                const gate    = item.gateNumber ?? '?'
+                const img     = horse.imageUrl || item.imageUrl
+                const time    = item.finishTime || item.raceTime || null
                 const isMedal = pos <= 3
                 return (
                   <div key={item.registrationId ?? i} className="flex items-center gap-3 px-5 py-3 hover:bg-stone-800/20 transition-colors">
@@ -181,7 +185,10 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-stone-100 truncate">{name}</p>
                       <p className="text-[10px] text-stone-500 mt-0.5 truncate">
-                        {jockey} · Gate #{gate}
+                        🏇 {jockey} · Gate #{gate}
+                      </p>
+                      <p className="text-[10px] text-stone-600 mt-0.5 truncate">
+                        👤 {owner}
                       </p>
                     </div>
 
