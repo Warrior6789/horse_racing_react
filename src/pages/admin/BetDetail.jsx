@@ -122,16 +122,36 @@ export default function BetDetail() {
             </div>
           ) : (
             <>
-              {/* Prize pool từ chủ ngựa */}
-              <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Prize Pool</p>
-                  <p className="text-3xl font-extrabold text-white">{(race?.totalPoolAmount ?? 0).toLocaleString('en-US')}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Đóng góp từ chủ ngựa · VND</p>
+              {/* 2 luồng tiền tách biệt */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Luồng 1: phí đăng ký chủ ngựa */}
+                <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registration Fees Collected</p>
+                    <p className="text-3xl font-extrabold text-white">{(race?.prizePool ?? 0).toLocaleString('en-US')}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Phí đăng ký chủ ngựa còn hiệu lực · VND</p>
+                  </div>
+                  <div className="p-3 bg-white/10 text-white rounded-xl">
+                    <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>savings</span>
+                  </div>
                 </div>
-                <div className="p-3 bg-white/10 text-white rounded-xl">
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>savings</span>
-                </div>
+                {/* Luồng 2: tổng tiền cược spectator */}
+                {(() => {
+                  const totalAmt  = pools.reduce((s, p) => s + (p.totalAmount ?? 0), 0)
+                  const totalBets = pools.reduce((s, p) => s + (p.betCount ?? 0), 0)
+                  return (
+                    <div className="bg-blue-950 p-5 rounded-2xl flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-blue-300/60 uppercase tracking-wider mb-1">Total Bet Pool</p>
+                        <p className="text-3xl font-extrabold text-white">{totalAmt.toLocaleString('en-US')}</p>
+                        <p className="text-xs text-blue-300/50 mt-0.5">{totalBets} lượt cược từ spectator · VND</p>
+                      </div>
+                      <div className="p-3 bg-white/10 text-blue-300 rounded-xl">
+                        <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>casino</span>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
