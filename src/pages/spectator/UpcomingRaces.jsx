@@ -331,7 +331,8 @@ function RaceDetailScreen({ race, mode, canBetByRole, onClose, onBetSuccess }) {
                 {/* Info */}
                 <div className="p-3 flex flex-col flex-1">
                   <h4 className="font-bold text-sm text-stone-100 truncate">{reg.horse?.horseName || '—'}</h4>
-                  <p className="text-[11px] text-stone-500 mt-0.5 truncate">{reg.jockeyName || reg.jockey?.fullName || 'Unknown jockey'}</p>
+                  <p className="text-[11px] text-stone-500 mt-0.5 truncate">🏇 {reg.jockeyName || reg.jockey?.fullName || 'Unknown jockey'}</p>
+                  <p className="text-[11px] text-stone-500 mt-0.5 truncate">👤 {reg.ownerName || reg.owner?.fullName || 'Unknown owner'}</p>
                   <p className="text-[10px] text-stone-600 mt-0.5">
                     {reg.horse?.breed || '—'} · {reg.horse?.age ? `${reg.horse.age}yo` : '—'}
                     {reg.horse?.weight ? ` · ${reg.horse.weight}kg` : ''}
