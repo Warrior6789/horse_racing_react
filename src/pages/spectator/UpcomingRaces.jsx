@@ -341,7 +341,7 @@ function RaceDetailScreen({ race, mode, canBetByRole, onClose, onBetSuccess }) {
       {!canBetByRole && raceIsOpen && (
         <div className="mx-6 mt-4 bg-amber-900/20 border border-amber-700/40 text-amber-300 text-xs px-4 py-3 rounded-lg flex items-center gap-2">
           <span className="shrink-0">⚠️</span>
-          <span>Tài khoản của bạn đã được nâng cấp lên role khác. Chỉ tài khoản Spectator mới có thể đặt cược.</span>
+          <span>Your account has been upgraded to a different role. Only Spectator accounts can place bets.</span>
         </div>
       )}
 

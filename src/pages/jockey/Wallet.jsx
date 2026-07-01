@@ -23,10 +23,10 @@ function Modal({ title, onClose, children }) {
 }
 
 const BALANCE_REASON_MSG = {
-  PrizePayout: (amount) => `+${amount.toLocaleString()} VND tiền thưởng giải đua`,
-  BetPayout:   (amount) => `+${amount.toLocaleString()} VND từ cược thắng`,
-  RefundBet:   (amount) => `+${amount.toLocaleString()} VND hoàn tiền cược`,
-  RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND hoàn phí đăng ký`,
+  PrizePayout: (amount) => `+${amount.toLocaleString()} VND race prize payout`,
+  BetPayout:   (amount) => `+${amount.toLocaleString()} VND winning bet payout`,
+  RefundBet:   (amount) => `+${amount.toLocaleString()} VND bet refund`,
+  RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND registration fee refund`,
 }
 
 export default function JockeyWallet() {

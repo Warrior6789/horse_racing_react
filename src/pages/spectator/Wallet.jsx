@@ -22,10 +22,10 @@ function Modal({ title, onClose, children }) {
 }
 
 const BALANCE_REASON_MSG = {
-  BetPayout:             (amount) => `+${amount.toLocaleString()} VND từ cược thắng`,
-  PrizePayout:           (amount) => `+${amount.toLocaleString()} VND tiền thưởng`,
-  RefundBet:             (amount) => `+${amount.toLocaleString()} VND hoàn tiền cược`,
-  RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND hoàn phí đăng ký`,
+  BetPayout:             (amount) => `+${amount.toLocaleString()} VND winning bet payout`,
+  PrizePayout:           (amount) => `+${amount.toLocaleString()} VND prize payout`,
+  RefundBet:             (amount) => `+${amount.toLocaleString()} VND bet refund`,
+  RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND registration fee refund`,
 }
 
 export default function WalletPage() {

@@ -673,7 +673,7 @@ export default function RaceManagement() {
           onClose={() => setResultRace(null)}
           onSuccess={() => {
             setResultRace(null)
-            showToast('Đã set kết quả')
+            showToast('Race result set successfully.')
             loadCards(); load(page, pageSize)
           }}
         />

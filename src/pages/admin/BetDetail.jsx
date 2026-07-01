@@ -379,7 +379,7 @@ export default function BetDetail() {
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               {!prize?.items?.length ? (
-                <div className="text-center py-16 text-sm font-semibold text-gray-400">Chưa có kết quả để tính thưởng.</div>
+                <div className="text-center py-16 text-sm font-semibold text-gray-400">No results available to calculate prizes.</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">

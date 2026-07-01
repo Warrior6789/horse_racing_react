@@ -98,8 +98,8 @@ export default function PlaceBet() {
   }, [raceId])
 
   const submit = async () => {
-    if (!selectedReg) { setError('Chọn ngựa trước.'); return }
-    if (numAmount <= 0) { setError('Nhập số tiền hợp lệ.'); return }
+    if (!selectedReg) { setError('Please select a horse first.'); return }
+    if (numAmount <= 0) { setError('Please enter a valid amount.'); return }
     setError(''); setSubmitting(true)
     try {
       await placeBet({ registrationId: selectedReg.registrationId, betType, betAmount: numAmount })
@@ -109,7 +109,7 @@ export default function PlaceBet() {
         if (bal != null) { setBalance(bal); updateUser({ balance: bal }) }
       }).catch(() => {})
     } catch (e) {
-      setError(e.response?.data?.message || 'Đặt cược thất bại.')
+      setError(e.response?.data?.message || 'Failed to place bet.')
     } finally { setSubmitting(false) }
   }
 
@@ -171,11 +171,11 @@ export default function PlaceBet() {
           {/* Left — Horse List */}
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3">
-              Chọn ngựa để đặt cược <span className="text-stone-600 font-normal">({registrations.length} runners)</span>
+              Select a horse to bet on <span className="text-stone-600 font-normal">({registrations.length} runners)</span>
             </h2>
             {registrations.length === 0 ? (
               <div className="text-center py-16 text-stone-500 text-sm bg-[#161310] rounded-xl border border-stone-800/60">
-                Chưa có ngựa đăng ký.
+                No horses registered yet.
               </div>
             ) : (
               <div className="space-y-3">
@@ -275,7 +275,7 @@ export default function PlaceBet() {
                   <p className="text-xs text-stone-500">Good luck on your wager.</p>
                   <button onClick={resetSlip}
                     className="text-xs font-bold text-[#f7e0a3] hover:underline">
-                    Đặt cược tiếp
+                    Place another bet
                   </button>
                 </div>
               ) : selectedReg ? (
@@ -345,7 +345,7 @@ export default function PlaceBet() {
                 </>
               ) : (
                 <div className="text-center py-10">
-                  <p className="text-stone-600 text-sm">Chọn một con ngựa<br />để bắt đầu đặt cược.</p>
+                  <p className="text-stone-600 text-sm">Select a horse<br />to start placing your bet.</p>
                 </div>
               )}
             </div>

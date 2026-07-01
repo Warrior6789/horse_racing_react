@@ -199,9 +199,9 @@ export default function ReportSubmission() {
                 required
               >
                 <option value="">Select penalty type...</option>
-                <option value="Warning">Warning — cảnh cáo, không ảnh hưởng kết quả</option>
-                <option value="Fine">Fine — phạt tiền owner</option>
-                <option value="Disqualification">Disqualification — loại ngựa khỏi kết quả</option>
+                <option value="Warning">Warning — caution only, no effect on race result</option>
+                <option value="Fine">Fine — monetary penalty for the owner</option>
+                <option value="Disqualification">Disqualification — horse removed from race result</option>
               </select>
             </div>
 
