@@ -71,9 +71,7 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
       }
       if (regsRes) {
         const rd = regsRes.data.data
-        const arr = Array.isArray(rd) ? rd : rd?.items || []
-        console.log('[RaceResult] regs[0]:', JSON.stringify(arr[0]))
-        setRegs(arr)
+        setRegs(Array.isArray(rd) ? rd : rd?.items || [])
       }
       if (betsRes)    setBets(betsRes.data.data?.items || [])
     }).catch(() => {}).finally(() => setLoading(false))
@@ -82,13 +80,13 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
   // Build a lookup from registrationId → full reg data (jockey, owner, horse)
   const regMap = Object.fromEntries(regs.map(r => [r.registrationId, r]))
 
-  console.log('[RaceResult] results[0]:', JSON.stringify(results[0]))
-  console.log('[RaceResult] regMap keys:', Object.keys(regMap).slice(0,3))
-
   const standings = [...results]
     .sort((a, b) => (a.finalPosition ?? a.rank ?? a.position ?? 99)
                   - (b.finalPosition ?? b.rank ?? b.position ?? 99))
-    .map(item => ({ ...regMap[item.registrationId], ...item }))
+    .map(item => {
+      const regId = item.registrationId ?? item.horse?.registrationId
+      return { ...regMap[regId], ...item }
+    })
 
   // fallback: if no API results, use registrations as unranked list
   const displayList = standings.length > 0 ? standings : regs.map((r, i) => ({ ...r, finalPosition: i + 1 }))
