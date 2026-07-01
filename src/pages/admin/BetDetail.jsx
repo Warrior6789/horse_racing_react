@@ -5,15 +5,15 @@ import { getRacePool, getRacePrizePreview, getRace } from '../../api/races'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const BET_TYPE_CLS = {
-  Win:   'bg-amber-500/20 text-amber-400',
-  Place: 'bg-blue-500/20 text-blue-400',
-  Show:  'bg-purple-500/20 text-purple-400',
+  Win:   'bg-amber-50 text-amber-700 ring-amber-500/20',
+  Place: 'bg-blue-50 text-blue-700 ring-blue-500/20',
+  Show:  'bg-purple-50 text-purple-700 ring-purple-500/20',
 }
 
 const BET_STATUS_CLS = {
-  Active: 'bg-gray-500/20 text-gray-400',
-  Won:    'bg-emerald-500/20 text-emerald-400',
-  Lost:   'bg-red-500/20 text-red-400',
+  Active: 'bg-gray-100 text-gray-500 ring-gray-400/20',
+  Won:    'bg-emerald-50 text-emerald-700 ring-emerald-500/20',
+  Lost:   'bg-red-50 text-red-500 ring-red-400/20',
 }
 
 const POS_COLORS = {
@@ -38,6 +38,12 @@ function fmt(dt) {
 }
 
 const BET_PAGE_SIZE = 4
+
+const POOL_CARDS = [
+  { label: 'Win',   icon: 'emoji_events',     iconColor: 'text-amber-600',  bgIcon: 'bg-amber-50'  },
+  { label: 'Place', icon: 'workspace_premium', iconColor: 'text-blue-600',   bgIcon: 'bg-blue-50'   },
+  { label: 'Show',  icon: 'military_tech',     iconColor: 'text-purple-600', bgIcon: 'bg-purple-50' },
+]
 
 export default function BetDetail() {
   const { raceId } = useParams()
@@ -85,94 +91,100 @@ export default function BetDetail() {
 
   const poolByType = (type) => pools.find(p => p.betType === type) || {}
 
-  const POOL_CARDS = [
-    { label: 'Win',   color: 'text-amber-400'  },
-    { label: 'Place', color: 'text-blue-400'   },
-    { label: 'Show',  color: 'text-purple-400' },
-  ]
-
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-[#1a1712] p-6 md:p-8 space-y-8">
+      <div className="space-y-8">
 
         {/* Header */}
         <div>
-          <button onClick={() => navigate('/admin/bets')} className="text-gray-400 hover:text-white text-sm mb-3 transition-colors">
-            ← Quay lại
+          <button onClick={() => navigate('/admin/bets')}
+            className="text-sm text-gray-400 hover:text-gray-700 transition-colors mb-3 flex items-center gap-1">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+            Quay lại
           </button>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-gray-900">
             {race?.raceName || `Race #${race?.raceNumber || '...'}`}
           </h1>
-          <p className="text-gray-400 text-sm mt-1">{race?.racecourseName || '—'}</p>
+          <p className="text-sm text-gray-500 mt-1">{race?.racecourseName || '—'}</p>
         </div>
 
         {/* Block A — Pool Summary */}
-        <section className="space-y-4">
-          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pool Summary</h2>
+        <section className="space-y-5">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-5 bg-gray-950 rounded-full" />
+            <h2 className="text-sm font-bold text-gray-900">Pool Summary</h2>
+          </div>
 
           {loadingPool ? (
             <div className="flex items-center justify-center h-32">
-              <div className="w-7 h-7 border-2 border-[#3d3830] border-t-white rounded-full animate-spin" />
+              <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
             </div>
           ) : (
             <>
-              {/* Stat cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {POOL_CARDS.map(({ label, color }) => {
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {POOL_CARDS.map(({ label, icon, iconColor, bgIcon }) => {
                   const p = poolByType(label)
                   return (
-                    <div key={label} className="bg-[#2a2620] rounded-xl p-5">
-                      <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${color}`}>{label}</p>
-                      <p className="text-2xl font-black text-white">{(p.totalAmount ?? 0).toLocaleString('vi-VN')}</p>
-                      <p className="text-gray-500 text-xs mt-1">{p.betCount ?? 0} bets · VND</p>
+                    <div key={label} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                        <p className="text-2xl font-extrabold text-gray-900">{(p.totalAmount ?? 0).toLocaleString('vi-VN')}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{p.betCount ?? 0} bets · VND</p>
+                      </div>
+                      <div className={`p-3 ${bgIcon} ${iconColor} rounded-xl`}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{icon}</span>
+                      </div>
                     </div>
                   )
                 })}
               </div>
 
               {/* Bets table */}
-              <div className="bg-[#2a2620] rounded-xl overflow-hidden">
-                <div className="px-5 py-4 border-b border-[#3d3830] flex items-center justify-between">
-                  <p className="text-sm font-bold text-white">All Bets</p>
-                  <span className="text-xs text-gray-500">{bets.length} total</span>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-5 bg-gray-950 rounded-full" />
+                    <h3 className="text-sm font-bold text-gray-900">All Bets</h3>
+                    <span className="text-xs text-gray-400 font-medium">({bets.length} total)</span>
+                  </div>
                 </div>
 
                 {bets.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 text-sm">No bets placed yet.</div>
+                  <div className="text-center py-16 text-sm font-semibold text-gray-400">No bets placed yet.</div>
                 ) : (
                   <>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left">
+                      <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="text-gray-500 text-[10px] uppercase tracking-wider border-b border-[#3d3830]">
+                          <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                             {['Bettor', 'Horse', 'Type', 'Amount', 'Status', 'Payout', 'Placed At'].map(col => (
-                              <th key={col} className="py-3 px-5 font-bold">{col}</th>
+                              <th key={col} className="py-3 px-4">{col}</th>
                             ))}
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#3d3830]">
+                        <tbody className="divide-y divide-gray-100 text-sm">
                           {betItems.map((b, i) => (
-                            <tr key={b.betId || i} className="hover:bg-[#3d3830] transition-colors">
-                              <td className="py-3 px-5 text-white text-sm font-medium">{b.spectatorName || '—'}</td>
-                              <td className="py-3 px-5 text-gray-300 text-sm">{b.horseName || '—'}</td>
-                              <td className="py-3 px-5">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${BET_TYPE_CLS[b.betType] || 'bg-gray-500/20 text-gray-400'}`}>
+                            <tr key={b.betId || i} className="hover:bg-gray-50/60 transition-colors">
+                              <td className="py-3 px-4 font-medium text-gray-900">{b.spectatorName || '—'}</td>
+                              <td className="py-3 px-4 text-gray-600">{b.horseName || '—'}</td>
+                              <td className="py-3 px-4">
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${BET_TYPE_CLS[b.betType] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
                                   {b.betType}
                                 </span>
                               </td>
-                              <td className="py-3 px-5 whitespace-nowrap text-white font-bold text-sm">
-                                {(b.betAmount ?? 0).toLocaleString('vi-VN')}
-                                <span className="text-gray-500 text-xs ml-1">VND</span>
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <span className="font-bold text-gray-900">{(b.betAmount ?? 0).toLocaleString('vi-VN')}</span>
+                                <span className="text-gray-400 text-xs ml-1">VND</span>
                               </td>
-                              <td className="py-3 px-5">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${BET_STATUS_CLS[b.status] || 'bg-gray-500/20 text-gray-400'}`}>
+                              <td className="py-3 px-4">
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${BET_STATUS_CLS[b.status] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
                                   {b.status || '—'}
                                 </span>
                               </td>
-                              <td className="py-3 px-5 text-gray-400 text-sm">
+                              <td className="py-3 px-4 text-gray-600 text-sm">
                                 {b.payoutRatio != null ? `×${b.payoutRatio}` : '—'}
                               </td>
-                              <td className="py-3 px-5 text-gray-500 text-xs whitespace-nowrap">{fmt(b.createdAt)}</td>
+                              <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{fmt(b.createdAt)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -180,15 +192,15 @@ export default function BetDetail() {
                     </div>
 
                     {betTotalPages > 1 && (
-                      <div className="px-5 py-3 border-t border-[#3d3830] flex items-center justify-between">
-                        <p className="text-xs text-gray-500">Page {betPage} of {betTotalPages}</p>
-                        <div className="flex gap-1">
+                      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <p className="text-xs text-gray-400">Page {betPage} of {betTotalPages}</p>
+                        <div className="flex gap-2">
                           <button onClick={() => setBetPage(p => Math.max(1, p - 1))} disabled={betPage === 1}
-                            className="px-3 py-1.5 bg-[#1a1712] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             ‹ Prev
                           </button>
                           <button onClick={() => setBetPage(p => Math.min(betTotalPages, p + 1))} disabled={betPage === betTotalPages}
-                            className="px-3 py-1.5 bg-[#1a1712] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             Next ›
                           </button>
                         </div>
@@ -202,56 +214,57 @@ export default function BetDetail() {
         </section>
 
         {/* Block B — Prize Preview */}
-        <section className="space-y-4">
+        <section className="space-y-5">
           <div className="flex items-center gap-3">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Prize Preview</h2>
+            <div className="w-1 h-5 bg-gray-950 rounded-full" />
+            <h2 className="text-sm font-bold text-gray-900">Prize Preview</h2>
             {prize != null && (
               prize.isFinal
-                ? <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">Final (Settled)</span>
-                : <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400">Preview (Estimated)</span>
+                ? <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset bg-emerald-50 text-emerald-700 ring-emerald-500/20">Final (Settled)</span>
+                : <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset bg-amber-50 text-amber-700 ring-amber-500/20">Preview (Estimated)</span>
             )}
           </div>
 
           {loadingPrize ? (
             <div className="flex items-center justify-center h-32">
-              <div className="w-7 h-7 border-2 border-[#3d3830] border-t-white rounded-full animate-spin" />
+              <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
             </div>
           ) : (
-            <div className="bg-[#2a2620] rounded-xl overflow-hidden">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               {!prize?.items?.length ? (
-                <div className="text-center py-12 text-gray-500 text-sm">Chưa có kết quả để tính thưởng.</div>
+                <div className="text-center py-16 text-sm font-semibold text-gray-400">Chưa có kết quả để tính thưởng.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="text-gray-500 text-[10px] uppercase tracking-wider border-b border-[#3d3830]">
+                      <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                         {['Pos', 'Horse', 'Owner', 'Owner Amount', 'Jockey', 'Jockey Amount', 'Total Prize'].map(col => (
-                          <th key={col} className="py-3 px-5 font-bold">{col}</th>
+                          <th key={col} className="py-3 px-4">{col}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#3d3830]">
+                    <tbody className="divide-y divide-gray-100 text-sm">
                       {prize.items.map((item, i) => (
-                        <tr key={i} className="hover:bg-[#3d3830] transition-colors">
-                          <td className="py-3 px-5">
-                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-black ${POS_COLORS[item.position] || 'bg-[#1a1712] text-gray-400'}`}>
+                        <tr key={i} className="hover:bg-gray-50/60 transition-colors">
+                          <td className="py-3 px-4">
+                            <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-xs font-black ${POS_COLORS[item.position] || 'bg-gray-100 text-gray-500'}`}>
                               {posLabel(item.position)}
                             </span>
                           </td>
-                          <td className="py-3 px-5 text-white font-bold text-sm">{item.horseName || '—'}</td>
-                          <td className="py-3 px-5 text-gray-300 text-sm">{item.ownerName || '—'}</td>
-                          <td className="py-3 px-5 whitespace-nowrap">
-                            <span className="text-emerald-400 font-bold text-sm">+{(item.ownerAmount ?? 0).toLocaleString('vi-VN')}</span>
-                            <span className="text-gray-500 text-xs ml-1">VND</span>
+                          <td className="py-3 px-4 font-bold text-gray-900">{item.horseName || '—'}</td>
+                          <td className="py-3 px-4 text-gray-600">{item.ownerName || '—'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="font-bold text-emerald-600">+{(item.ownerAmount ?? 0).toLocaleString('vi-VN')}</span>
+                            <span className="text-gray-400 text-xs ml-1">VND</span>
                           </td>
-                          <td className="py-3 px-5 text-gray-300 text-sm">{item.jockeyName || '—'}</td>
-                          <td className="py-3 px-5 whitespace-nowrap">
-                            <span className="text-blue-400 font-bold text-sm">+{(item.jockeyAmount ?? 0).toLocaleString('vi-VN')}</span>
-                            <span className="text-gray-500 text-xs ml-1">VND</span>
+                          <td className="py-3 px-4 text-gray-600">{item.jockeyName || '—'}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="font-bold text-blue-600">+{(item.jockeyAmount ?? 0).toLocaleString('vi-VN')}</span>
+                            <span className="text-gray-400 text-xs ml-1">VND</span>
                           </td>
-                          <td className="py-3 px-5 whitespace-nowrap">
-                            <span className="text-amber-400 font-bold text-sm">+{(item.positionPrize ?? 0).toLocaleString('vi-VN')}</span>
-                            <span className="text-gray-500 text-xs ml-1">VND</span>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <span className="font-bold text-amber-600">+{(item.positionPrize ?? 0).toLocaleString('vi-VN')}</span>
+                            <span className="text-gray-400 text-xs ml-1">VND</span>
                           </td>
                         </tr>
                       ))}

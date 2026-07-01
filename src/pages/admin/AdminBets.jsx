@@ -5,11 +5,21 @@ import { getRacesPaged } from '../../api/races'
 
 const STATUS_OPTS = ['BettingOpen', 'BettingClosed', 'Live', 'Finished']
 
-const STATUS_CLS = {
-  BettingOpen:   'bg-emerald-500/20 text-emerald-400',
-  BettingClosed: 'bg-orange-500/20 text-orange-400',
-  Live:          'bg-red-500/20 text-red-400',
-  Finished:      'bg-gray-500/20 text-gray-400',
+const RACE_STATUS = {
+  BettingOpen:   { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20', dot: true,  label: 'Betting Open'   },
+  BettingClosed: { cls: 'bg-orange-50 text-orange-700 ring-orange-500/20',    dot: false, label: 'Betting Closed' },
+  Live:          { cls: 'bg-red-50 text-red-600 ring-red-500/20',             dot: true,  label: 'Live'           },
+  Finished:      { cls: 'bg-gray-100 text-gray-500 ring-gray-400/20',         dot: false, label: 'Finished'       },
+}
+
+function StatusBadge({ status }) {
+  const s = RACE_STATUS[status] || { cls: 'bg-gray-100 text-gray-500 ring-gray-400/20', label: status }
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${s.cls}`}>
+      {s.dot && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse" />}
+      {s.label}
+    </span>
+  )
 }
 
 const PAGE_SIZE = 10
@@ -49,24 +59,24 @@ export default function AdminBets() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-[#1a1712] p-6 md:p-8 space-y-6">
+      <div className="space-y-6">
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-white">Bets</h1>
-          <p className="text-sm text-gray-400 mt-1">Monitor race pools and betting activity.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Bet Management</h1>
+          <p className="text-sm text-gray-500 mt-1">Monitor race pools and betting activity.</p>
         </div>
 
-        {/* Status filter */}
-        <div className="flex flex-wrap gap-2">
+        {/* Status tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
           {STATUS_OPTS.map(s => (
             <button
               key={s}
               onClick={() => changeStatus(s)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
                 status === s
-                  ? 'bg-white text-[#1a1712]'
-                  : 'bg-[#2a2620] text-gray-400 hover:text-white'
+                  ? 'border-gray-900 text-gray-900'
+                  : 'border-transparent text-gray-400 hover:text-gray-600'
               }`}
             >
               {s.replace(/([A-Z])/g, ' $1').trim()}
@@ -77,36 +87,34 @@ export default function AdminBets() {
         {/* List */}
         {loading ? (
           <div className="flex items-center justify-center h-48">
-            <div className="w-8 h-8 border-2 border-[#3d3830] border-t-white rounded-full animate-spin" />
+            <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
           </div>
         ) : races.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 text-sm">No races found.</div>
+          <div className="text-center py-20 text-sm font-semibold text-gray-400">No races found.</div>
         ) : (
           <div className="space-y-2">
             {races.map(r => (
               <div
                 key={r.raceId}
                 onClick={() => navigate(`/admin/bets/${r.raceId}`)}
-                className="flex items-center justify-between p-4 bg-[#2a2620] hover:bg-[#3d3830] rounded-xl cursor-pointer transition-colors"
+                className="flex items-center justify-between px-5 py-4 bg-white border border-gray-100 shadow-sm rounded-2xl cursor-pointer hover:shadow-md hover:border-gray-200 transition-all"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#1a1712] flex items-center justify-center shrink-0">
-                    <span className="text-gray-300 font-bold text-sm">#{r.raceNumber}</span>
+                  <div className="w-10 h-10 rounded-xl bg-gray-950 text-white flex items-center justify-center shrink-0 font-bold text-xs">
+                    #{r.raceNumber}
                   </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">{r.raceName || `Race #${r.raceNumber}`}</p>
+                    <p className="font-bold text-gray-900 text-sm">{r.raceName || `Race #${r.raceNumber}`}</p>
                     <p className="text-gray-400 text-xs mt-0.5">{r.racecourseName || '—'} · {fmt(r.startTime)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right hidden sm:block">
-                    <p className="text-white font-bold text-sm">{(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')} VND</p>
+                    <p className="text-gray-900 font-bold text-sm">{(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')} VND</p>
                     <p className="text-gray-400 text-xs">{r.betCount ?? 0} bets</p>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${STATUS_CLS[r.status] || 'bg-gray-500/20 text-gray-400'}`}>
-                    {r.status}
-                  </span>
-                  <span className="text-gray-500 text-lg">›</span>
+                  <StatusBadge status={r.status} />
+                  <span className="text-gray-300 text-lg font-light">›</span>
                 </div>
               </div>
             ))}
@@ -116,14 +124,14 @@ export default function AdminBets() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-2">
-            <p className="text-xs text-gray-500">Page {page} of {totalPages} · {total} races</p>
-            <div className="flex gap-1">
+            <p className="text-xs text-gray-400">Page {page} of {totalPages} · {total} races</p>
+            <div className="flex gap-2">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="px-3 py-1.5 bg-[#2a2620] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
+                className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
                 ‹ Prev
               </button>
               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="px-3 py-1.5 bg-[#2a2620] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
+                className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
                 Next ›
               </button>
             </div>
