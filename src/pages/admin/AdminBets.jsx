@@ -101,37 +101,37 @@ export default function AdminBets() {
         </div>
 
         {/* Filter Bar */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
-          {/* Course Selection */}
-          <div className="flex-1 min-w-0">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
-              Course Selection
-            </label>
-            <div className="relative">
-              <select
-                value={draftCourse}
-                onChange={e => setDraftCourse(e.target.value)}
-                className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 pr-8"
-              >
-                <option value="">All Racecourses</option>
-                {racecourses.map(c => (
-                  <option key={c.racecourseId || c.id} value={c.racecourseId || c.id}>
-                    {c.racecourseName || c.name}
-                  </option>
-                ))}
-              </select>
-              <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" style={{ fontSize: '16px' }}>
-                expand_more
-              </span>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            {/* Course Selection */}
+            <div className="flex-1 min-w-0">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Course Selection
+              </label>
+              <div className="relative">
+                <select
+                  value={draftCourse}
+                  onChange={e => setDraftCourse(e.target.value)}
+                  className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 pr-8"
+                >
+                  <option value="">All Racecourses</option>
+                  {racecourses.map(c => (
+                    <option key={c.racecourseId || c.id} value={c.racecourseId || c.id}>
+                      {c.racecourseName || c.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" style={{ fontSize: '16px' }}>
+                  expand_more
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Date Range */}
-          <div className="flex-1 min-w-0">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
-              Date Range
-            </label>
-            <div className="relative">
+            {/* Date Range */}
+            <div className="flex-1 min-w-0">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Date Range
+              </label>
               <input
                 type="date"
                 value={draftDate}
@@ -139,19 +139,16 @@ export default function AdminBets() {
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400"
               />
             </div>
-            {draftDate && (
-              <p className="text-[10px] text-gray-400 mt-1">{fmtDate(draftDate)}</p>
-            )}
-          </div>
 
-          {/* Apply button */}
-          <button
-            onClick={applyFilters}
-            className="sm:self-end px-6 py-2.5 bg-[#facc15] hover:bg-yellow-400 text-gray-900 font-bold text-sm rounded-xl transition-colors whitespace-nowrap flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>filter_alt</span>
-            Apply Filters
-          </button>
+            {/* Apply button */}
+            <button
+              onClick={applyFilters}
+              className="h-[42px] px-6 bg-[#facc15] hover:bg-yellow-400 text-gray-900 font-bold text-sm rounded-xl transition-colors whitespace-nowrap flex items-center gap-2 shrink-0"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>filter_alt</span>
+              Apply Filters
+            </button>
+          </div>
         </div>
 
         {/* Status tabs */}
