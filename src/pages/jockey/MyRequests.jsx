@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Check, X, Clock, AlertCircle, Trophy, CalendarDays, ChevronLeft, ChevronRight, Phone } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, CalendarDays, ChevronLeft, ChevronRight, Phone } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getJockeyMyRequestsPaged, acceptRegistration, rejectRegistration } from '../../api/registrations'
 import { getBalance } from '../../api/payments'
@@ -33,32 +33,26 @@ export default function JockeyRequests() {
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
   const [page, setPage]           = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
   const [selectedOwner, setSelectedOwner] = useState(null)
   const [selectedHorse, setSelectedHorse] = useState(null)
 
-  const fetchData = useCallback((p = 1) => {
+  const fetchData = useCallback(() => {
     setLoading(true)
-    getJockeyMyRequestsPaged({ page: p, pageSize: PAGE_SIZE })
+    getJockeyMyRequestsPaged({ page: 1, pageSize: 500 })
       .then(r => {
         const d = r.data.data
-        const items = d?.items || d || []
-        if (items.length > 0) console.log('[MyRequests] horse object:', items[0].horse)
-        setRegs(items)
-        setTotalPages(d?.totalPages ?? 1)
-        setTotalCount(d?.totalCount ?? (d?.items?.length ?? 0))
+        setRegs(d?.items || [])
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { fetchData(page) }, [fetchData, page])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const handleRegistrationsUpdated = useCallback((data) => {
     if (data?.jockeyId && data.jockeyId !== user?.id) return
-    fetchData(page)
-  }, [fetchData, page, user])
+    fetchData()
+  }, [fetchData, user])
 
   useRaceHub(null, { onRegistrationsUpdated: handleRegistrationsUpdated })
 
@@ -76,17 +70,15 @@ export default function JockeyRequests() {
           if (bal != null) updateUser({ balance: bal })
         }).catch(() => {})
       }
-      fetchData(page)
+      fetchData()
     } catch {}
     finally { setActing(null) }
   }
 
-  const acceptedRaceIds = new Set(
-    regs.filter(r => r.jockeyConfirmation === true).map(r => r.race?.raceId).filter(Boolean)
-  )
-  const pending  = regs.filter(r => (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) && !acceptedRaceIds.has(r.race?.raceId)).length
-  const accepted = regs.filter(r => r.jockeyConfirmation === true).length
-  const rejected = regs.filter(r => r.jockeyConfirmation === false).length
+  const pendingRegs = regs.filter(r => r.jockeyConfirmation === null || r.jockeyConfirmation === undefined)
+  const totalPages  = Math.max(1, Math.ceil(pendingRegs.length / PAGE_SIZE))
+  const safePage    = Math.min(page, totalPages)
+  const pageItems   = pendingRegs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   return (
     <JockeyLayout>
@@ -99,43 +91,40 @@ export default function JockeyRequests() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Pending"  value={pending}     subtitle="Requires action"     icon={Clock}        />
-          <StatCard title="Accepted" value={accepted}    subtitle="Confirmed races"      icon={Trophy}       />
-          <StatCard title="Rejected" value={rejected}    subtitle="Declined invitations" icon={AlertCircle}  />
-          <StatCard title="Total"    value={totalCount}  subtitle="All invitations"      icon={CalendarDays} />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard title="Pending"  value={pendingRegs.length} subtitle="Requires action"     icon={Clock}        />
+          <StatCard title="Rejected" value={regs.filter(r => r.jockeyConfirmation === false).length} subtitle="Declined invitations" icon={AlertCircle}  />
+          <StatCard title="Total"    value={regs.length}        subtitle="All invitations"      icon={CalendarDays} />
         </div>
 
         {/* Table */}
         <div className="bg-[#161a23] rounded-xl border border-gray-800 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
             <h2 className="text-sm font-bold text-gray-200">Invitation List</h2>
-            <span className="text-[11px] text-gray-500">{totalCount} total</span>
+            <span className="text-[11px] text-gray-500">{pendingRegs.length} pending</span>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center h-48">
               <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
             </div>
-          ) : regs.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">No invitations yet.</div>
+          ) : pendingRegs.length === 0 ? (
+            <div className="text-center py-16 text-gray-500 text-sm">No pending invitations.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left whitespace-nowrap">
                 <thead>
                   <tr className="text-gray-500 text-[10px] uppercase tracking-wider border-b border-gray-800 bg-[#16181d]/50">
-                    {['Race Info', 'Owner', 'Horse', 'Gate', 'Date', 'Status', 'Actions'].map(col => (
+                    {['Race Info', 'Owner', 'Horse', 'Gate', 'Date', 'Actions'].map(col => (
                       <th key={col} className="px-6 py-4 font-bold">{col}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  {regs.map(item => {
-                    const race      = item.race  || {}
-                    const horse     = item.horse || {}
-                    const isPending = (item.jockeyConfirmation === null || item.jockeyConfirmation === undefined) && !acceptedRaceIds.has(item.race?.raceId)
-                    const status    = item.jockeyConfirmation === true ? 'Accepted' : item.jockeyConfirmation === false ? 'Rejected' : 'Pending'
-                    const isActing  = acting === item.registrationId
+                  {pageItems.map(item => {
+                    const race     = item.race  || {}
+                    const horse    = item.horse || {}
+                    const isActing = acting === item.registrationId
                     return (
                       <tr key={item.registrationId} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="px-6 py-4">
@@ -181,31 +170,22 @@ export default function JockeyRequests() {
                           ) : '—'}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_CLS[status] || STATUS_CLS.Pending}`}>
-                            {status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {isPending ? (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handle(item.registrationId, 'accept')}
-                                disabled={isActing}
-                                className="flex items-center gap-1 bg-green-900/30 hover:bg-green-900/50 text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
-                              >
-                                <Check size={13} /> Accept
-                              </button>
-                              <button
-                                onClick={() => handle(item.registrationId, 'reject')}
-                                disabled={isActing}
-                                className="flex items-center gap-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
-                              >
-                                <X size={13} /> Reject
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-gray-600 text-xs">—</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handle(item.registrationId, 'accept')}
+                              disabled={isActing}
+                              className="flex items-center gap-1 bg-green-900/30 hover:bg-green-900/50 text-green-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                            >
+                              <Check size={13} /> Accept
+                            </button>
+                            <button
+                              onClick={() => handle(item.registrationId, 'reject')}
+                              disabled={isActing}
+                              className="flex items-center gap-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                            >
+                              <X size={13} /> Reject
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -218,31 +198,20 @@ export default function JockeyRequests() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
-              <p className="text-gray-500 text-xs">
-                Page {page} of {totalPages}
-              </p>
+              <p className="text-gray-500 text-xs">Page {safePage} of {totalPages}</p>
               <div className="flex gap-1">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
-                >
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
+                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40">
                   <ChevronLeft size={14} />
                 </button>
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${p === page ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                  >
+                  <button key={p} onClick={() => setPage(p)}
+                    className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold transition-colors ${p === safePage ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
                     {p}
                   </button>
                 ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40"
-                >
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
+                  className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 transition-colors disabled:opacity-40">
                   <ChevronRight size={14} />
                 </button>
               </div>
