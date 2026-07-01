@@ -7,8 +7,8 @@ import { getRacecourses } from '../../api/racecourses'
 const STATUS_OPTS = ['All', 'BettingOpen', 'BettingClosed', 'Finished']
 
 const RACE_STATUS = {
-  BettingOpen:   { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20', dot: true,  label: 'Betting Open'   },
-  BettingClosed: { cls: 'bg-orange-50 text-orange-700 ring-orange-500/20',    dot: false, label: 'Betting Closed' },
+  BettingOpen:   { cls: 'bg-blue-50 text-blue-700 ring-blue-500/20',          dot: true,  label: 'Betting Open'   },
+  BettingClosed: { cls: 'bg-yellow-50 text-yellow-700 ring-yellow-500/20',    dot: false, label: 'Betting Closed' },
   Live:          { cls: 'bg-red-50 text-red-600 ring-red-500/20',             dot: true,  label: 'Live'           },
   Finished:      { cls: 'bg-gray-100 text-gray-500 ring-gray-400/20',         dot: false, label: 'Finished'       },
 }
