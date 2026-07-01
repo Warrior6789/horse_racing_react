@@ -42,13 +42,10 @@ export default function JockeySchedule() {
     Promise.all([
       getJockeyMyRequestsPaged({ page: 1, pageSize: 500 })
         .then(r => {
-          console.log('[Schedule] raw r.data:', JSON.stringify(r.data))
           const d = r.data.data
-          const items = d?.items || d || []
-          console.log('[Schedule] count:', Array.isArray(items) ? items.length : items)
-          setRegs(Array.isArray(items) ? items : [])
+          setRegs(d?.items || [])
         })
-        .catch(e => console.error('[Schedule] error:', e)),
+        .catch(() => {}),
       getMyJockeyProfile()
         .then(r => setProfile(r.data.data))
         .catch(() => {}),
