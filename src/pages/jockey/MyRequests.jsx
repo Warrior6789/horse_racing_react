@@ -172,9 +172,12 @@ export default function JockeyRequests() {
                           {item.gateNumber ? `#${item.gateNumber}` : '—'}
                         </td>
                         <td className="px-6 py-4 text-gray-400 text-sm">
-                          {race.startTime
-                            ? new Date(race.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : '—'}
+                          {race.startTime ? (
+                            <>
+                              <p>{new Date(race.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                              <p className="text-[11px] text-gray-500 mt-0.5">{new Date(race.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                            </>
+                          ) : '—'}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${STATUS_CLS[status] || STATUS_CLS.Pending}`}>
