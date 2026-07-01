@@ -168,65 +168,68 @@ export default function BetDetail() {
                 const mPage = Math.min(matrixPage, mTotalPages)
                 const mItems = matrix.slice((mPage - 1) * MATRIX_PAGE_SIZE, mPage * MATRIX_PAGE_SIZE)
                 return (
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                      <div className="w-1 h-5 bg-gray-950 rounded-full" />
-                      <h3 className="text-sm font-bold text-gray-900">Horse Bet Distribution</h3>
-                      <span className="text-xs text-gray-400 font-medium">({matrix.length} horses)</span>
+                  <div className="bg-[#1a1712] rounded-2xl overflow-hidden">
+                    {/* Header */}
+                    <div className="grid grid-cols-5 gap-4 px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                      <div className="col-span-1">Horse</div>
+                      <div>Win</div>
+                      <div>Place</div>
+                      <div>Show</div>
+                      <div className="text-right">Total</div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                            <th className="py-3 px-4">Horse</th>
-                            {BET_TYPES.map(t => <th key={t} className="py-3 px-4">{t}</th>)}
-                            <th className="py-3 px-4">Total</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 text-sm">
-                          {mItems.map(row => (
-                            <tr key={row.name} className="hover:bg-gray-50/60 transition-colors">
-                              <td className="py-3 px-4 font-semibold text-gray-900">{row.name}</td>
-                              {BET_TYPES.map(t => (
-                                <td key={t} className="py-3 px-4">
-                                  <p className="font-bold text-gray-900 text-sm">{row[t].amt.toLocaleString('en-US')}</p>
-                                  <p className="text-gray-400 text-xs">({row[t].cnt} bets)</p>
-                                </td>
-                              ))}
-                              <td className="py-3 px-4">
-                                <p className="font-extrabold text-gray-900 text-sm">{row.total.amt.toLocaleString('en-US')}</p>
-                                <p className="text-gray-400 text-xs">({row.total.cnt} bets)</p>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot>
-                          <tr className="bg-gray-50 border-t-2 border-gray-200 text-sm font-bold">
-                            <td className="py-3 px-4 text-gray-500 text-[11px] uppercase tracking-wider">Total</td>
-                            {BET_TYPES.map(t => (
-                              <td key={t} className="py-3 px-4">
-                                <p className="text-gray-900">{footer[t].amt.toLocaleString('en-US')}</p>
-                                <p className="text-gray-400 text-xs font-normal">({footer[t].cnt} bets)</p>
-                              </td>
-                            ))}
-                            <td className="py-3 px-4">
-                              <p className="text-gray-900">{footer.total.amt.toLocaleString('en-US')}</p>
-                              <p className="text-gray-400 text-xs font-normal">({footer.total.cnt} bets)</p>
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
+
+                    {/* Rows */}
+                    {mItems.map(row => (
+                      <div key={row.name} className="grid grid-cols-5 gap-4 px-6 py-4 border-t border-[#3d3830] items-center hover:bg-[#2a2620] transition-colors">
+                        <div className="col-span-1 flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 bg-[#2a2620] border border-[#3d3830] rounded-full flex items-center justify-center shrink-0 text-lg">🐎</div>
+                          <span className="font-bold text-white text-sm truncate">{row.name}</span>
+                        </div>
+                        <div>
+                          <p className="text-gray-300 text-sm font-medium">{row.Win.amt.toLocaleString('en-US')} VND</p>
+                          <p className="text-gray-500 text-xs">({row.Win.cnt} bets)</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-300 text-sm font-medium">{row.Place.amt.toLocaleString('en-US')} VND</p>
+                          <p className="text-gray-500 text-xs">({row.Place.cnt} bets)</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-300 text-sm font-medium">{row.Show.amt.toLocaleString('en-US')} VND</p>
+                          <p className="text-gray-500 text-xs">({row.Show.cnt} bets)</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-yellow-500 font-bold text-sm">{row.total.amt.toLocaleString('en-US')} VND</p>
+                          <p className="text-gray-500 text-xs">({row.total.cnt} bets)</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Footer total */}
+                    <div className="grid grid-cols-5 gap-4 px-6 py-4 border-t-2 border-[#3d3830] items-center bg-[#2a2620]">
+                      <div className="col-span-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</div>
+                      {BET_TYPES.map(t => (
+                        <div key={t}>
+                          <p className="text-gray-300 text-sm font-bold">{footer[t].amt.toLocaleString('en-US')} VND</p>
+                          <p className="text-gray-500 text-xs">({footer[t].cnt} bets)</p>
+                        </div>
+                      ))}
+                      <div className="text-right">
+                        <p className="text-yellow-500 font-bold text-sm">{footer.total.amt.toLocaleString('en-US')} VND</p>
+                        <p className="text-gray-500 text-xs">({footer.total.cnt} bets)</p>
+                      </div>
                     </div>
+
+                    {/* Pagination */}
                     {mTotalPages > 1 && (
-                      <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between">
-                        <p className="text-xs text-gray-400">Page {mPage} of {mTotalPages}</p>
+                      <div className="px-6 py-3 border-t border-[#3d3830] flex items-center justify-between">
+                        <p className="text-xs text-gray-500">Page {mPage} of {mTotalPages}</p>
                         <div className="flex gap-2">
                           <button onClick={() => setMatrixPage(p => Math.max(1, p - 1))} disabled={mPage === 1}
-                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            className="px-3 py-1.5 bg-[#2a2620] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
                             ‹ Prev
                           </button>
                           <button onClick={() => setMatrixPage(p => Math.min(mTotalPages, p + 1))} disabled={mPage === mTotalPages}
-                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                            className="px-3 py-1.5 bg-[#2a2620] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
                             Next ›
                           </button>
                         </div>
