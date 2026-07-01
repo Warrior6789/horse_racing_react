@@ -66,8 +66,10 @@ export default function AdminBets() {
     getRacesPaged(params)
       .then(r => {
         const d = r.data.data
-        setRaces(d?.items || [])
-        setTotal(d?.totalCount || 0)
+        const ALLOWED = ['BettingOpen', 'BettingClosed', 'Finished']
+        const items = (d?.items || []).filter(r => ALLOWED.includes(r.status))
+        setRaces(items)
+        setTotal(st === 'All' ? items.length : d?.totalCount || 0)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
