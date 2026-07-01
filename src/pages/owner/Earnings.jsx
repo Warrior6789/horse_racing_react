@@ -39,6 +39,7 @@ export default function OwnerEarnings() {
             getHorsePerformance(h.horseId)
               .then(res => {
                 const d = res.data.data
+                console.log('[Earnings] horse:', h.horseName, 'perf:', JSON.stringify(d))
                 return { horse: h, totalRaces: d?.totalRaces || 0, totalWins: d?.totalWins || 0, totalEarned: d?.totalEarned || 0 }
               })
               .catch(() => ({ horse: h, totalRaces: 0, totalWins: 0, totalEarned: 0 }))
