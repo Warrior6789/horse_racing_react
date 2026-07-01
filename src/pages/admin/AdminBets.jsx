@@ -4,7 +4,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getRacecourses } from '../../api/racecourses'
 
-const STATUS_OPTS = ['All', 'BettingOpen', 'BettingClosed', 'Live', 'Finished']
+const STATUS_OPTS = ['BettingOpen', 'BettingClosed', 'Finished']
 
 const RACE_STATUS = {
   BettingOpen:   { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20', dot: true,  label: 'Betting Open'   },
@@ -37,7 +37,7 @@ function fmtDateTime(dt) {
 export default function AdminBets() {
   const navigate = useNavigate()
 
-  const [status, setStatus]         = useState('All')
+  const [status, setStatus]         = useState('BettingOpen')
   const [races, setRaces]           = useState([])
   const [total, setTotal]           = useState(0)
   const [page, setPage]             = useState(1)
@@ -59,8 +59,7 @@ export default function AdminBets() {
 
   const load = useCallback((pg, st, courseId, date) => {
     setLoading(true)
-    const params = { page: pg, pageSize: PAGE_SIZE }
-    if (st && st !== 'All') params.status = st
+    const params = { page: pg, pageSize: PAGE_SIZE, status: st }
     if (courseId) params.racecourseId = courseId
     if (date)     params.date         = date
     getRacesPaged(params)
