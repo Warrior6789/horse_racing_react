@@ -75,7 +75,7 @@ export default function BetDetail() {
   }, [raceId])
 
   useEffect(() => {
-    getRace(raceId).then(r => setRace(r.data.data)).catch(() => {})
+    getRace(raceId).then(r => { console.log('[BetDetail] race:', r.data.data); setRace(r.data.data) }).catch(() => {})
     fetchPool()
     fetchPrize()
     getRaceRegistrations(raceId)
