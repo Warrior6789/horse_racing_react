@@ -122,23 +122,37 @@ export default function BetDetail() {
             </div>
           ) : (
             <>
-              {/* Total Pool card */}
-              {(() => {
-                const totalAmt = pools.reduce((s, p) => s + (p.totalAmount ?? 0), 0)
-                const totalBets = pools.reduce((s, p) => s + (p.betCount ?? 0), 0)
-                return (
-                  <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Pool</p>
-                      <p className="text-3xl font-extrabold text-white">{totalAmt.toLocaleString('en-US')}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{totalBets} bets · VND</p>
-                    </div>
-                    <div className="p-3 bg-white/10 text-white rounded-xl">
-                      <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>paid</span>
-                    </div>
+              {/* Prize Pool + Betting Pool side by side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Prize pool từ chủ ngựa */}
+                <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Prize Pool</p>
+                    <p className="text-3xl font-extrabold text-white">{(race?.totalPoolAmount ?? 0).toLocaleString('en-US')}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Đóng góp từ chủ ngựa · VND</p>
                   </div>
-                )
-              })()}
+                  <div className="p-3 bg-white/10 text-white rounded-xl">
+                    <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>savings</span>
+                  </div>
+                </div>
+                {/* Betting pool từ spectator */}
+                {(() => {
+                  const totalAmt  = pools.reduce((s, p) => s + (p.totalAmount ?? 0), 0)
+                  const totalBets = pools.reduce((s, p) => s + (p.betCount ?? 0), 0)
+                  return (
+                    <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Betting Pool</p>
+                        <p className="text-3xl font-extrabold text-white">{totalAmt.toLocaleString('en-US')}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{totalBets} bets từ spectator · VND</p>
+                      </div>
+                      <div className="p-3 bg-white/10 text-white rounded-xl">
+                        <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>paid</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {POOL_CARDS.map(({ label, icon, iconColor, bgIcon }) => {
