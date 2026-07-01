@@ -87,13 +87,19 @@ export default function JockeyLayout({ children }) {
           <button className="md:hidden text-gray-400 hover:text-white shrink-0" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className="hidden md:flex p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
-          </button>
+          <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+            </button>
+            <div>
+              <p className="text-sm font-bold text-white leading-tight">Welcome back, {displayName}</p>
+              <p className="text-xs text-gray-500">Track your races and profile.</p>
+            </div>
+          </div>
           <div className="flex items-center gap-4 ml-auto shrink-0">
             <button className="text-gray-400 hover:text-white relative transition-colors">
               <Bell size={20} />

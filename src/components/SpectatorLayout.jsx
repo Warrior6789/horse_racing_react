@@ -87,13 +87,19 @@ export default function SpectatorLayout({ children }) {
           <button className="md:hidden text-stone-400 hover:text-white shrink-0" onClick={() => setMobileOpen(true)}>
             <Menu size={22} />
           </button>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className="hidden md:flex p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800/40 transition-colors"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
-          </button>
+          <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800/40 transition-colors"
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+            </button>
+            <div>
+              <p className="text-sm font-bold text-stone-200 leading-tight">Welcome back, {displayName}</p>
+              <p className="text-xs text-stone-500">Here is what's happening at the tracks today.</p>
+            </div>
+          </div>
           <div className="flex items-center gap-4 ml-auto">
             <button className="text-stone-400 hover:text-white relative transition-colors">
               <Bell size={20} />
