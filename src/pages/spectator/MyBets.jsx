@@ -33,7 +33,7 @@ export default function MyBets() {
   const fetchBets = useCallback((p, filter, { silent = false } = {}) => {
     if (!silent) setLoading(true)
     const status = STATUS_MAP[filter]
-    getMyBetsPaged({ page: p, pageSize: 4, ...(status && { status }) })
+    getMyBetsPaged({ page: p, pageSize: 6, ...(status && { status }) })
       .then(r => {
         const items = r.data.data?.items || []
         setBets(items)
@@ -101,73 +101,73 @@ export default function MyBets() {
 
         {/* Cards */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[0,1,2,3].map(i => <div key={i} className="h-52 bg-[#171410] rounded-2xl animate-pulse" />)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[0,1,2,3].map(i => <div key={i} className="h-24 bg-[#171410] rounded-2xl animate-pulse" />)}
           </div>
         ) : bets.length === 0 ? (
           <div className="text-center py-20 text-stone-500 text-sm bg-[#171410] rounded-2xl border border-stone-800/60">
             No bets found.
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {bets.map(bet => (
-              <div key={bet.betId} className="bg-[#171410] p-5 rounded-2xl border border-stone-800/60 flex flex-col justify-between aspect-square hover:border-stone-700 transition-all">
-                {/* Top row */}
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 bg-[#1f1a14] rounded-xl flex items-center justify-center border border-stone-800 shrink-0">
-                      <Flag size={16} className="text-[#f7e0a3]" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm text-stone-200 line-clamp-1">
-                        {bet.horseName || '—'}
-                      </h3>
-                      <p className="text-[11px] text-stone-500 mt-0.5">{event(bet) || '—'}</p>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-md uppercase border shrink-0 ${statusBadge(bet.status)}`}>
-                    {normalizeStatus(bet.status)}
-                  </span>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {bets.map(bet => {
+              const s = (bet.status || '').toLowerCase()
+              const payout = calcPayout(bet)
+              return (
+                <div key={bet.betId} className="bg-[#171410] border border-stone-800/60 rounded-2xl p-5 flex items-center gap-4 hover:border-stone-700 transition-all">
 
-                {/* Info grid */}
-                <div className="grid grid-cols-2 gap-2 bg-[#110e0b] p-3 rounded-xl border border-stone-900/40 text-center my-3">
-                  <div>
-                    <p className="text-[10px] text-stone-500 uppercase font-semibold">Type</p>
-                    <p className="text-xs font-bold text-[#f7e0a3] mt-0.5">{bet.betType || '—'}</p>
+                  {/* Icon */}
+                  <div className="w-11 h-11 bg-[#1f1a14] rounded-xl flex items-center justify-center border border-stone-800 shrink-0">
+                    <Flag size={18} className="text-[#f7e0a3]" />
                   </div>
-                  <div>
-                    <p className="text-[10px] text-stone-500 uppercase font-semibold">Amount</p>
-                    <p className="text-xs font-bold text-stone-300 mt-0.5">
-                      {bet.betAmount != null ? `${bet.betAmount.toLocaleString()} VND` : '—'}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Bottom row */}
-                <div className="flex justify-between items-end pt-2 border-t border-stone-800/40">
-                  <div>
-                    <p className="text-[9px] text-stone-500 font-medium">
-                      {(bet.status || '').toLowerCase() === 'won' ? 'Actual Payout' : 'Est. Payout'}
-                    </p>
-                    {(() => {
-                      const s = (bet.status || '').toLowerCase()
-                      const payout = calcPayout(bet)
-                      if (s === 'lost') return <p className="text-base font-black mt-0.5 text-stone-500">0 VND</p>
-                      if (payout != null) return (
-                        <p className="text-base font-black mt-0.5 text-[#f7e0a3]">
-                          {payout.toLocaleString()} VND
+                  {/* Main info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-sm text-stone-100 truncate">{bet.horseName || '—'}</h3>
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase border shrink-0 ${statusBadge(bet.status)}`}>
+                        {normalizeStatus(bet.status)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 truncate mb-2">{event(bet)}</p>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-[9px] text-stone-600 uppercase font-bold">Type</p>
+                        <p className="text-xs font-bold text-[#f7e0a3]">{bet.betType || '—'}</p>
+                      </div>
+                      <div className="w-px h-5 bg-stone-800" />
+                      <div>
+                        <p className="text-[9px] text-stone-600 uppercase font-bold">Wager</p>
+                        <p className="text-xs font-bold text-stone-300">
+                          {bet.betAmount != null ? `${bet.betAmount.toLocaleString()}` : '—'} <span className="text-stone-600 font-normal text-[9px]">VND</span>
                         </p>
-                      )
-                      return <p className="text-base font-black mt-0.5 text-stone-600">—</p>
-                    })()}
+                      </div>
+                      <div className="w-px h-5 bg-stone-800" />
+                      <div>
+                        <p className="text-[9px] text-stone-600 uppercase font-bold">{s === 'won' ? 'Payout' : 'Est.'}</p>
+                        {s === 'lost'
+                          ? <p className="text-xs font-bold text-stone-500">0 <span className="text-stone-600 font-normal text-[9px]">VND</span></p>
+                          : payout != null
+                            ? <p className="text-xs font-bold text-[#f7e0a3]">{payout.toLocaleString()} <span className="text-stone-600 font-normal text-[9px]">VND</span></p>
+                            : <p className="text-xs font-bold text-stone-600">—</p>
+                        }
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-stone-500 font-mono mb-0.5">
-                    {bet.createdAt ? new Date(bet.createdAt).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                  </span>
+
+                  {/* Date */}
+                  <div className="shrink-0 text-right hidden sm:block">
+                    <p className="text-[10px] text-stone-500 font-mono leading-relaxed">
+                      {bet.createdAt ? new Date(bet.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    </p>
+                    <p className="text-[10px] text-stone-600 font-mono">
+                      {bet.createdAt ? new Date(bet.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </p>
+                  </div>
+
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
