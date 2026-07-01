@@ -139,6 +139,86 @@ export default function BetDetail() {
                 })}
               </div>
 
+              {/* Horse × BetType Matrix */}
+              {bets.length > 0 && (() => {
+                const BET_TYPES = ['Win', 'Place', 'Show']
+                const horses = [...new Map(bets.map(b => [b.horseId || b.horseName, b.horseName])).values()]
+                const matrix = horses.map(name => {
+                  const row = { name }
+                  let total = 0; let totalCount = 0
+                  BET_TYPES.forEach(t => {
+                    const matched = bets.filter(b => b.horseName === name && b.betType === t)
+                    const amt = matched.reduce((s, b) => s + (b.betAmount ?? 0), 0)
+                    const cnt = matched.length
+                    row[t] = { amt, cnt }
+                    total += amt; totalCount += cnt
+                  })
+                  row.total = { amt: total, cnt: totalCount }
+                  return row
+                })
+                const footer = { name: 'TOTAL' }
+                BET_TYPES.forEach(t => {
+                  const matched = bets.filter(b => b.betType === t)
+                  footer[t] = { amt: matched.reduce((s, b) => s + (b.betAmount ?? 0), 0), cnt: matched.length }
+                })
+                footer.total = { amt: bets.reduce((s, b) => s + (b.betAmount ?? 0), 0), cnt: bets.length }
+                return (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                      <div className="w-1 h-5 bg-gray-950 rounded-full" />
+                      <h3 className="text-sm font-bold text-gray-900">Horse Bet Distribution</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                            <th className="py-3 px-4">Horse</th>
+                            {BET_TYPES.map(t => <th key={t} className="py-3 px-4">{t}</th>)}
+                            <th className="py-3 px-4">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 text-sm">
+                          {matrix.map(row => (
+                            <tr key={row.name} className="hover:bg-gray-50/60 transition-colors">
+                              <td className="py-3 px-4 font-semibold text-gray-900">{row.name}</td>
+                              {BET_TYPES.map(t => (
+                                <td key={t} className="py-3 px-4">
+                                  {row[t].cnt > 0 ? (
+                                    <>
+                                      <p className="font-bold text-gray-900 text-sm">{row[t].amt.toLocaleString('en-US')}</p>
+                                      <p className="text-gray-400 text-xs">({row[t].cnt} bets)</p>
+                                    </>
+                                  ) : <span className="text-gray-300">—</span>}
+                                </td>
+                              ))}
+                              <td className="py-3 px-4">
+                                <p className="font-extrabold text-gray-900 text-sm">{row.total.amt.toLocaleString('en-US')}</p>
+                                <p className="text-gray-400 text-xs">({row.total.cnt} bets)</p>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-gray-50 border-t-2 border-gray-200 text-sm font-bold">
+                            <td className="py-3 px-4 text-gray-500 text-[11px] uppercase tracking-wider">Total</td>
+                            {BET_TYPES.map(t => (
+                              <td key={t} className="py-3 px-4">
+                                <p className="text-gray-900">{footer[t].amt.toLocaleString('en-US')}</p>
+                                <p className="text-gray-400 text-xs font-normal">({footer[t].cnt} bets)</p>
+                              </td>
+                            ))}
+                            <td className="py-3 px-4">
+                              <p className="text-gray-900">{footer.total.amt.toLocaleString('en-US')}</p>
+                              <p className="text-gray-400 text-xs font-normal">({footer.total.cnt} bets)</p>
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* Bets table */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
