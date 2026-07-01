@@ -143,34 +143,38 @@ export default function BetDetail() {
               {/* Horse × BetType Matrix */}
               {bets.length > 0 && (() => {
                 const BET_TYPES = ['Win', 'Place', 'Show']
-                const MATRIX_PAGE_SIZE = 5
-                const horses = [...new Map(bets.map(b => [b.horseId || b.horseName, b.horseName])).values()]
-                const matrix = horses.map(name => {
-                  const row = { name }
-                  let total = 0; let totalCount = 0
+                const MATRIX_PAGE_SIZE = 3
+                const horseMap = new Map()
+                bets.forEach(b => {
+                  const key = b.horseId || b.horseName
+                  if (!horseMap.has(key)) horseMap.set(key, { name: b.horseName, img: b.horseImageUrl || b.horseAvatar || null })
+                })
+                const horses = [...horseMap.values()]
+                const matrix = horses.map(({ name, img }) => {
+                  const row = { name, img }
+                  let total = 0
                   BET_TYPES.forEach(t => {
                     const matched = bets.filter(b => b.horseName === name && b.betType === t)
                     const amt = matched.reduce((s, b) => s + (b.betAmount ?? 0), 0)
-                    const cnt = matched.length
-                    row[t] = { amt, cnt }
-                    total += amt; totalCount += cnt
+                    row[t] = amt
+                    total += amt
                   })
-                  row.total = { amt: total, cnt: totalCount }
+                  row.total = total
                   return row
                 })
-                const footer = { name: 'TOTAL' }
-                BET_TYPES.forEach(t => {
-                  const matched = bets.filter(b => b.betType === t)
-                  footer[t] = { amt: matched.reduce((s, b) => s + (b.betAmount ?? 0), 0), cnt: matched.length }
-                })
-                footer.total = { amt: bets.reduce((s, b) => s + (b.betAmount ?? 0), 0), cnt: bets.length }
                 const mTotalPages = Math.max(1, Math.ceil(matrix.length / MATRIX_PAGE_SIZE))
                 const mPage = Math.min(matrixPage, mTotalPages)
                 const mItems = matrix.slice((mPage - 1) * MATRIX_PAGE_SIZE, mPage * MATRIX_PAGE_SIZE)
                 return (
-                  <div className="bg-[#1a1712] rounded-2xl overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                      <div className="w-1 h-5 bg-gray-950 rounded-full" />
+                      <h3 className="text-sm font-bold text-gray-900">Horse Bet Distribution</h3>
+                      <span className="text-xs text-gray-400 font-medium">({matrix.length} horses)</span>
+                    </div>
+
                     {/* Header */}
-                    <div className="grid grid-cols-5 gap-4 px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    <div className="grid grid-cols-5 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                       <div className="col-span-1">Horse</div>
                       <div>Win</div>
                       <div>Place</div>
@@ -180,56 +184,34 @@ export default function BetDetail() {
 
                     {/* Rows */}
                     {mItems.map(row => (
-                      <div key={row.name} className="grid grid-cols-5 gap-4 px-6 py-4 border-t border-[#3d3830] items-center hover:bg-[#2a2620] transition-colors">
+                      <div key={row.name} className="grid grid-cols-5 gap-4 px-6 py-4 border-b border-gray-100 items-center hover:bg-gray-50/60 transition-colors last:border-b-0">
                         <div className="col-span-1 flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 bg-[#2a2620] border border-[#3d3830] rounded-full flex items-center justify-center shrink-0 text-lg">🐎</div>
-                          <span className="font-bold text-white text-sm truncate">{row.name}</span>
+                          <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
+                            {row.img
+                              ? <img src={row.img} alt="" className="w-full h-full object-cover" />
+                              : <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '18px' }}>sprint</span>
+                            }
+                          </div>
+                          <span className="font-semibold text-gray-900 text-sm truncate">{row.name}</span>
                         </div>
-                        <div>
-                          <p className="text-gray-300 text-sm font-medium">{row.Win.amt.toLocaleString('en-US')} VND</p>
-                          <p className="text-gray-500 text-xs">({row.Win.cnt} bets)</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-300 text-sm font-medium">{row.Place.amt.toLocaleString('en-US')} VND</p>
-                          <p className="text-gray-500 text-xs">({row.Place.cnt} bets)</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-300 text-sm font-medium">{row.Show.amt.toLocaleString('en-US')} VND</p>
-                          <p className="text-gray-500 text-xs">({row.Show.cnt} bets)</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-yellow-500 font-bold text-sm">{row.total.amt.toLocaleString('en-US')} VND</p>
-                          <p className="text-gray-500 text-xs">({row.total.cnt} bets)</p>
-                        </div>
+                        <div className="font-medium text-gray-700 text-sm">{row.Win.toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">VND</span></div>
+                        <div className="font-medium text-gray-700 text-sm">{row.Place.toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">VND</span></div>
+                        <div className="font-medium text-gray-700 text-sm">{row.Show.toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">VND</span></div>
+                        <div className="text-right font-extrabold text-gray-900 text-sm">{row.total.toLocaleString('en-US')} <span className="text-gray-400 font-normal text-xs">VND</span></div>
                       </div>
                     ))}
 
-                    {/* Footer total */}
-                    <div className="grid grid-cols-5 gap-4 px-6 py-4 border-t-2 border-[#3d3830] items-center bg-[#2a2620]">
-                      <div className="col-span-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</div>
-                      {BET_TYPES.map(t => (
-                        <div key={t}>
-                          <p className="text-gray-300 text-sm font-bold">{footer[t].amt.toLocaleString('en-US')} VND</p>
-                          <p className="text-gray-500 text-xs">({footer[t].cnt} bets)</p>
-                        </div>
-                      ))}
-                      <div className="text-right">
-                        <p className="text-yellow-500 font-bold text-sm">{footer.total.amt.toLocaleString('en-US')} VND</p>
-                        <p className="text-gray-500 text-xs">({footer.total.cnt} bets)</p>
-                      </div>
-                    </div>
-
                     {/* Pagination */}
                     {mTotalPages > 1 && (
-                      <div className="px-6 py-3 border-t border-[#3d3830] flex items-center justify-between">
-                        <p className="text-xs text-gray-500">Page {mPage} of {mTotalPages}</p>
+                      <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between">
+                        <p className="text-xs text-gray-400">Page {mPage} of {mTotalPages}</p>
                         <div className="flex gap-2">
                           <button onClick={() => setMatrixPage(p => Math.max(1, p - 1))} disabled={mPage === 1}
-                            className="px-3 py-1.5 bg-[#2a2620] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             ‹ Prev
                           </button>
                           <button onClick={() => setMatrixPage(p => Math.min(mTotalPages, p + 1))} disabled={mPage === mTotalPages}
-                            className="px-3 py-1.5 bg-[#2a2620] text-gray-400 rounded-lg text-xs font-semibold hover:text-white disabled:opacity-40 transition-colors">
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-50 disabled:opacity-40 transition-colors">
                             Next ›
                           </button>
                         </div>
