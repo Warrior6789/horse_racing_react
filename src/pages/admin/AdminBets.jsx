@@ -92,29 +92,40 @@ export default function AdminBets() {
         ) : races.length === 0 ? (
           <div className="text-center py-20 text-sm font-semibold text-gray-400">No races found.</div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {races.map(r => (
               <div
                 key={r.raceId}
                 onClick={() => navigate(`/admin/bets/${r.raceId}`)}
-                className="flex items-center justify-between px-5 py-4 bg-white border border-gray-100 shadow-sm rounded-2xl cursor-pointer hover:shadow-md hover:border-gray-200 transition-all"
+                className="bg-white border border-gray-100 shadow-sm rounded-2xl cursor-pointer hover:shadow-md hover:border-gray-200 transition-all overflow-hidden"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-gray-950 text-white flex items-center justify-center shrink-0 font-bold text-xs">
-                    #{r.raceNumber}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm">{r.raceName || `Race #${r.raceNumber}`}</p>
-                    <p className="text-gray-400 text-xs mt-0.5">{r.racecourseName || '—'} · {fmt(r.startTime)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right hidden sm:block">
-                    <p className="text-gray-900 font-bold text-sm">{(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')} VND</p>
-                    <p className="text-gray-400 text-xs">{r.betCount ?? 0} bets</p>
-                  </div>
+                {/* Top strip: status + start time */}
+                <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-100 bg-gray-50">
                   <StatusBadge status={r.status} />
-                  <span className="text-gray-300 text-lg font-light">›</span>
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>schedule</span>
+                    {fmt(r.startTime)}
+                  </span>
+                </div>
+
+                {/* Bottom: race info + total bet */}
+                <div className="flex items-center justify-between px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gray-950 text-white flex items-center justify-center shrink-0 font-bold text-xs">
+                      #{r.raceNumber}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">{r.raceName || `Race #${r.raceNumber}`}</p>
+                      <p className="text-gray-400 text-xs mt-0.5">{r.racecourseName || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="text-right">
+                      <p className="text-gray-900 font-extrabold text-base">{(r.totalPoolAmount ?? 0).toLocaleString('vi-VN')}<span className="text-gray-400 font-normal text-xs ml-1">VND</span></p>
+                      <p className="text-gray-400 text-xs">{r.betCount ?? 0} bets</p>
+                    </div>
+                    <span className="text-gray-300 text-lg font-light">›</span>
+                  </div>
                 </div>
               </div>
             ))}
