@@ -381,7 +381,9 @@ export default function RaceManagement() {
         setCards(prev => prev.map(patch))
         setRaces(prev => prev.map(patch))
       }
-    } catch {}
+    } catch (e) {
+      showToast(extractError(e))
+    }
     setActing(null)
   }
 
