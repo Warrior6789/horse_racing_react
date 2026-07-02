@@ -26,6 +26,12 @@ export default function TakeoutLedger() {
   const [page, setPage]       = useState(1)
   const [loading, setLoading] = useState(true)
 
+  // totalTakeoutAmount isn't in the API response yet — BE needs to add a
+  // SUM across all matching records. Until then this falls back to the sum
+  // of whatever page is currently loaded, labeled accordingly below.
+  const [totalTakeout, setTotalTakeout]           = useState(0)
+  const [hasServerTotal, setHasServerTotal]       = useState(false)
+
   const load = useCallback((pg, bt) => {
     setLoading(true)
     const params = { page: pg, pageSize: PAGE_SIZE }
@@ -33,10 +39,18 @@ export default function TakeoutLedger() {
     getTakeoutLedgerPaged(params)
       .then(r => {
         const d = r.data.data
-        setItems(d?.items || [])
+        const its = d?.items || []
+        setItems(its)
         setTotal(d?.totalCount || 0)
+        if (d?.totalTakeoutAmount != null) {
+          setHasServerTotal(true)
+          setTotalTakeout(d.totalTakeoutAmount)
+        } else {
+          setHasServerTotal(false)
+          setTotalTakeout(its.reduce((s, r) => s + (r.takeoutAmount ?? 0), 0))
+        }
       })
-      .catch(() => { setItems([]); setTotal(0) })
+      .catch(() => { setItems([]); setTotal(0); setTotalTakeout(0); setHasServerTotal(false) })
       .finally(() => setLoading(false))
   }, [])
 
@@ -46,7 +60,8 @@ export default function TakeoutLedger() {
 
   function changeBetType(bt) { setBetType(bt); setPage(1) }
 
-  const pageTakeoutSum = items.reduce((s, r) => s + (r.takeoutAmount ?? 0), 0)
+  // Best-effort "latest" from the currently loaded page only — accurate on
+  // page 1 if the API sorts by createdAt desc, otherwise just informational.
   const latest = items.reduce((max, r) => {
     if (!r.createdAt) return max
     return (!max || new Date(r.createdAt) > new Date(max.createdAt)) ? r : max
@@ -66,9 +81,13 @@ export default function TakeoutLedger() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Takeout (This Page)</p>
-              <p className="text-3xl font-extrabold text-white">{pageTakeoutSum.toLocaleString('en-US')}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Sum of {items.length} records shown · VND</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                {hasServerTotal ? 'Total Takeout Collected' : 'Takeout (This Page)'}
+              </p>
+              <p className="text-3xl font-extrabold text-white">{totalTakeout.toLocaleString('en-US')}</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {hasServerTotal ? 'All matching records · VND' : `Sum of ${items.length} records shown · VND`}
+              </p>
             </div>
             <div className="p-3 bg-white/10 text-white rounded-xl">
               <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>payments</span>
