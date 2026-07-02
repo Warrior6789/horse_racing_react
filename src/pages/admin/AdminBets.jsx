@@ -4,9 +4,10 @@ import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getRacecourses } from '../../api/racecourses'
 
-const STATUS_OPTS = ['All', 'BettingOpen', 'BettingClosed', 'Finished']
+const STATUS_OPTS = ['All', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Finished']
 
 const RACE_STATUS = {
+  Scheduled:     { cls: 'bg-amber-50 text-amber-700 ring-amber-500/20',       dot: false, label: 'Scheduled'      },
   BettingOpen:   { cls: 'bg-blue-50 text-blue-700 ring-blue-500/20',          dot: true,  label: 'Betting Open'   },
   BettingClosed: { cls: 'bg-yellow-50 text-yellow-700 ring-yellow-500/20',    dot: false, label: 'Betting Closed' },
   Live:          { cls: 'bg-red-50 text-red-600 ring-red-500/20',             dot: true,  label: 'Live'           },
@@ -66,7 +67,7 @@ export default function AdminBets() {
     getRacesPaged(params)
       .then(r => {
         const d = r.data.data
-        const ALLOWED = ['BettingOpen', 'BettingClosed', 'Finished']
+        const ALLOWED = ['Scheduled', 'BettingOpen', 'BettingClosed', 'Finished']
         const items = (d?.items || []).filter(r => ALLOWED.includes(r.status))
         setRaces(items)
         setTotal(st === 'All' ? items.length : d?.totalCount || 0)
