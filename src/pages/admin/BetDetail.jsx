@@ -58,12 +58,12 @@ export default function BetDetail() {
   const [matrixPage, setMatrixPage]     = useState(1)
   const [horseImageMap, setHorseImageMap] = useState({})
 
-  const fetchPool = useCallback(() => {
-    setLoadingPool(true)
+  const fetchPool = useCallback((silent = false) => {
+    if (!silent) setLoadingPool(true)
     getRacePool(raceId)
       .then(r => setPool(r.data.data))
-      .catch(() => setPool(null))
-      .finally(() => setLoadingPool(false))
+      .catch(() => { if (!silent) setPool(null) })
+      .finally(() => { if (!silent) setLoadingPool(false) })
   }, [raceId])
 
   const fetchPrize = useCallback(() => {
@@ -92,9 +92,9 @@ export default function BetDetail() {
       .catch(() => {})
   }, [raceId, fetchPool, fetchPrize])
 
-  const handlePoolUpdate = useCallback((pools) => {
-    setPool(prev => prev ? { ...prev, pools } : { pools })
-  }, [])
+  const handlePoolUpdate = useCallback(() => {
+    fetchPool(true)
+  }, [fetchPool])
 
   const handlePrizePoolUpdate = useCallback((prizePool) => {
     setRace(prev => prev ? { ...prev, prizePool } : prev)
