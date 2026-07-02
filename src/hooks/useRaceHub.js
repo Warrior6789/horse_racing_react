@@ -20,15 +20,15 @@ export function useRaceHub(raceId, { onPoolUpdate, onPrizePoolUpdate, onRaceUpda
       .build()
 
     hub.on('PoolUpdate', (data) => {
-      if (data.raceId === raceId) onPoolUpdate?.(data.pools)
+      if (String(data.raceId) === String(raceId)) onPoolUpdate?.(data.pools)
     })
 
     hub.on('PrizePoolUpdate', (data) => {
-      if (data.raceId === raceId) onPrizePoolUpdate?.(data.prizePool)
+      if (String(data.raceId) === String(raceId)) onPrizePoolUpdate?.(data.prizePool)
     })
 
     hub.on('RaceUpdate', (data) => {
-      if (!raceId || data.raceId === raceId) onRaceUpdate?.(data)
+      if (!raceId || String(data.raceId) === String(raceId)) onRaceUpdate?.(data)
     })
 
     hub.on('RacesUpdated', () => {
