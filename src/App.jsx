@@ -53,6 +53,7 @@ import PaymentManagement from './pages/admin/PaymentManagement'
 import RefereeAssignment from './pages/admin/RefereeAssignment'
 import AdminBets from './pages/admin/AdminBets'
 import BetDetail from './pages/admin/BetDetail'
+import TakeoutLedger from './pages/admin/TakeoutLedger'
 
 export default function App() {
   return (
@@ -123,6 +124,7 @@ export default function App() {
           <Route path="/admin/referees" element={<PrivateRoute roles={['Admin']}><RefereeAssignment /></PrivateRoute>} />
           <Route path="/admin/bets" element={<PrivateRoute roles={['Admin']}><AdminBets /></PrivateRoute>} />
           <Route path="/admin/bets/:raceId" element={<PrivateRoute roles={['Admin']}><BetDetail /></PrivateRoute>} />
+          <Route path="/admin/takeout-ledger" element={<PrivateRoute roles={['Admin']}><TakeoutLedger /></PrivateRoute>} />
 
           <Route path="/unauthorized" element={<div className="flex items-center justify-center h-screen text-secondary text-body-lg">You do not have permission to access this page.</div>} />
           <Route path="*" element={<Navigate to="/login" replace />} />

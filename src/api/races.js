@@ -26,3 +26,4 @@ export const getRaceRegistrations = (raceId) => client.get(`/races/${raceId}/reg
 export const collectPool = (raceId, data) => client.post(`/races/${raceId}/pool/collect`, data)
 export const getRacePool = (raceId) => client.get(`/races/${raceId}/pool`)
 export const getRacePrizePreview = (raceId) => client.get(`/races/${raceId}/prize-preview`)
+export const getTakeoutLedgerPaged = (params) => client.get('/races/takeout-ledger/paged', { params })
