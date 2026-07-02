@@ -96,7 +96,11 @@ export default function BetDetail() {
     setPool(prev => prev ? { ...prev, pools } : { pools })
   }, [])
 
-  useRaceHub(raceId, { onPoolUpdate: handlePoolUpdate })
+  const handlePrizePoolUpdate = useCallback((prizePool) => {
+    setRace(prev => prev ? { ...prev, prizePool } : prev)
+  }, [])
+
+  useRaceHub(raceId, { onPoolUpdate: handlePoolUpdate, onPrizePoolUpdate: handlePrizePoolUpdate })
 
   const pools = pool?.pools || []
   const bets  = pool?.bets  || []
