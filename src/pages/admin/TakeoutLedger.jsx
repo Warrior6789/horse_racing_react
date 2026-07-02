@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getTakeoutLedgerPaged } from '../../api/races'
+import { useRaceHub } from '../../hooks/useRaceHub'
 
 const BET_TYPE_OPTS = ['All', 'Win', 'Place', 'Show']
 
@@ -28,8 +29,8 @@ export default function TakeoutLedger() {
 
   const [totalTakeout, setTotalTakeout] = useState(0)
 
-  const load = useCallback((pg, bt) => {
-    setLoading(true)
+  const load = useCallback((pg, bt, silent = false) => {
+    if (!silent) setLoading(true)
     const params = { page: pg, pageSize: PAGE_SIZE }
     if (bt !== 'All') params.betType = bt
     getTakeoutLedgerPaged(params)
@@ -39,11 +40,17 @@ export default function TakeoutLedger() {
         setTotal(d?.totalCount || 0)
         setTotalTakeout(d?.totalTakeoutAmount ?? 0)
       })
-      .catch(() => { setItems([]); setTotal(0); setTotalTakeout(0) })
-      .finally(() => setLoading(false))
+      .catch(() => { if (!silent) { setItems([]); setTotal(0); setTotalTakeout(0) } })
+      .finally(() => { if (!silent) setLoading(false) })
   }, [])
 
   useEffect(() => { load(page, betType) }, [load, page, betType])
+
+  const handleTakeoutLedgerUpdated = useCallback(() => {
+    load(page, betType, true)
+  }, [load, page, betType])
+
+  useRaceHub(null, { onTakeoutLedgerUpdated: handleTakeoutLedgerUpdated })
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
