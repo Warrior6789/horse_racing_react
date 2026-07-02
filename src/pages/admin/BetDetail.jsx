@@ -141,7 +141,7 @@ export default function BetDetail() {
                 <div className="bg-gray-900 p-5 rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registration Fees Collected</p>
-                    <p className="text-3xl font-extrabold text-white">{(race?.totalPoolAmount ?? 0).toLocaleString('en-US')}</p>
+                    <p className="text-3xl font-extrabold text-white">{(race?.prizePool ?? 0).toLocaleString('en-US')}</p>
                     <p className="text-xs text-gray-400 mt-0.5">Active registration fees from owners · VND</p>
                   </div>
                   <div className="p-3 bg-white/10 text-white rounded-xl">
