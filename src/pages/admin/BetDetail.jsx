@@ -312,8 +312,16 @@ export default function BetDetail() {
                                   {b.status || '—'}
                                 </span>
                               </td>
-                              <td className="py-3 px-4 text-gray-600 text-sm">
-                                {b.payoutRatio != null ? `×${b.payoutRatio}` : '—'}
+                              <td className="py-3 px-4 text-gray-600 text-sm whitespace-nowrap">
+                                {b.payoutRatio != null
+                                  ? <span className="font-semibold text-gray-900">×{b.payoutRatio}</span>
+                                  : b.estimatedPayout != null
+                                    ? <>
+                                        <span className="text-[10px] text-gray-400 uppercase font-bold mr-1">Est.</span>
+                                        <span className="font-semibold text-gray-900">{Math.round(b.estimatedPayout).toLocaleString('en-US')}</span>
+                                        <span className="text-gray-400 text-xs ml-1">VND</span>
+                                      </>
+                                    : '—'}
                               </td>
                               <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{fmt(b.createdAt)}</td>
                             </tr>
