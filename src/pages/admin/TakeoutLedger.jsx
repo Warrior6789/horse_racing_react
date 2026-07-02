@@ -59,7 +59,7 @@ export default function TakeoutLedger() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Takeout Ledger</h1>
-          <p className="text-sm text-gray-500 mt-1">Lịch sử số tiền hoa hồng (takeout) đã trích từ các pool cược.</p>
+          <p className="text-sm text-gray-500 mt-1">History of commission (takeout) deducted from betting pools.</p>
         </div>
 
         {/* Stat cards */}
@@ -68,7 +68,7 @@ export default function TakeoutLedger() {
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Takeout (This Page)</p>
               <p className="text-3xl font-extrabold text-white">{pageTakeoutSum.toLocaleString('en-US')}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Tổng {items.length} bản ghi đang hiện · VND</p>
+              <p className="text-xs text-gray-400 mt-0.5">Sum of {items.length} records shown · VND</p>
             </div>
             <div className="p-3 bg-white/10 text-white rounded-xl">
               <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>payments</span>
@@ -79,7 +79,7 @@ export default function TakeoutLedger() {
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Records</p>
               <p className="text-2xl font-extrabold text-gray-900">{total.toLocaleString('en-US')}</p>
-              <p className="text-xs text-gray-400 mt-0.5">bản ghi takeout</p>
+              <p className="text-xs text-gray-400 mt-0.5">takeout records</p>
             </div>
             <div className="p-3 bg-gray-50 text-gray-600 rounded-xl">
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>receipt_long</span>
@@ -92,7 +92,7 @@ export default function TakeoutLedger() {
               <p className="text-lg font-extrabold text-gray-900 truncate">
                 {latest ? (latest.raceName || `Race #${latest.raceNumber ?? '—'}`) : '—'}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">{latest ? fmtDateTime(latest.createdAt) : 'Chưa có dữ liệu'}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{latest ? fmtDateTime(latest.createdAt) : 'No data yet'}</p>
             </div>
             <div className="p-3 bg-gray-50 text-gray-600 rounded-xl shrink-0">
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>schedule</span>
@@ -140,7 +140,7 @@ export default function TakeoutLedger() {
                 >
                   <div className="min-w-0">
                     <p className="font-bold text-gray-900 text-sm truncate">
-                      {r.raceName || 'Race đã xoá'}{r.raceNumber != null && ` (#${r.raceNumber})`}
+                      {r.raceName || 'Deleted race'}{r.raceNumber != null && ` (#${r.raceNumber})`}
                     </p>
                     <p className="text-gray-400 text-xs truncate">{r.raceId}</p>
                   </div>
