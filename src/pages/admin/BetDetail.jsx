@@ -75,6 +75,12 @@ export default function BetDetail() {
   }, [raceId])
 
   useEffect(() => {
+    if (window.location.hash === '#prize-preview') {
+      document.getElementById('prize-preview')?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [])
+
+  useEffect(() => {
     getRace(raceId).then(r => setRace(r.data.data)).catch(() => {})
     fetchPool()
     fetchPrize()
@@ -353,7 +359,7 @@ export default function BetDetail() {
         </section>
 
         {/* Block B — Prize Preview */}
-        <section className="space-y-5">
+        <section id="prize-preview" className="space-y-5 scroll-mt-6">
           <div className="flex items-center gap-3">
             <div className="w-1 h-5 bg-gray-950 rounded-full" />
             <h2 className="text-sm font-bold text-gray-900">Prize Preview</h2>

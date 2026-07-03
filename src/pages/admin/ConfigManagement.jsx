@@ -54,6 +54,7 @@ const TABS = [
     ],
     tableHeaders: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
     rowCells: (r) => [pct(r.pos1Ratio), pct(r.pos2Ratio), pct(r.pos3Ratio), pct(r.pos4Ratio), pct(r.pos5Ratio), pct(r.pos6Ratio)],
+    note: 'These ratios apply when all 6 positions finish a race. If a race has fewer horses, the ratios are automatically re-normalized to the actual number of finishers.',
   },
   {
     key: 'jockey',
@@ -99,7 +100,7 @@ function StatusBadge({ status }) {
 
 const PAGE_SIZE = 4
 
-function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, formDef, tableHeaders, rowCells }) {
+function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, formDef, tableHeaders, rowCells, note }) {
   const [active,    setActive]    = useState(null)
   const [rows,      setRows]      = useState([])
   const [page,      setPage]      = useState(1)
@@ -277,6 +278,10 @@ function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, f
         </footer>
       </div>
 
+      {note && (
+        <p className="text-xs text-gray-400 leading-relaxed">{note}</p>
+      )}
+
       {/* Create modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -370,6 +375,7 @@ export default function ConfigManagement() {
           formDef={current.formDef}
           tableHeaders={current.tableHeaders}
           rowCells={current.rowCells}
+          note={current.note}
         />
 
       </div>

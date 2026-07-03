@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import CardCarousel from '../../components/CardCarousel'
@@ -205,6 +206,7 @@ function KpiCard({ title, value, icon, iconColor, bgIcon }) {
 }
 
 export default function RaceManagement() {
+  const navigate = useNavigate()
   const [cards, setCards]           = useState([])
   const [cLoading, setCLoading]     = useState(true)
   const [races, setRaces]           = useState([])
@@ -618,6 +620,12 @@ export default function RaceManagement() {
                               Set Result
                             </button>
                           )}
+                          <button
+                            onClick={() => navigate(`/admin/bets/${r.raceId}#prize-preview`)}
+                            className="px-2.5 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors"
+                          >
+                            Prize Preview
+                          </button>
                           <button
                             onClick={() => handleAction(r.raceId, resetRace)}
                             disabled={acting === r.raceId}
