@@ -319,18 +319,20 @@ export default function BetDetail() {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-gray-600 text-sm whitespace-nowrap">
-                                {b.payoutRatio != null
+                                {b.status === 'Won' && b.payoutRatio != null
                                   ? <>
                                       <span className="font-semibold text-gray-900">{Math.round((b.betAmount ?? 0) * b.payoutRatio).toLocaleString('vi-VN')}</span>
                                       <span className="text-gray-400 text-xs ml-1">VND</span>
                                     </>
-                                  : b.estimatedPayout != null
-                                    ? <>
-                                        <span className="text-[10px] text-gray-400 uppercase font-bold mr-1">Est.</span>
-                                        <span className="font-semibold text-gray-900">{Math.round(b.estimatedPayout).toLocaleString('en-US')}</span>
-                                        <span className="text-gray-400 text-xs ml-1">VND</span>
-                                      </>
-                                    : '—'}
+                                  : b.status === 'Lost'
+                                    ? <span className="font-semibold text-gray-400">0 VND</span>
+                                    : b.estimatedPayout != null
+                                      ? <>
+                                          <span className="text-[10px] text-gray-400 uppercase font-bold mr-1">Est.</span>
+                                          <span className="font-semibold text-gray-900">{Math.round(b.estimatedPayout).toLocaleString('en-US')}</span>
+                                          <span className="text-gray-400 text-xs ml-1">VND</span>
+                                        </>
+                                      : '—'}
                               </td>
                               <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{fmt(b.createdAt)}</td>
                             </tr>
