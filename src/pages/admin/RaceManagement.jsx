@@ -401,9 +401,9 @@ export default function RaceManagement() {
   const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white'
   const f = (k) => ({ value: form[k], onChange: e => setForm(p => ({ ...p, [k]: e.target.value })) })
 
-  const live      = races.filter(r => r.status === 'Live').length
-  const scheduled = races.filter(r => r.status === 'Scheduled').length
-  const completed = races.filter(r => r.status === 'Completed').length
+  const live      = cards.filter(r => r.status === 'Live').length
+  const scheduled = cards.filter(r => r.status === 'Scheduled').length
+  const completed = cards.filter(r => ['Finished', 'Cancelled'].includes(r.status)).length
 
   return (
     <DashboardLayout title="Race Management">
