@@ -274,11 +274,12 @@ export default function JockeySchedule() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard title="Total Assignments" value={regs.length}       sub={`${pending.length} pending`} />
           <StatCard title="Confirmed Races"   value={confirmed.length}  sub="Ready to race" accent />
           <StatCard title="Next Race"         value={nextRaceName}      sub={nextRaceTime} leftBorder />
           <StatCard title="Win Rate"          value={`${winRate}%`}     sub={`${totalWins} wins / ${totalRaces} races`} />
+          <StatCard title="Total Earned"      value={`${totalEarned.toLocaleString()} VND`} sub="From race prizes" />
         </div>
 
         {/* Table View */}

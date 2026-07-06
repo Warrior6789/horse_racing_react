@@ -474,6 +474,7 @@ function RaceRow({ race, canBetByRole = true, onAction, query = '' }) {
 
   const { state, stateText, statusLabel, statusValue } = info
   const isLive = state === 'progress'
+  const { display: countdownDisplay } = useCountdown(state === 'scheduled' || state === 'open' ? race.startTime : null)
 
   return (
     <div className="bg-[#161310] border border-stone-800/60 rounded-xl overflow-hidden flex flex-col md:flex-row group hover:border-stone-700/80 transition-colors relative">
@@ -534,6 +535,9 @@ function RaceRow({ race, canBetByRole = true, onAction, query = '' }) {
             <p className={`text-lg font-black mt-0.5 ${isLive ? 'text-[#ff5a5f] italic' : 'text-[#f7e0a3]'}`}>
               {statusValue}
             </p>
+            {countdownDisplay && (
+              <p className="text-[11px] text-stone-500 font-bold mt-0.5">Starts in {countdownDisplay}</p>
+            )}
           </div>
         </div>
 

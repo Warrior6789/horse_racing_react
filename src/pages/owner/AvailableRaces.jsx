@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { MapPin, Sprout, Mountain, Ruler, CalendarCheck, ChevronDown, ChevronLeft, ChevronRight, Search, Calendar, Users } from 'lucide-react'
+import { MapPin, Sprout, Mountain, Ruler, ChevronDown, ChevronLeft, ChevronRight, Search, Calendar, Users } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getUpcomingRaces, getRaceRegistrations } from '../../api/races'
 import { getOwnerAllRegistrations } from '../../api/registrations'

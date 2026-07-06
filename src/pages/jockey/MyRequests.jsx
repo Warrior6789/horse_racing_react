@@ -21,12 +21,6 @@ function StatCard({ title, value, subtitle, icon: Icon }) {
   )
 }
 
-const STATUS_CLS = {
-  Pending:  'bg-yellow-900/30 text-yellow-400 border border-yellow-700/40',
-  Accepted: 'bg-green-900/30 text-green-400 border border-green-700/40',
-  Rejected: 'bg-red-900/30 text-red-400 border border-red-700/40',
-}
-
 export default function JockeyRequests() {
   const { user, updateUser } = useAuth()
   const [regs, setRegs]           = useState([])

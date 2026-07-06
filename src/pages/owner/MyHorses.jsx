@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trophy, Plus, X, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Trophy, Plus, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import CardCarousel from '../../components/CardCarousel'
 import { getHorses, deleteHorse } from '../../api/horses'
-import { getRacesPaged, registerHorseToRace } from '../../api/races'
-import { getJockeysPaged } from '../../api/jockeyProfiles'
 import { getOwnerAllRegistrations } from '../../api/registrations'
 
 
@@ -133,20 +131,6 @@ function HorseCard({ horse, onEdit, onDelete, onRegister, hasActiveReg }) {
   )
 }
 
-function Modal({ title, onClose, children }) {
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-[#11141e] border border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-xl space-y-4 my-auto">
-        <div className="flex justify-between items-center">
-          <h3 className="text-base font-bold text-white">{title}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors"><X size={18} /></button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
-
 export default function MyHorses() {
   const [horses, setHorses]     = useState([])
   const navigate                = useNavigate()
@@ -154,15 +138,7 @@ export default function MyHorses() {
   const [filter, setFilter]     = useState('All')
   const [view, setView]         = useState('grid')
   const [listPage, setListPage] = useState(1)
-  const [gridPage, setGridPage] = useState(1)
   const LIST_SIZE = 8
-  const GRID_SIZE = 3
-  const [modal, setModal]       = useState(null)
-  const [regHorse, setRegHorse] = useState(null)
-  const [races, setRaces]       = useState([])
-  const [jockeys, setJockeys]   = useState([])
-  const [reg, setReg]                   = useState({ raceId: '', jockeyId: '', gateNumber: '' })
-  const [regError, setRegError]         = useState('')
   const [activeRegHorseIds, setActiveRegHorseIds] = useState(new Set())
 
   const load = () => {
@@ -183,33 +159,11 @@ export default function MyHorses() {
   }
   useEffect(() => { load() }, [])
 
-  const openRegister = async (h) => {
-    setRegHorse(h); setReg({ raceId: '', jockeyId: '', gateNumber: '' }); setRegError(''); setModal('register')
-    const [rRes, jRes] = await Promise.all([
-      getRacesPaged({ page: 1, pageSize: 50, status: 'Scheduled' }).catch(() => ({ data: { data: {} } })),
-      getJockeysPaged({ page: 1, pageSize: 50 }).catch(() => ({ data: { data: {} } })),
-    ])
-    setRaces(rRes.data.data?.items || [])
-    setJockeys(jRes.data.data?.items || [])
-  }
-
   const handleDelete = async (id) => {
     if (!confirm('Delete this horse?')) return
     await deleteHorse(id).catch(() => {})
     load()
   }
-
-  const submitReg = async () => {
-    if (!reg.raceId || !reg.jockeyId) { setRegError('Please select race and jockey.'); return }
-    setRegError('')
-    try {
-      await registerHorseToRace(reg.raceId, { horseId: regHorse.horseId, jockeyId: reg.jockeyId, gateNumber: reg.gateNumber || undefined })
-      setModal(null); alert('Horse registered!')
-    } catch (e) { setRegError(e.response?.data?.message || 'Registration failed.') }
-  }
-
-  const inputCls = 'w-full bg-[#0b0f19] border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-200 outline-none focus:border-yellow-500/40 transition-colors placeholder:text-gray-600'
-  const labelCls = 'block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5'
 
   const counts = {
     All:     horses.length,
@@ -220,8 +174,6 @@ export default function MyHorses() {
   }
 
   const displayed = filter === 'All' ? horses : horses.filter(h => h.status === filter)
-
-  const f = (k) => ({ value: form[k], onChange: e => setForm(p => ({ ...p, [k]: e.target.value })) })
 
   return (
     <OwnerLayout>
@@ -260,7 +212,7 @@ export default function MyHorses() {
                   count={s === 'All' ? counts.All : undefined}
                   status={s !== 'All' ? s : undefined}
                   active={filter === s}
-                  onClick={() => { setFilter(s); setGridPage(1); setListPage(1) }}
+                  onClick={() => { setFilter(s); setListPage(1) }}
                 />
               ))}
             </div>
@@ -419,49 +371,6 @@ export default function MyHorses() {
       >
         <Plus size={26} />
       </button>
-
-      {/* Register Modal */}
-      {modal === 'register' && (
-        <Modal title={`Register ${regHorse?.horseName} to Race`} onClose={() => setModal(null)}>
-          <div className="space-y-3">
-            <div>
-              <label className={labelCls}>Select Race *</label>
-              <select className={inputCls} value={reg.raceId} onChange={e => setReg(p => ({ ...p, raceId: e.target.value }))}>
-                <option value="">Choose race...</option>
-                {races.map(r => (
-                  <option key={r.raceId} value={r.raceId}>
-                    Race #{r.raceNumber} — {r.racecourseName} ({new Date(r.startTime).toLocaleDateString()})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Select Jockey *</label>
-              <select className={inputCls} value={reg.jockeyId} onChange={e => setReg(p => ({ ...p, jockeyId: e.target.value }))}>
-                <option value="">Choose jockey...</option>
-                {jockeys.map(j => (
-                  <option key={j.accountId} value={j.accountId}>
-                    {j.fullName} ({j.licenseNumber || 'No license'})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Gate Number (optional)</label>
-              <input type="number" min="1" className={inputCls} value={reg.gateNumber} onChange={e => setReg(p => ({ ...p, gateNumber: e.target.value }))} />
-            </div>
-          </div>
-          {regError && <p className="text-xs text-red-400">{regError}</p>}
-          <div className="flex gap-3 pt-1">
-            <button onClick={() => setModal(null)} className="flex-1 h-11 border border-gray-700 rounded-xl text-sm font-bold text-gray-400 hover:bg-[#1a2031] transition-colors">
-              Cancel
-            </button>
-            <button onClick={submitReg} className="flex-1 h-11 bg-[#facc15] hover:bg-yellow-400 text-black rounded-xl text-sm font-bold transition-colors">
-              Register
-            </button>
-          </div>
-        </Modal>
-      )}
     </OwnerLayout>
   )
 }

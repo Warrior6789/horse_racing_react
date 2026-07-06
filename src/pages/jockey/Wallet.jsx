@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Wallet, WalletCards, ArrowDownLeft, ArrowUpRight, Plus, X, TrendingDown, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { Wallet, WalletCards, Plus, X, TrendingDown, TrendingUp, Clock, CheckCircle } from 'lucide-react'
 import JockeyLayout from '../../components/JockeyLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'

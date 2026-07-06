@@ -141,7 +141,6 @@ export default function RefereeRaces() {
   const [allRaces, setAllRaces] = useState([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
-  const [inputVal, setInputVal] = useState('')
   const [status, setStatus]     = useState('')
   const [tab, setTab]           = useState('active')
 

@@ -49,6 +49,7 @@ export default function WithdrawalManagement() {
   const [totalCount, setCount]    = useState(0)
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
+  const [revealed, setRevealed]   = useState(new Set())
 
   const load = (p = page) => {
     setLoading(true)
@@ -150,7 +151,17 @@ export default function WithdrawalManagement() {
                       {/* Bank Details */}
                       <td className="py-5 px-6">
                         <p className="font-bold text-zinc-950">{item.bankName || '—'}</p>
-                        <p className="text-xs font-mono text-zinc-400">{item.bankAccountNumber || '—'}</p>
+                        <button
+                          type="button"
+                          onClick={() => setRevealed(prev => {
+                            const next = new Set(prev)
+                            next.has(item.withdrawalId) ? next.delete(item.withdrawalId) : next.add(item.withdrawalId)
+                            return next
+                          })}
+                          className="text-xs font-mono text-zinc-400 hover:text-zinc-600 transition-colors"
+                        >
+                          {revealed.has(item.withdrawalId) ? (item.bankAccountNumber || '—') : maskAccount(item.bankAccountNumber)}
+                        </button>
                       </td>
 
                       {/* Date */}

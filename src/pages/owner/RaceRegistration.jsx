@@ -28,7 +28,7 @@ function rawTimeStr(st) {
 }
 import {
   ChevronLeft, ChevronRight, Calendar, MapPin, Route, Wallet,
-  PawPrint, User, UserPlus, Search, X, Disc, MessageSquare, CheckCircle2
+  PawPrint, User, UserPlus, Search, X, MessageSquare, CheckCircle2
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getRace, registerHorseToRace, getRaceRegistrations } from '../../api/races'
@@ -241,7 +241,7 @@ function JockeySelectionModal({ jockeys, loading, selectedId, raceName, onSelect
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-gray-700/50">
           <div>
-            <h2 className="text-lg font-bold text-[#facc15]">Select Jockey</h2>
+            <h2 className="text-lg font-bold text-[#facc15]">Select Jockey for {raceName}</h2>
             <p className="text-xs text-gray-400 mt-0.5">{filtered.length} jockey{filtered.length !== 1 ? 's' : ''} available</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><X size={20} /></button>

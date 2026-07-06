@@ -13,13 +13,6 @@ const NAV = [
   { to: '/upgrade',             icon: TrendingUp,  label: 'Upgrade Role' },
 ]
 
-const navLinkCls = ({ isActive }) =>
-  `flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all ${
-    isActive
-      ? 'bg-[#29221a] text-[#f7e0a3] border border-[#f7e0a3]/20 shadow-sm'
-      : 'text-stone-400 hover:bg-stone-800/30 hover:text-stone-200'
-  }`
-
 function SidebarContent({ onClose, collapsed }) {
   return (
     <div className="flex flex-col h-full p-3">
