@@ -34,7 +34,13 @@ test('admin advances a race through to Finished and prizes are paid out', async 
 
   await expect(row.getByText('Live')).toBeVisible({ timeout: 15_000 })
 
-  await expect(row.getByText(/Finished|Completed/)).toBeVisible({ timeout: 1_200_000 })
+  let finished = false
+  for (let i = 0; i < 80 && !finished; i++) {
+    await page.waitForTimeout(15_000)
+    await page.reload()
+    finished = await row.getByText(/Finished|Completed/).isVisible()
+  }
+  expect(finished).toBe(true)
 
   const ownerBalance = await balanceOn(page, '/owner/wallet')
   expect(ownerBalance).toBeGreaterThan(0)
