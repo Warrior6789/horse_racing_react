@@ -38,6 +38,9 @@ test('admin advances a race through to Finished and prizes are paid out', async 
   for (let i = 0; i < 80 && !finished; i++) {
     await page.waitForTimeout(15_000)
     await page.reload()
+    const url = page.url()
+    const rowText = await row.innerText().catch(() => '(row not found)')
+    console.log(`[poll ${i}] url=${url} rowText=${JSON.stringify(rowText)}`)
     finished = await row.getByText(/Finished|Completed/).isVisible()
   }
   expect(finished).toBe(true)
