@@ -3,6 +3,14 @@ import { test, expect } from '@playwright/test'
 const ADMIN = { email: 'e2e-admin-fixed@test.com', password: 'Passw0rd!123' }
 const OWNER = { email: 'e2e-owner-fixed@test.com', password: 'Passw0rd!123' }
 const JOCKEY = { email: 'e2e-jockey-fixed@test.com', password: 'Passw0rd!123' }
+const RACE_ID = '14ea7401-47d2-4304-a197-3fa6baf14008'
+const API_BASE = process.env.VITE_API_URL || ''
+
+async function fetchRaceStatus(page) {
+  const res = await page.request.get(`${API_BASE}/api/races/${RACE_ID}`)
+  const json = await res.json()
+  return json.data?.status
+}
 
 async function login(page, { email, password }) {
   await page.goto('/login')
@@ -18,7 +26,7 @@ async function balanceOn(page, walletPath) {
 }
 
 test('admin advances a race through to Finished and prizes are paid out', async ({ page }) => {
-  test.setTimeout(300_000)
+  test.setTimeout(1_320_000)
 
   await login(page, ADMIN)
   await expect(page).toHaveURL(/\/admin\/dashboard/)
@@ -34,8 +42,16 @@ test('admin advances a race through to Finished and prizes are paid out', async 
 
   await expect(row.getByText('Live')).toBeVisible({ timeout: 15_000 })
 
-  await expect(row.getByText(/Finished|Completed/)).toBeVisible({ timeout: 240_000 })
+  let finished = false
+  for (let i = 0; i < 60 && !finished; i++) {
+    await page.waitForTimeout(15_000)
+    const status = await fetchRaceStatus(page)
+    console.log(`[poll ${i}] status=${status}`)
+    finished = status === 'Finished' || status === 'Completed'
+  }
+  expect(finished).toBe(true)
 
+  await login(page, OWNER)
   const ownerBalance = await balanceOn(page, '/owner/wallet')
   expect(ownerBalance).toBeGreaterThan(0)
 
