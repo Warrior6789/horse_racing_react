@@ -58,6 +58,8 @@ jobs:
         run: node e2e/reset-e2e-data.js
 
       - name: Run Playwright e2e tests
+        env:
+          VITE_API_URL: ""
         run: npx playwright test
 
       - name: Show backend log on failure
