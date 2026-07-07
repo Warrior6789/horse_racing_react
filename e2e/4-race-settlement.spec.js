@@ -51,6 +51,7 @@ test('admin advances a race through to Finished and prizes are paid out', async 
   }
   expect(finished).toBe(true)
 
+  await login(page, OWNER)
   const ownerBalance = await balanceOn(page, '/owner/wallet')
   expect(ownerBalance).toBeGreaterThan(0)
 
