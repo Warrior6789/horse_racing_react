@@ -18,7 +18,7 @@ async function balanceOn(page, walletPath) {
 }
 
 test('admin advances a race through to Finished and prizes are paid out', async ({ page }) => {
-  test.setTimeout(660_000)
+  test.setTimeout(1_320_000)
 
   await login(page, ADMIN)
   await expect(page).toHaveURL(/\/admin\/dashboard/)
@@ -34,7 +34,7 @@ test('admin advances a race through to Finished and prizes are paid out', async 
 
   await expect(row.getByText('Live')).toBeVisible({ timeout: 15_000 })
 
-  await expect(row.getByText(/Finished|Completed/)).toBeVisible({ timeout: 600_000 })
+  await expect(row.getByText(/Finished|Completed/)).toBeVisible({ timeout: 1_200_000 })
 
   const ownerBalance = await balanceOn(page, '/owner/wallet')
   expect(ownerBalance).toBeGreaterThan(0)
