@@ -17,6 +17,7 @@ async function login(page, { email, password }) {
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(password)
   await page.getByRole('button', { name: 'Sign In' }).click()
+  await page.waitForURL(/\/(admin|owner|jockey|spectator|referee)\/(dashboard|races)/)
 }
 
 async function balanceOn(page, walletPath) {
