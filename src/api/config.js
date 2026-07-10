@@ -23,9 +23,3 @@ export const getRegistrationFeeConfigs    = (params) => client.get('/registratio
 export const getActiveRegistrationFeeConfig = ()     => client.get('/registrationfeeconfig/active')
 export const createRegistrationFeeConfig  = (data)  => client.post('/registrationfeeconfig', data)
 export const activateRegistrationFeeConfig = (id)   => client.put(`/registrationfeeconfig/${id}/activate`)
-
-// ConversionRate — GET /page, GET /active, POST, PUT /{id}/activate
-export const getConversionRates = (params) => client.get('/conversionrate/page', { params })
-export const getActiveConversionRate = () => client.get('/conversionrate/active')
-export const createConversionRate = (data) => client.post('/conversionrate', data)
-export const activateConversionRate = (id) => client.put(`/conversionrate/${id}/activate`)

@@ -3,8 +3,6 @@ import client from './client'
 export const getRacesPaged = (params) => client.get('/races/paged', { params })
 export const getRace = (id) => client.get(`/races/${id}`)
 export const getUpcomingRaces = (params) => client.get('/races/upcoming/paged', { params })
-export const getRacesByTournament = (tournamentId) => client.get(`/races/tournament/${tournamentId}`)
-export const getRaceHorses = (raceId) => client.get(`/races/${raceId}/horses`)
 export const getRaceResults = (raceId) => client.get(`/races/${raceId}/results`)
 export const createRace = (formData) => client.post('/races', formData)
 export const updateRace = (id, data) => client.put(`/races/${id}`, data)
