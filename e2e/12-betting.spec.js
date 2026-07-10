@@ -1,19 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { Client } from 'pg'
-import { login, createRace, createHorse, registerHorseToRace, registerFreshSpectator } from './helpers'
+import { login, createRace, createHorse, registerHorseToRace, registerFreshSpectator, fundAccountBalance } from './helpers'
 
 const ADMIN = { email: 'e2e-admin-fixed@test.com', password: 'Passw0rd!123' }
 const OWNER = { email: 'e2e-owner-fixed@test.com', password: 'Passw0rd!123' }
-
-async function fundSpectator(email, amount) {
-  const client = new Client({ connectionString: process.env.E2E_DATABASE_URL })
-  await client.connect()
-  await client.query(
-    `UPDATE "UserProfiles" SET "Balance" = $2 FROM "Account" WHERE "UserProfiles"."AccountID" = "Account"."ID" AND "Account"."Email" = $1`,
-    [email, amount]
-  )
-  await client.end()
-}
 
 test('spectator can place a bet on a confirmed horse once betting is open', async ({ page }) => {
   test.skip(!process.env.E2E_DATABASE_URL, 'requires E2E_DATABASE_URL to fund a fresh spectator account')
@@ -23,7 +12,7 @@ test('spectator can place a bet on a confirmed horse once betting is open', asyn
   const horseName = `E2E Betting Horse ${unique}`
 
   await login(page, ADMIN)
-  await createRace(page, { raceName, racecourseName: 'E2E Test Track', raceNumber: 96, startTimeMinutesFromNow: 150 })
+  await createRace(page, { raceName, racecourseName: 'E2E Test Track', raceNumber: 96, startTimeMinutesFromNow: 260 })
 
   await login(page, OWNER)
   await createHorse(page, horseName)
@@ -48,7 +37,7 @@ test('spectator can place a bet on a confirmed horse once betting is open', asyn
   await expect(adminRaceRow.getByText('Betting Open')).toBeVisible({ timeout: 15_000 })
 
   const spectator = await registerFreshSpectator(page, 'bettor')
-  await fundSpectator(spectator.email, 500_000)
+  await fundAccountBalance(spectator.email, 500_000)
 
   await login(page, spectator)
   await page.goto('/spectator/races')

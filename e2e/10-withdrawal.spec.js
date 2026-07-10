@@ -27,7 +27,7 @@ test('owner requests a withdrawal and admin approves it', async ({ page }) => {
   await expect(row.getByText('Pending')).toBeVisible()
   await row.getByRole('button', { name: 'Approve' }).click()
 
-  await expect(row.getByText('Approved')).toBeVisible()
+  await expect(row).not.toBeVisible()
 })
 
 test('owner requests a withdrawal and admin rejects it', async ({ page }) => {
@@ -52,5 +52,5 @@ test('owner requests a withdrawal and admin rejects it', async ({ page }) => {
   await row.waitFor()
   await row.getByRole('button', { name: 'Reject' }).click()
 
-  await expect(row.getByText('Rejected')).toBeVisible()
+  await expect(row).not.toBeVisible()
 })

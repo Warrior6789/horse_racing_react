@@ -10,7 +10,7 @@ test('admin can accept a registration and then scratch the confirmed horse', asy
   const horseName = `E2E RegMgmt Horse ${unique}`
 
   await login(page, ADMIN)
-  await createRace(page, { raceName, racecourseName: 'E2E Test Track', raceNumber: 98, startTimeMinutesFromNow: 150 })
+  await createRace(page, { raceName, racecourseName: 'E2E Test Track', raceNumber: 98, startTimeMinutesFromNow: 180 })
 
   await login(page, OWNER)
   await createHorse(page, horseName)
@@ -41,7 +41,7 @@ test('admin can reject a pending registration', async ({ page }) => {
   const horseName = `E2E RegReject Horse ${unique}`
 
   await login(page, ADMIN)
-  await createRace(page, { raceName, racecourseName: 'E2E Test Track', raceNumber: 97, startTimeMinutesFromNow: 150 })
+  await createRace(page, { raceName, racecourseName: 'E2E Test Track', raceNumber: 97, startTimeMinutesFromNow: 220 })
 
   await login(page, OWNER)
   await createHorse(page, horseName)

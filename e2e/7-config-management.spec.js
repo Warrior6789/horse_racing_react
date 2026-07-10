@@ -20,7 +20,7 @@ test('admin can create and activate a jockey reward config', async ({ page }) =>
   await row.waitFor()
   await row.getByRole('button', { name: 'Activate' }).click()
 
-  await expect(page.locator('div').filter({ hasText: 'Active Configuration' }).getByText('12.0%')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: 'Active Configuration' }).getByText('12.0%').first()).toBeVisible()
 })
 
 test('admin can create and activate a takeout config', async ({ page }) => {
@@ -39,5 +39,5 @@ test('admin can create and activate a takeout config', async ({ page }) => {
   await row.waitFor()
   await row.getByRole('button', { name: 'Activate' }).click()
 
-  await expect(page.locator('div').filter({ hasText: 'Active Configuration' }).getByText('15.0%')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: 'Active Configuration' }).getByText('15.0%').first()).toBeVisible()
 })

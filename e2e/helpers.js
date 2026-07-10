@@ -1,4 +1,15 @@
 import { expect } from '@playwright/test'
+import { Client } from 'pg'
+
+export async function fundAccountBalance(email, amount) {
+  const client = new Client({ connectionString: process.env.E2E_DATABASE_URL })
+  await client.connect()
+  await client.query(
+    `UPDATE "UserProfiles" SET "Balance" = $2 FROM "Account" WHERE "UserProfiles"."AccountID" = "Account"."ID" AND "Account"."Email" = $1`,
+    [email, amount]
+  )
+  await client.end()
+}
 
 export async function login(page, { email, password }) {
   await page.goto('/login')
@@ -21,6 +32,51 @@ export async function registerFreshSpectator(page, label = 'spectator') {
   await expect(page).toHaveURL(/\/login\?registered=1/)
 
   return { email, password }
+}
+
+export async function registerFreshOwner(page, adminCreds, label = 'owner') {
+  const account = await registerFreshSpectator(page, label)
+
+  await login(page, account)
+  await page.goto('/upgrade')
+  await page.getByText('Owner', { exact: true }).click()
+  await page.locator('input[placeholder="Enter your full name"]').fill(`E2E ${label}`)
+  await page.locator('input[placeholder="+84 912 345 678"]').fill('0900000002')
+  await page.getByRole('button', { name: 'Submit Request' }).click()
+  await expect(page.getByText('Request Submitted!')).toBeVisible()
+
+  await login(page, adminCreds)
+  await page.goto('/admin/accounts')
+  await page.getByRole('button', { name: 'Upgrade Requests' }).click()
+  const upgradeRow = page.locator('div[class*="rounded-2xl border border-gray-100"]').filter({ hasText: account.email })
+  await upgradeRow.waitFor()
+  await upgradeRow.getByRole('button', { name: 'Approve' }).click()
+  await expect(upgradeRow).not.toBeVisible()
+
+  return account
+}
+
+export async function registerFreshJockey(page, adminCreds, label = 'jockey') {
+  const account = await registerFreshSpectator(page, label)
+
+  await login(page, account)
+  await page.goto('/upgrade')
+  await page.getByText('Jockey', { exact: true }).click()
+  await page.locator('input[placeholder="Enter your full name"]').fill(`E2E ${label}`)
+  await page.locator('input[placeholder="+84 912 345 678"]').fill('0900000003')
+  await page.locator('input[placeholder="J-XXXXXX"]').fill(`E2E-${Date.now()}`)
+  await page.getByRole('button', { name: 'Submit Request' }).click()
+  await expect(page.getByText('Request Submitted!')).toBeVisible()
+
+  await login(page, adminCreds)
+  await page.goto('/admin/accounts')
+  await page.getByRole('button', { name: 'Upgrade Requests' }).click()
+  const upgradeRow = page.locator('div[class*="rounded-2xl border border-gray-100"]').filter({ hasText: account.email })
+  await upgradeRow.waitFor()
+  await upgradeRow.getByRole('button', { name: 'Approve' }).click()
+  await expect(upgradeRow).not.toBeVisible()
+
+  return { ...account, fullName: `E2E ${label}` }
 }
 
 export async function createHorse(page, horseName) {

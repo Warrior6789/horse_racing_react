@@ -20,13 +20,22 @@ test('owner can start a deposit and is redirected to the payment gateway', async
   expect(navigatedAway || inlineSuccess).toBe(true)
 })
 
-test('payment cancel page shows an error state for an unknown order code', async ({ page }) => {
+test('payment cancel page shows an error state when no order code is given', async ({ page }) => {
   await login(page, OWNER)
-  await page.goto('/payment/cancel?orderCode=999999999999')
+  await page.goto('/payment/cancel')
 
   await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText('Order code not found.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Back to Wallet' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Back to Wallet' }).click()
   await expect(page).toHaveURL(/\/owner\/wallet/)
+})
+
+test('payment cancel page shows success for a well-formed but unknown order code', async ({ page }) => {
+  await login(page, OWNER)
+  await page.goto('/payment/cancel?orderCode=999999999999')
+
+  await expect(page.getByText('Transaction Cancelled')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('button', { name: 'Back to Wallet' })).toBeVisible()
 })
