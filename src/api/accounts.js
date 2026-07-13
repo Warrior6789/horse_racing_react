@@ -1,6 +1,5 @@
 import client from './client'
 
-export const getAccounts = (params) => client.get('/accounts', { params })
 export const getAccountsPaged = (params) => client.get('/accounts/paged', { params })
 export const suspendAccount = (id) => client.put(`/accounts/${id}/suspend`)
 export const banAccount = (id) => client.put(`/accounts/${id}/ban`)
