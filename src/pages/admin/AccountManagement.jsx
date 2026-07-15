@@ -495,8 +495,12 @@ export default function AccountManagement() {
                         <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-gray-800 text-white font-bold text-xs flex items-center justify-center shrink-0 tracking-wider">
-                                {initials(acc.email)}
+                              <div className="w-9 h-9 rounded-full bg-gray-800 text-white font-bold text-xs flex items-center justify-center shrink-0 tracking-wider overflow-hidden">
+                                {acc.avatarUrl ? (
+                                  <img src={acc.avatarUrl} alt={acc.email} className="w-full h-full object-cover block" />
+                                ) : (
+                                  initials(acc.email)
+                                )}
                               </div>
                               <span className="font-medium text-gray-900 text-sm"><Highlight text={acc.email} query={search} /></span>
                             </div>
