@@ -210,8 +210,12 @@ export default function RacecourseManagement() {
                     <tr key={rcId(item)} className="hover:bg-gray-50/40 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>stadium</span>
+                          <div className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center shrink-0 overflow-hidden">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.racecourseName} className="w-full h-full object-cover block" />
+                            ) : (
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>stadium</span>
+                            )}
                           </div>
                           <span className="font-semibold text-gray-900">{item.racecourseName}</span>
                         </div>
