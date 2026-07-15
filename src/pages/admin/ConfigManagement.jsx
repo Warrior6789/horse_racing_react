@@ -21,12 +21,12 @@ const TABS = [
     createFn:   createRegistrationFeeConfig,
     activateFn: activateRegistrationFeeConfig,
     activeMetrics: (d) => [
-      { label: 'Fee per Race (coins)', value: coin(d.feeAmount) },
+      { label: 'Fee per Race (VND)', value: coin(d.feeAmount) },
     ],
     formDef: [
-      { key: 'feeAmount', label: 'Fee Amount (coins)', raw: true, step: '1', placeholder: '1000' },
+      { key: 'feeAmount', label: 'Fee Amount (VND)', raw: true, step: '1', placeholder: '1000' },
     ],
-    tableHeaders: ['Fee Amount (coins)'],
+    tableHeaders: ['Fee Amount (VND)'],
     rowCells: (r) => [coin(r.feeAmount)],
   },
   {

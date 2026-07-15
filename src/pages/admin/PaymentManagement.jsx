@@ -77,7 +77,7 @@ export default function PaymentManagement() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                    {['Type', 'Amount', 'Balance Changed', 'Current Balance', 'Status', 'Date'].map(h => (
+                    {['Account', 'Type', 'Amount', 'Balance Changed', 'Current Balance', 'Status', 'Date'].map(h => (
                       <th key={h} className="py-4 px-6">{h}</th>
                     ))}
                   </tr>
@@ -85,6 +85,9 @@ export default function PaymentManagement() {
                 <tbody className="divide-y divide-gray-100 text-sm">
                   {rows.map(row => (
                     <tr key={row.paymentId} className="hover:bg-gray-50/40 transition-colors">
+                      <td className="py-4 px-6 text-gray-700 font-medium">
+                        {row.accountEmail || '—'}
+                      </td>
                       <td className="py-4 px-6">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ring-inset ${TX_TYPE[row.transactionType] || 'bg-gray-100 text-gray-500 ring-gray-400/20'}`}>
                           {row.transactionType || '—'}
