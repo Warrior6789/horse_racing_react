@@ -432,11 +432,6 @@ export default function RefereeRaces() {
             </div>
           </div>
         </div>
-
-        <footer className="px-8 py-3 border-t border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest flex justify-between items-center shrink-0">
-          <span>© 2024 International Equine Officiating Body</span>
-          <span>Server Status: <span className="text-emerald-500">Operational</span></span>
-        </footer>
       </main>
 
       {profileOpen && <AccountProfile variant="light" onClose={() => setProfileOpen(false)} />}
