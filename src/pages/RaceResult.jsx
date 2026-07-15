@@ -85,7 +85,8 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
                   - (b.finalPosition ?? b.rank ?? b.position ?? 99))
     .map(item => {
       const regId = item.registrationId ?? item.horse?.registrationId
-      return { ...regMap[regId], ...item }
+      const reg = regMap[regId] || {}
+      return { ...reg, ...item, horse: { ...reg.horse, ...item.horse } }
     })
 
   // fallback: if no API results, use registrations as unranked list
