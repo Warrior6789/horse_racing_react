@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Flag, Settings, HelpCircle, Search, Bell,
+  Flag, Search, Bell,
   History, User, SlidersHorizontal, MapPin, Clock,
-  ChevronRight, BarChart3,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getMyRefereeRaces } from '../../api/races'
@@ -198,15 +198,6 @@ export default function RefereeRaces() {
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-1 border-b border-slate-800 pb-4">
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
-              <Settings size={16} /><span>Settings</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
-              <HelpCircle size={16} /><span>Support</span>
-            </button>
-          </div>
-
           <button
             onClick={() => setProfileOpen(true)}
             className="w-full bg-[#24273e] p-3 rounded-xl flex items-center gap-3 border border-slate-800/60 hover:border-slate-700 transition-colors text-left"
@@ -397,37 +388,21 @@ export default function RefereeRaces() {
           )}
 
           {/* Footer blocks */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="md:col-span-2 bg-[#e0e4f7] rounded-2xl p-6 flex justify-between items-center relative overflow-hidden border border-indigo-100">
-              <div className="space-y-2 max-w-md z-10">
-                <h3 className="text-base font-bold text-slate-900">Track Safety Protocol Updated</h3>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  Referees must review the updated wet-weather surface guidelines before the weekend events.
-                </p>
-                <button className="mt-2 bg-black hover:bg-slate-900 text-white font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors">
-                  Review Protocol <ChevronRight size={14} />
-                </button>
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between md:max-w-xs">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-1.5 bg-slate-50 border border-slate-100 rounded-lg text-emerald-500">
+                <BarChart3 size={16} />
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-32 bg-indigo-200/40 transform skew-x-12 translate-x-10 pointer-events-none" />
-              <div className="absolute right-12 top-0 bottom-0 w-8 bg-indigo-200/20 transform skew-x-12 translate-x-10 pointer-events-none" />
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Live Now</h3>
             </div>
-
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="p-1.5 bg-slate-50 border border-slate-100 rounded-lg text-emerald-500">
-                  <BarChart3 size={16} />
-                </div>
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Live Now</h3>
+            <div className="space-y-3.5">
+              <div className="flex justify-between items-end text-xs">
+                <span className="font-semibold text-slate-500">Active Races</span>
+                <span className="font-bold text-slate-800 text-sm">{String(liveCount).padStart(2, '0')}</span>
               </div>
-              <div className="space-y-3.5">
-                <div className="flex justify-between items-end text-xs">
-                  <span className="font-semibold text-slate-500">Active Races</span>
-                  <span className="font-bold text-slate-800 text-sm">{String(liveCount).padStart(2, '0')}</span>
-                </div>
-                <div className="flex justify-between items-end text-xs">
-                  <span className="font-semibold text-slate-500">Total Races</span>
-                  <span className="font-bold text-slate-800 text-sm">{totalCount}</span>
-                </div>
+              <div className="flex justify-between items-end text-xs">
+                <span className="font-semibold text-slate-500">Total Races</span>
+                <span className="font-bold text-slate-800 text-sm">{totalCount}</span>
               </div>
             </div>
           </div>
