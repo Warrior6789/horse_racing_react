@@ -242,7 +242,7 @@ export default function RefereeRaceDetail() {
           </div>
           <button onClick={() => setProfileOpen(true)}
             className="w-full bg-[#24273e] p-3 rounded-xl flex items-center gap-3 border border-slate-800/60 hover:border-slate-700 transition-colors text-left">
-            <div className="w-9 h-9 bg-slate-600 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 bg-slate-600 rounded-full overflow-hidden flex items-center justify-center shrink-0">
               {user?.avatarUrl
                 ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 : <span className="text-xs font-bold text-slate-200">{initials}</span>}
