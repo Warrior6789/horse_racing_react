@@ -147,7 +147,7 @@ export default function OwnerDashboard() {
   const activeRegMap = Object.fromEntries(
     registrations
       .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
-      .map(r => [r.horseId || r.horse?.horseId, r])
+      .map(r => [r.horseId || r.horse?.id || r.horse?.horseId, r])
   )
 
   const active       = horses.filter(h => h.status === 'Healthy').length
