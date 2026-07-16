@@ -98,7 +98,7 @@ export default function SpectatorDashboard() {
           </p>
         </div>
         <div className="bg-[#141210] border border-stone-800 p-4 rounded-2xl">
-          <p className="text-xs text-stone-500 uppercase font-bold mb-2 tracking-wider">Pending</p>
+          <p className="text-xs text-stone-500 uppercase font-bold mb-2 tracking-wider">Active</p>
           <p className="text-2xl font-bold text-[#f7e0a3]">
             {loading || betStats.pending === null ? '—' : betStats.pending}
           </p>

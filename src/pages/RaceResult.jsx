@@ -266,7 +266,7 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
                         status === 'lost' ? 'bg-red-500/10 text-red-400'      :
                         'bg-stone-800 text-stone-500'
                       }`}>
-                        {bet.status || 'Pending'}
+                        {bet.status || 'Active'}
                       </span>
                       {bet.actualPayout > 0 && (
                         <p className="text-[10px] text-[#f7e0a3] mt-1">
