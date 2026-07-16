@@ -52,12 +52,12 @@ function StatusIcon({ ok }) {
   return <Circle size={16} className="text-gray-700" />
 }
 
-function StatCard({ title, value, sub, accent, leftBorder }) {
+function StatCard({ title, value, sub, accent, danger, leftBorder }) {
   return (
     <div className={`bg-[#161a23] p-5 rounded-xl border border-gray-800/80 flex flex-col justify-between h-28 ${leftBorder ? 'border-l-2 border-l-[#facc15]' : ''}`}>
       <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{title}</p>
       <div>
-        <h3 className={`font-bold mb-1 ${accent ? 'text-[#facc15] text-2xl' : 'text-white text-2xl'}`}>{value}</h3>
+        <h3 className={`font-bold mb-1 text-2xl ${danger ? 'text-red-500' : accent ? 'text-[#facc15]' : 'text-white'}`}>{value}</h3>
         {sub && <p className="text-gray-400 text-xs">{sub}</p>}
       </div>
     </div>
@@ -426,8 +426,10 @@ export default function MySchedule() {
   const safePage   = Math.min(page, totalPages)
   const pageItems  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
-  const confirmed = activeSchedule.filter(s => s.jockeyConfirmation === true).length
-  const pending   = activeSchedule.filter(s => s.jockeyId && !s.jockeyConfirmation).length
+  const confirmed   = activeSchedule.filter(s => s.jockeyConfirmation === true).length
+  const rejected    = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation === false).length
+  const pending     = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation == null).length
+  const unconfirmed = pending + rejected
   const nextRace  = [...schedule]
     .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date())
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))[0]
@@ -501,9 +503,10 @@ export default function MySchedule() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Entries"     value={activeSchedule.length} sub={`${pending} unconfirmed`} />
-          <StatCard title="Pending Jockey"    value={pending} sub="Awaiting jockey assignment" accent />
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatCard title="Total Entries"     value={activeSchedule.length} sub={`${unconfirmed} unconfirmed`} />
+          <StatCard title="Pending Jockey"    value={pending} sub="Awaiting jockey response" accent />
+          <StatCard title="Rejected"          value={rejected} sub="Jockey declined" danger />
           <StatCard title="Next Race"         value={nextRaceName} sub={nextRaceTime} leftBorder />
           <StatCard title="Confirmed Jockeys" value={confirmed} sub="Jockeys assigned" />
         </div>
@@ -706,8 +709,14 @@ export default function MySchedule() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[10px] font-bold text-gray-500 uppercase">Jockey</span>
-                        <span className={`text-[10px] font-bold ${nextRace.jockeyId ? 'text-[#facc15]' : 'text-red-500'}`}>
-                          {nextRace.jockeyConfirmation === true ? 'Confirmed' : nextRace.jockeyId ? 'Pending' : 'Not assigned'}
+                        <span className={`text-[10px] font-bold ${
+                          nextRace.jockeyConfirmation === true ? 'text-[#facc15]'
+                          : nextRace.jockeyConfirmation === false ? 'text-red-500'
+                          : nextRace.jockeyId ? 'text-gray-300' : 'text-red-500'
+                        }`}>
+                          {nextRace.jockeyConfirmation === true ? 'Confirmed'
+                            : nextRace.jockeyConfirmation === false ? 'Rejected'
+                            : nextRace.jockeyId ? 'Pending' : 'Not assigned'}
                         </span>
                       </div>
                       <div className="mt-3 w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
