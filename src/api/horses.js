@@ -8,3 +8,4 @@ export const updateHorse = (id, formData) => client.put(`/horses/${id}`, formDat
 export const updateHorseImage = (id, formData) => client.put(`/horses/${id}/image`, formData)
 export const deleteHorse = (id) => client.delete(`/horses/${id}`)
 export const getHorsePerformance = (id) => client.get(`/horses/${id}/performance-summary`)
+export const getOwnerRaceHistory = (params) => client.get('/horses/race-history', { params })
