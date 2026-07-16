@@ -27,7 +27,7 @@ function rawTimeStr(st) {
   return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
 }
 import {
-  ChevronLeft, ChevronRight, Calendar, MapPin, Route, Wallet,
+  ChevronLeft, ChevronRight, ChevronDown, Calendar, MapPin, Route, Wallet,
   PawPrint, User, UserPlus, Search, X, MessageSquare, CheckCircle2
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
@@ -704,29 +704,23 @@ export default function RaceRegistration() {
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                   Gate Number <span className="text-red-500">*</span>
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from({ length: race?.maxParticipants || 12 }, (_, i) => i + 1).map(g => {
-                    const taken = takenGates.includes(g)
-                    const selected = Number(gateNumber) === g
-                    return (
-                      <button
-                        key={g}
-                        type="button"
-                        disabled={taken}
-                        onClick={() => setGateNumber(String(g))}
-                        title={taken ? `Gate ${g} is already taken` : `Gate ${g}`}
-                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${
-                          taken
-                            ? 'bg-gray-800/60 text-gray-600 line-through border border-gray-800 cursor-not-allowed'
-                            : selected
-                              ? 'bg-[#facc15] text-black border border-[#facc15]'
-                              : 'bg-[#0f1117] border border-gray-700 text-gray-200 hover:border-yellow-500/40'
-                        }`}
-                      >
-                        {g}
-                      </button>
-                    )
-                  })}
+                <div className="relative w-48">
+                  <select
+                    value={gateNumber}
+                    onChange={e => setGateNumber(e.target.value)}
+                    className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 outline-none focus:border-yellow-500/40 transition-colors appearance-none"
+                  >
+                    <option value="" disabled>Select a gate</option>
+                    {Array.from({ length: race?.maxParticipants || 12 }, (_, i) => i + 1).map(g => {
+                      const taken = takenGates.includes(g)
+                      return (
+                        <option key={g} value={g} disabled={taken}>
+                          Gate {g}{taken ? ' (Taken)' : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                 </div>
               </div>
             </div>
