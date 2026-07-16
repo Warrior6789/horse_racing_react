@@ -30,11 +30,6 @@ function fmtDateTime(dt) {
     ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
-function truncateId(id) {
-  if (!id) return '—'
-  return `${id.slice(0, 8)}…`
-}
-
 export default function WalletLedger() {
   const [type, setType]       = useState('All')
   const [items, setItems]     = useState([])
@@ -97,8 +92,8 @@ export default function WalletLedger() {
 
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_1.2fr_1.2fr] px-5 py-3 bg-gray-50 border-b border-gray-100">
-            {['Account', 'Type', 'Amount', 'Balance After', 'Reference', 'Created At'].map(col => (
+          <div className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_1.2fr] px-5 py-3 bg-gray-50 border-b border-gray-100">
+            {['Account', 'Type', 'Amount', 'Balance After', 'Created At'].map(col => (
               <span key={col} className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{col}</span>
             ))}
           </div>
@@ -114,11 +109,10 @@ export default function WalletLedger() {
               {items.map(r => (
                 <div
                   key={r.walletTransactionId}
-                  className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_1.2fr_1.2fr] items-center px-5 py-4 gap-x-2"
+                  className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_1.2fr] items-center px-5 py-4 gap-x-2"
                 >
                   <div className="min-w-0" title={r.accountId}>
                     <p className="font-bold text-gray-900 text-sm truncate">{r.accountEmail || 'Unknown account'}</p>
-                    <p className="text-[11px] text-gray-400 font-mono">{truncateId(r.accountId)}</p>
                   </div>
 
                   <div>
@@ -133,10 +127,6 @@ export default function WalletLedger() {
 
                   <p className="font-medium text-gray-700 text-sm">
                     {(r.balanceAfter ?? 0).toLocaleString('en-US')}
-                  </p>
-
-                  <p className="text-gray-400 text-xs font-mono truncate" title={r.referenceId}>
-                    {truncateId(r.referenceId)}
                   </p>
 
                   <p className="text-gray-400 text-xs">{fmtDateTime(r.createdAt)}</p>
