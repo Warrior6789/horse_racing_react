@@ -31,7 +31,7 @@ import {
   PawPrint, User, UserPlus, Search, X, MessageSquare, CheckCircle2
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
-import { getRace, registerHorseToRace, getRaceRegistrations } from '../../api/races'
+import { getRace, registerHorseToRace, getRaceRegistrations, getTakenGateNumbers } from '../../api/races'
 import { getHorses } from '../../api/horses'
 import { getOwnerAllRegistrations } from '../../api/registrations'
 import { getJockeysPaged, getJockeyProfile } from '../../api/jockeyProfiles'
@@ -381,6 +381,7 @@ export default function RaceRegistration() {
   const [selectedJockey,  setSelectedJockey]  = useState(null)
   const [jockeyDetail,    setJockeyDetail]    = useState(null)
   const [gateNumber,      setGateNumber]      = useState('')
+  const [takenGates,      setTakenGates]      = useState([])
   const [agreed,          setAgreed]          = useState(false)
   const [horseModalOpen,  setHorseModalOpen]  = useState(false)
   const [jockeyModalOpen, setJockeyModalOpen] = useState(false)
@@ -398,7 +399,8 @@ export default function RaceRegistration() {
       getActiveRegistrationFeeConfig().catch(() => null),
       getRaceRegistrations(raceId).catch(() => null),
       getOwnerAllRegistrations().catch(() => ({ data: { data: [] } })),
-    ]).then(([r, h, bal, fee, regsRes, ownerRegsRes]) => {
+      getTakenGateNumbers(raceId).catch(() => null),
+    ]).then(([r, h, bal, fee, regsRes, ownerRegsRes, gatesRes]) => {
       setRace(r.data.data || r.data)
       const hList = h.data.data?.items || h.data.data || []
       const ownerRegs = ownerRegsRes.data.data || ownerRegsRes.data || []
@@ -425,6 +427,9 @@ export default function RaceRegistration() {
             .filter(Boolean)
         )
         setBookedJockeyIds(ids)
+      }
+      if (gatesRes) {
+        setTakenGates(gatesRes.data.data || gatesRes.data || [])
       }
     }).catch(() => {})
      .finally(() => setLoading(false))
@@ -699,11 +704,30 @@ export default function RaceRegistration() {
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                   Gate Number <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number" min="1" placeholder="e.g. 3"
-                  value={gateNumber} onChange={e => setGateNumber(e.target.value)}
-                  className="w-32 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 outline-none focus:border-yellow-500/40 transition-colors"
-                />
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: race?.maxParticipants || 12 }, (_, i) => i + 1).map(g => {
+                    const taken = takenGates.includes(g)
+                    const selected = Number(gateNumber) === g
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        disabled={taken}
+                        onClick={() => setGateNumber(String(g))}
+                        title={taken ? `Gate ${g} is already taken` : `Gate ${g}`}
+                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-colors ${
+                          taken
+                            ? 'bg-gray-800/60 text-gray-600 line-through border border-gray-800 cursor-not-allowed'
+                            : selected
+                              ? 'bg-[#facc15] text-black border border-[#facc15]'
+                              : 'bg-[#0f1117] border border-gray-700 text-gray-200 hover:border-yellow-500/40'
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 
