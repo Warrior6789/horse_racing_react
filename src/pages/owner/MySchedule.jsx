@@ -100,9 +100,9 @@ function CalendarView({ items, venues, jockeyMap, onJockeyClick }) {
     return m
   }, [filtered])
 
-  // next upcoming from full items (not filtered)
+  // next upcoming from full items (not filtered), jockey-accepted only
   const nextRace = useMemo(() => [...items]
-    .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date())
+    .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date() && s.jockeyConfirmation === true)
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))[0]
   , [items])
 
@@ -431,7 +431,7 @@ export default function MySchedule() {
   const pending     = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation == null).length
   const unconfirmed = pending + rejected
   const nextRace  = [...schedule]
-    .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date())
+    .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date() && s.jockeyConfirmation === true)
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))[0]
 
   const nextRaceName = nextRace ? (nextRace.race?.raceName || `Race #${nextRace.race?.raceNumber}`) : '—'
