@@ -558,12 +558,14 @@ export default function RaceRegistration() {
                   )}
                 </div>
 
-                <div className="mt-6 bg-[#1a1f2b] border border-gray-800/60 rounded-xl p-4">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Prize Pool</p>
-                  <p className="text-2xl font-black text-[#facc15]">
-                    {prize} <span className="text-sm text-gray-400 ml-0.5">VND</span>
-                  </p>
-                </div>
+                {status !== 'Scheduled' && (
+                  <div className="mt-6 bg-[#1a1f2b] border border-gray-800/60 rounded-xl p-4">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Prize Pool</p>
+                    <p className="text-2xl font-black text-[#facc15]">
+                      {prize} <span className="text-sm text-gray-400 ml-0.5">VND</span>
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
