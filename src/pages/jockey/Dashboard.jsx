@@ -208,6 +208,11 @@ export default function JockeyDashboard() {
                         <p className="text-xs text-gray-400 mt-1">
                           📍 {featuredRace.race?.racecourseName || '—'}
                         </p>
+                        {featuredRace.owner?.fullName && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            🤝 Owner: <span className="text-gray-300 font-medium">{featuredRace.owner.fullName}</span>
+                          </p>
+                        )}
                       </div>
                       {featuredRace.gateNumber && (
                         <span className="text-[10px] font-black uppercase text-gray-500">Gate #{featuredRace.gateNumber}</span>
