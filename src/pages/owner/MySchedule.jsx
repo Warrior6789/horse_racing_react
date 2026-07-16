@@ -100,7 +100,6 @@ function CalendarView({ items, venues, jockeyMap, onJockeyClick }) {
     return m
   }, [filtered])
 
-  // next upcoming from full items (not filtered), jockey-accepted only
   const nextRace = useMemo(() => [...items]
     .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date() && s.jockeyConfirmation === true)
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))[0]
@@ -426,10 +425,11 @@ export default function MySchedule() {
   const safePage   = Math.min(page, totalPages)
   const pageItems  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
-  const confirmed   = activeSchedule.filter(s => s.jockeyConfirmation === true).length
-  const rejected    = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation === false).length
-  const pending     = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation == null).length
-  const unconfirmed = pending + rejected
+  const confirmed        = activeSchedule.filter(s => s.jockeyConfirmation === true).length
+  const rejected         = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation === false).length
+  const pending          = activeSchedule.filter(s => s.jockeyId && s.jockeyConfirmation == null).length
+  const unconfirmed      = pending + rejected
+  const confirmedAllTime = schedule.filter(s => s.jockeyConfirmation === true).length
   const nextRace  = [...schedule]
     .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date() && s.jockeyConfirmation === true)
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))[0]
@@ -689,7 +689,7 @@ export default function MySchedule() {
                     </div>
                     <div className="bg-[#1a1f2b] p-4 rounded-xl border border-gray-800/60">
                       <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">Confirmed Races</p>
-                      <h4 className="text-white font-bold text-sm">{confirmed}</h4>
+                      <h4 className="text-white font-bold text-sm">{confirmedAllTime}</h4>
                       <p className="text-gray-400 text-xs font-medium mt-1">With assigned jockey</p>
                     </div>
                   </div>

@@ -491,6 +491,35 @@ export default function RaceRegistration() {
     )
   }
 
+  if (status !== 'Scheduled') {
+    return (
+      <OwnerLayout>
+        <div className="p-6 md:p-8 max-w-6xl mx-auto pb-12">
+          <div className="flex items-center gap-2 text-[11px] font-bold mb-4 tracking-wide">
+            <Link to="/owner/races" className="text-gray-400 hover:text-gray-300 transition-colors">Available Races</Link>
+            <ChevronRight size={12} className="text-gray-600" />
+            <span className="text-[#facc15]">Race Registration</span>
+          </div>
+          <div className="bg-[#161a23] rounded-2xl border border-gray-800/80 p-10 text-center">
+            <h2 className="text-xl font-bold text-white mb-2">
+              {race?.raceName || `Race #${race?.raceNumber}`} is no longer open for registration
+            </h2>
+            <p className="text-gray-400 text-sm mb-6">
+              This race has moved to <span className="font-bold text-gray-300">{status || 'an unknown'}</span> status.
+              New entries are only accepted while a race is Scheduled.
+            </p>
+            <button
+              onClick={() => navigate('/owner/races')}
+              className="px-6 py-3 bg-[#facc15] hover:bg-yellow-400 text-black text-sm font-bold rounded-xl transition-colors"
+            >
+              Back to Available Races
+            </button>
+          </div>
+        </div>
+      </OwnerLayout>
+    )
+  }
+
   return (
     <OwnerLayout>
       <div className="p-6 md:p-8 max-w-6xl mx-auto pb-12">

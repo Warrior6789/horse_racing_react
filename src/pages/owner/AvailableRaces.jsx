@@ -129,6 +129,14 @@ function RaceCard({ race, regCount, onRegister, isRegistered, search }) {
           >
             ✓ Registered
           </button>
+        ) : status !== 'Scheduled' ? (
+          <button
+            disabled
+            title="Registration closes once a race leaves Scheduled status"
+            className="border-2 border-gray-700 text-gray-500 bg-gray-800/40 px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap cursor-not-allowed opacity-80"
+          >
+            Registration Closed
+          </button>
         ) : (
           <button
             onClick={() => onRegister(race.raceId)}
