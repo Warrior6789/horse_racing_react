@@ -33,6 +33,7 @@ import {
 import OwnerLayout from '../../components/OwnerLayout'
 import { getRace, registerHorseToRace, getRaceRegistrations } from '../../api/races'
 import { getHorses } from '../../api/horses'
+import { getOwnerAllRegistrations } from '../../api/registrations'
 import { getJockeysPaged, getJockeyProfile } from '../../api/jockeyProfiles'
 import { getBalance } from '../../api/payments'
 import { getActiveRegistrationFeeConfig } from '../../api/config'
@@ -396,10 +397,18 @@ export default function RaceRegistration() {
       getBalance(),
       getActiveRegistrationFeeConfig().catch(() => null),
       getRaceRegistrations(raceId).catch(() => null),
-    ]).then(([r, h, bal, fee, regsRes]) => {
+      getOwnerAllRegistrations().catch(() => ({ data: { data: [] } })),
+    ]).then(([r, h, bal, fee, regsRes, ownerRegsRes]) => {
       setRace(r.data.data || r.data)
       const hList = h.data.data?.items || h.data.data || []
-      setHorses(hList.filter(h => h.status === 'Healthy' || !h.status))
+      const ownerRegs = ownerRegsRes.data.data || ownerRegsRes.data || []
+      const activeHorseIds = new Set(
+        ownerRegs
+          .filter(reg => reg.status !== 'Rejected' && reg.status !== 'Scratched')
+          .map(reg => reg.horseId || reg.horse?.horseId)
+          .filter(Boolean)
+      )
+      setHorses(hList.filter(h => (h.status === 'Healthy' || !h.status) && !activeHorseIds.has(h.horseId ?? h.id)))
       const prof = bal.data.data || bal.data
       setBalance(prof?.balance ?? prof?.walletBalance ?? null)
       if (fee) {
