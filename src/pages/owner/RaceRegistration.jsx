@@ -405,7 +405,7 @@ export default function RaceRegistration() {
       const activeHorseIds = new Set(
         ownerRegs
           .filter(reg => reg.status !== 'Rejected' && reg.status !== 'Scratched')
-          .map(reg => reg.horseId || reg.horse?.horseId)
+          .map(reg => reg.horseId || reg.horse?.id || reg.horse?.horseId)
           .filter(Boolean)
       )
       setHorses(hList.filter(h => (h.status === 'Healthy' || !h.status) && !activeHorseIds.has(h.horseId ?? h.id)))

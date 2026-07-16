@@ -163,7 +163,7 @@ export default function MyHorses() {
       regs
         .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
         .forEach(r => {
-          const hId = r.horseId || r.horse?.horseId
+          const hId = r.horseId || r.horse?.id || r.horse?.horseId
           if (hId) map.set(hId, r.status)
         })
       setRegStatusByHorseId(map)
