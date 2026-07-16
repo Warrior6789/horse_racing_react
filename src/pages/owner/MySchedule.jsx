@@ -14,6 +14,8 @@ import { getJockeyProfile } from '../../api/jockeyProfiles'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const PAGE_SIZE = 4
+const ACTIVE_RACE_STATUSES = ['Scheduled', 'BettingOpen', 'BettingClosed', 'Live']
+const PAST_RACE_STATUSES   = ['Completed', 'Finished', 'Cancelled']
 
 /* ─── Helpers ──────────────────────────────────────────────────────── */
 // BE stores admin-entered local time in the UTC slot (no real UTC conversion).
@@ -338,6 +340,7 @@ export default function MySchedule() {
   const [page, setPage]         = useState(1)
   const [view, setView]         = useState('table')
   const [horseFilter, setHorseFilter] = useState('all')
+  const [timeFilter, setTimeFilter] = useState('upcoming')
   const [dropOpen, setDropOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [jockeyMap, setJockeyMap] = useState({})
@@ -396,7 +399,7 @@ export default function MySchedule() {
   const horses = useMemo(() => {
     const seen = new Map()
     schedule.forEach(s => {
-      const id   = s.horse?.horseId   ?? s.horseId
+      const id   = s.horse?.horseId   ?? s.horse?.id   ?? s.horseId
       const name = s.horse?.horseName ?? s.horseName
       if (id && !seen.has(id)) seen.set(id, name || `Horse #${id}`)
     })
@@ -404,22 +407,32 @@ export default function MySchedule() {
   }, [schedule])
 
 
+  const activeSchedule = useMemo(
+    () => schedule.filter(s => ACTIVE_RACE_STATUSES.includes(s.race?.status)),
+    [schedule]
+  )
+  const pastSchedule = useMemo(
+    () => schedule.filter(s => PAST_RACE_STATUSES.includes(s.race?.status)),
+    [schedule]
+  )
+
   const filtered = useMemo(() => {
-    if (horseFilter === 'all') return schedule
-    return schedule.filter(s => String(s.horse?.horseId) === horseFilter)
-  }, [schedule, horseFilter])
+    const base = timeFilter === 'past' ? pastSchedule : activeSchedule
+    if (horseFilter === 'all') return base
+    return base.filter(s => String(s.horse?.horseId ?? s.horse?.id) === horseFilter)
+  }, [activeSchedule, pastSchedule, timeFilter, horseFilter])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage   = Math.min(page, totalPages)
   const pageItems  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
-  const confirmed = schedule.filter(s => s.jockeyConfirmation === true).length
-  const pending   = schedule.filter(s => s.jockeyId && !s.jockeyConfirmation).length
+  const confirmed = activeSchedule.filter(s => s.jockeyConfirmation === true).length
+  const pending   = activeSchedule.filter(s => s.jockeyId && !s.jockeyConfirmation).length
   const nextRace  = [...schedule]
     .filter(s => s.race?.startTime && new Date(s.race.startTime) > new Date())
     .sort((a, b) => new Date(a.race.startTime) - new Date(b.race.startTime))[0]
 
-  const nextRaceName = nextRace ? `Race #${nextRace.race?.raceNumber}` : '—'
+  const nextRaceName = nextRace ? (nextRace.race?.raceName || `Race #${nextRace.race?.raceNumber}`) : '—'
   const nextRaceTime = nextRace?.race?.startTime
     ? `${rawDate(nextRace.race.startTime)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${rawTimeStr(nextRace.race.startTime) || ''}`
     : '—'
@@ -437,7 +450,7 @@ export default function MySchedule() {
           <div>
             <h1 className="text-3xl font-bold text-[#facc15] mb-2 tracking-tight">My Race Schedule</h1>
             <p className="text-gray-400 text-sm font-medium">
-              Monitoring {schedule.length} upcoming race entries across {allVenues.length} location{allVenues.length !== 1 ? 's' : ''}.
+              Monitoring {activeSchedule.length} upcoming race entries across {allVenues.length} location{allVenues.length !== 1 ? 's' : ''}.
             </p>
           </div>
 
@@ -489,7 +502,7 @@ export default function MySchedule() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Entries"     value={schedule.length} sub={`${pending} unconfirmed`} />
+          <StatCard title="Total Entries"     value={activeSchedule.length} sub={`${pending} unconfirmed`} />
           <StatCard title="Pending Jockey"    value={pending} sub="Awaiting jockey assignment" accent />
           <StatCard title="Next Race"         value={nextRaceName} sub={nextRaceTime} leftBorder />
           <StatCard title="Confirmed Jockeys" value={confirmed} sub="Jockeys assigned" />
@@ -500,7 +513,23 @@ export default function MySchedule() {
           <>
             <div className="bg-[#161a23] rounded-2xl border border-gray-800/80 flex flex-col overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800/50 flex justify-between items-center bg-[#1a1f2b]/30">
-                <h2 className="text-sm font-bold text-gray-300">Entry Roster</h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-sm font-bold text-gray-300">Entry Roster</h2>
+                  <div className="flex bg-[#0f1219] p-1 rounded-lg border border-gray-800">
+                    <button
+                      onClick={() => { setTimeFilter('upcoming'); setPage(1) }}
+                      className={`px-3 py-1 text-xs font-bold rounded transition-colors ${timeFilter === 'upcoming' ? 'bg-[#facc15] text-black' : 'text-gray-400 hover:text-white'}`}
+                    >
+                      Upcoming
+                    </button>
+                    <button
+                      onClick={() => { setTimeFilter('past'); setPage(1) }}
+                      className={`px-3 py-1 text-xs font-bold rounded transition-colors ${timeFilter === 'past' ? 'bg-[#facc15] text-black' : 'text-gray-400 hover:text-white'}`}
+                    >
+                      Past
+                    </button>
+                  </div>
+                </div>
                 <span className="text-gray-500 text-xs font-medium">{filtered.length} races</span>
               </div>
               <div className="overflow-x-auto">
@@ -509,7 +538,9 @@ export default function MySchedule() {
                     <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="text-center py-16 text-gray-500 text-sm">No scheduled races.</div>
+                  <div className="text-center py-16 text-gray-500 text-sm">
+                    {timeFilter === 'past' ? 'No past races.' : 'No scheduled races.'}
+                  </div>
                 ) : (
                   <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>

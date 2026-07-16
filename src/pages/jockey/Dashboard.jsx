@@ -106,7 +106,8 @@ export default function JockeyDashboard() {
   const acceptedRaceIds = new Set(confirmed.map(r => r.race?.raceId || r.raceId).filter(Boolean))
   const pending         = regs.filter(r =>
     (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
-    !acceptedRaceIds.has(r.race?.raceId || r.raceId)
+    !acceptedRaceIds.has(r.race?.raceId || r.raceId) &&
+    !['Completed', 'Finished', 'Cancelled'].includes(r.race?.status)
   )
 
   const STATUS_PRIORITY = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3 }
