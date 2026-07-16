@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  Flag, Settings, HelpCircle, Bell, History, User,
+  Flag, Bell, History, User,
   ArrowLeft, AlertTriangle, ShieldAlert, Send, ChevronDown, X,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -232,14 +232,6 @@ export default function RefereeRaceDetail() {
           </nav>
         </div>
         <div className="space-y-4">
-          <div className="space-y-1 border-b border-slate-800 pb-4">
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
-              <Settings size={16} /><span>Settings</span>
-            </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-xs font-medium transition-colors">
-              <HelpCircle size={16} /><span>Support</span>
-            </button>
-          </div>
           <button onClick={() => setProfileOpen(true)}
             className="w-full bg-[#24273e] p-3 rounded-xl flex items-center gap-3 border border-slate-800/60 hover:border-slate-700 transition-colors text-left">
             <div className="w-9 h-9 bg-slate-600 rounded-full overflow-hidden flex items-center justify-center shrink-0">
