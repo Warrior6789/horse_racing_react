@@ -404,7 +404,8 @@ export default function RaceRegistration() {
       const ownerRegs = ownerRegsRes.data.data || ownerRegsRes.data || []
       const activeHorseIds = new Set(
         ownerRegs
-          .filter(reg => reg.status !== 'Rejected' && reg.status !== 'Scratched')
+          .filter(reg => reg.status !== 'Rejected' && reg.status !== 'Scratched'
+            && !['Completed', 'Finished', 'Cancelled'].includes(reg.race?.status))
           .map(reg => reg.horseId || reg.horse?.id || reg.horse?.horseId)
           .filter(Boolean)
       )

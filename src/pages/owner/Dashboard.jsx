@@ -46,6 +46,7 @@ function HorseCard({ horse, reg }) {
 
   const isConfirmed = reg?.status === 'Confirmed' || reg?.jockeyConfirmation === true
   const isInRace    = reg && reg.status !== 'Rejected' && reg.status !== 'Scratched'
+    && !['Completed', 'Finished', 'Cancelled'].includes(reg.race?.status)
 
   return (
     <div className="bg-[#1a1c23] rounded-xl border border-gray-800 overflow-hidden flex flex-col">
@@ -146,7 +147,8 @@ export default function OwnerDashboard() {
 
   const activeRegMap = Object.fromEntries(
     registrations
-      .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
+      .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched'
+        && !['Completed', 'Finished', 'Cancelled'].includes(r.race?.status))
       .map(r => [r.horseId || r.horse?.id || r.horse?.horseId, r])
   )
 
