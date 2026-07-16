@@ -1,8 +1,27 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { History, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
-import { getHorses, getHorsePerformance } from '../../api/horses'
+import { getHorses, getHorsePerformance, getOwnerRaceHistory } from '../../api/horses'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
+
+const PAGE_SIZE = 10
+
+const getPosColor = (pos) => {
+  if (pos === 1) return 'bg-yellow-500 text-black'
+  if (pos === 2) return 'bg-gray-300 text-black'
+  if (pos === 3) return 'bg-orange-700 text-white'
+  return 'bg-gray-700 text-gray-300'
+}
+
+const posLabel = (pos) => {
+  if (!pos) return '—'
+  if (pos === 1) return '1st'
+  if (pos === 2) return '2nd'
+  if (pos === 3) return '3rd'
+  return `${pos}th`
+}
 
 function StatCard({ title, value, subtext, trend }) {
   return (
@@ -24,9 +43,16 @@ function StatCard({ title, value, subtext, trend }) {
 
 export default function OwnerEarnings() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [horses,     setHorses]     = useState([])
   const [horseStats, setHorseStats] = useState([])
   const [loading,    setLoading]    = useState(true)
+
+  const [historyItems,      setHistoryItems]      = useState([])
+  const [historyTotalCount, setHistoryTotalCount] = useState(0)
+  const [historyTotalPages, setHistoryTotalPages] = useState(1)
+  const [historyLoading,    setHistoryLoading]    = useState(true)
+  const [historyPage,       setHistoryPage]       = useState(1)
 
   const fetchEarnings = useCallback(() => {
     setLoading(true)
@@ -52,10 +78,25 @@ export default function OwnerEarnings() {
 
   useEffect(() => { fetchEarnings() }, [fetchEarnings])
 
+  const fetchHistory = useCallback((p) => {
+    setHistoryLoading(true)
+    getOwnerRaceHistory({ page: p, pageSize: PAGE_SIZE })
+      .then(r => {
+        const d = r.data.data
+        setHistoryItems(d?.items || [])
+        setHistoryTotalCount(d?.totalCount || 0)
+        setHistoryTotalPages(d?.totalPages || 1)
+      })
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false))
+  }, [])
+
+  useEffect(() => { fetchHistory(historyPage) }, [historyPage, fetchHistory])
+
   const handleBalanceUpdated = useCallback((data) => {
     if (data?.accountId !== user?.id) return
-    if (data?.reason === 'PrizePayout') fetchEarnings()
-  }, [user, fetchEarnings])
+    if (data?.reason === 'PrizePayout') { fetchEarnings(); fetchHistory(historyPage) }
+  }, [user, fetchEarnings, fetchHistory, historyPage])
 
   useRaceHub(null, { onBalanceUpdated: handleBalanceUpdated })
 
@@ -139,6 +180,120 @@ export default function OwnerEarnings() {
                 </tbody>
               </table>
             </div>
+          )}
+        </section>
+
+        {/* Race-by-race history */}
+        <section className="bg-[#161a23] rounded-xl border border-gray-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <History size={15} className="text-gray-500" />
+              <h2 className="text-sm font-bold text-gray-200">Race History</h2>
+            </div>
+            <span className="text-[11px] text-gray-500">{historyTotalCount} races</span>
+          </div>
+
+          {historyLoading ? (
+            <div className="flex items-center justify-center h-48">
+              <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
+            </div>
+          ) : historyItems.length === 0 ? (
+            <div className="text-center py-16 text-gray-500 text-sm">No completed races yet.</div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left whitespace-nowrap">
+                  <thead>
+                    <tr className="text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-800 bg-[#16181d]/50">
+                      <th className="px-6 py-3 font-bold">Date</th>
+                      <th className="px-6 py-3 font-bold">Race</th>
+                      <th className="px-6 py-3 font-bold">Horse</th>
+                      <th className="px-6 py-3 font-bold">Jockey</th>
+                      <th className="px-6 py-3 font-bold">Track</th>
+                      <th className="px-6 py-3 font-bold">Pos</th>
+                      <th className="px-6 py-3 font-bold">Earnings</th>
+                      <th className="px-6 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/80">
+                    {historyItems.map(item => (
+                      <tr key={item.registrationId} className="hover:bg-gray-800/40 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          {item.date
+                            ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            : '—'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-yellow-500 text-sm">
+                            {item.raceName || `Race #${item.raceNumber || '—'}`}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center text-base shrink-0">
+                              {item.horseImageUrl
+                                ? <img src={item.horseImageUrl} alt="" className="w-full h-full object-cover" />
+                                : '🐎'}
+                            </div>
+                            <span className="font-semibold text-sm text-white">{item.horseName || '—'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-300">{item.jockeyName || '—'}</td>
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          <div>{item.racecourseName || '—'}</div>
+                          {item.trackType && (
+                            <div className="text-xs text-gray-500 mt-0.5">{item.trackType}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded text-xs font-bold ${item.position ? getPosColor(item.position) : 'bg-gray-700 text-gray-500'}`}>
+                            {posLabel(item.position)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-sm">
+                          {item.earnings != null && item.earnings > 0
+                            ? <span className="text-emerald-400 font-bold">+{item.earnings.toLocaleString('vi-VN')} VND</span>
+                            : <span className="text-gray-600">—</span>}
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.raceId && (
+                            <button
+                              onClick={() => navigate(`/owner/races/${item.raceId}/results`)}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-yellow-400 hover:bg-gray-700 transition-colors"
+                              title="View Results"
+                            >
+                              <ExternalLink size={14} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {historyTotalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
+                  <p className="text-gray-500 text-xs">Page {historyPage} of {historyTotalPages}</p>
+                  <div className="flex gap-1">
+                    <button onClick={() => setHistoryPage(p => Math.max(1, p - 1))} disabled={historyPage === 1}
+                      className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40">
+                      <ChevronLeft size={14} />
+                    </button>
+                    {Array.from({ length: Math.min(historyTotalPages, 5) }, (_, i) => i + 1).map(n => (
+                      <button key={n} onClick={() => setHistoryPage(n)}
+                        className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold ${n === historyPage ? 'bg-[#facc15] text-black' : 'border border-gray-800 text-gray-400 hover:bg-gray-800'}`}>
+                        {n}
+                      </button>
+                    ))}
+                    <button onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))} disabled={historyPage === historyTotalPages}
+                      className="w-7 h-7 flex items-center justify-center rounded border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40">
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
 
