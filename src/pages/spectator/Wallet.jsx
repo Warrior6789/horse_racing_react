@@ -223,7 +223,7 @@ export default function WalletPage() {
           {[
             { icon: <TrendingUp size={16} />, color: 'text-emerald-400 bg-emerald-500/10', label: 'Total Winnings', value: loading ? '—' : `+${totalWinnings.toLocaleString()} VND` },
             { icon: <Trophy size={16} />,    color: 'text-[#f7e0a3] bg-[#f7e0a3]/10',    label: 'Bets Won',        value: loading ? '—' : `${wonBets} Races` },
-            { icon: <Clock size={16} />,     color: 'text-stone-400 bg-stone-500/10',     label: 'Pending Bets',    value: loading ? '—' : `${pendingBets} Stakes` },
+            { icon: <Clock size={16} />,     color: 'text-stone-400 bg-stone-500/10',     label: 'Active Bets',    value: loading ? '—' : `${pendingBets} Stakes` },
           ].map(({ icon, color, label, value }) => (
             <div key={label} className="bg-[#171410] p-4 rounded-xl border border-stone-800/50 flex items-center space-x-3">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
