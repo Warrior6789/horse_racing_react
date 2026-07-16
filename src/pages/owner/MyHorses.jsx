@@ -161,7 +161,8 @@ export default function MyHorses() {
       const regs = rRes.data.data || []
       const map = new Map()
       regs
-        .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
+        .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched'
+          && !['Completed', 'Finished', 'Cancelled'].includes(r.race?.status))
         .forEach(r => {
           const hId = r.horseId || r.horse?.id || r.horse?.horseId
           if (hId) map.set(hId, r.status)
