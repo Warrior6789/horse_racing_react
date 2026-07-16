@@ -236,7 +236,9 @@ export default function OwnerDashboard() {
                     return (
                     <tr key={item.registrationId ?? i} className="hover:bg-gray-800/40 transition-colors group">
                       <td className="px-6 py-4">
-                        <p className="font-bold text-gray-200 text-sm group-hover:text-white">Race #{r.raceNumber || '—'}</p>
+                        <p className="font-bold text-gray-200 text-sm group-hover:text-white">
+                          {r.raceName || `Race #${r.raceNumber || '—'}`}
+                        </p>
                         {r.status && (
                           <p className="text-[10px] text-yellow-500 font-bold uppercase mt-1 tracking-wide">{r.status}</p>
                         )}
