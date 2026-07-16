@@ -59,7 +59,7 @@ export default function SpectatorDashboard() {
 
       Promise.all([
         getMyBetsPaged({ page: 1, pageSize: 1 }),
-        getMyBetsPaged({ page: 1, pageSize: 1, status: 'Pending' }),
+        getMyBetsPaged({ page: 1, pageSize: 1, status: 'Active' }),
         getMyBetsPaged({ page: 1, pageSize: 1, status: 'Won' }),
         getMyBetsPaged({ page: 1, pageSize: 500 }),
       ]).then(([all, pending, won, allItems]) => {

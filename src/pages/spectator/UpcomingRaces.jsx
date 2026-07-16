@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Search, X, Flag, Bell, Trophy, ChevronLeft, ChevronRight, Zap, Radio } from 'lucide-react'
+import { MapPin, Search, X, Flag, Trophy, ChevronLeft, ChevronRight, Zap, Radio } from 'lucide-react'
 import SpectatorLayout from '../../components/SpectatorLayout'
 import { useAuth } from '../../context/AuthContext'
 import { getRacesPaged, getRaceRegistrations } from '../../api/races'
@@ -635,7 +635,6 @@ export default function UpcomingRaces() {
 
   useEffect(() => { refreshUser() }, [])
 
-  const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'User'
   const canBetByRole = authSynced && (!user?.role || user.role === 'Spectator') && !user?.requestedRole
 
   const TAB_API_STATUS = {
@@ -744,13 +743,6 @@ export default function UpcomingRaces() {
           </div>
           <div className="bg-stone-900/50 border border-stone-800 px-3 py-1.5 rounded-full text-sm font-bold text-[#f7e0a3]">
             {balance != null ? `${balance.toLocaleString()} VND` : '—'}
-          </div>
-          <button className="p-2 text-stone-400 hover:text-stone-200 bg-stone-900/50 rounded-full border border-stone-800 relative">
-            <Bell size={16} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
-          </button>
-          <div className="w-8 h-8 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center font-bold text-xs text-stone-200">
-            {displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
           </div>
         </div>
       </header>
