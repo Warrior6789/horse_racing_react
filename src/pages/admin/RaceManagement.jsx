@@ -214,7 +214,7 @@ export default function RaceManagement() {
   const [page, setPage]             = useState(1)
   const [pageSize] = useState(4)
   const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
+  const [tableCount, setTableCount] = useState(0)
   const [loading, setLoading]       = useState(true)
   const [acting, setActing]         = useState(null)
 
@@ -250,7 +250,7 @@ export default function RaceManagement() {
           const start = (p - 1) * ps
           setRaces(active.slice(start, start + ps))
           setTotalPages(Math.ceil(active.length / ps) || 1)
-          setTotalCount(active.length)
+          setTableCount(active.length)
         })
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
@@ -262,7 +262,7 @@ export default function RaceManagement() {
           const start = (p - 1) * ps
           setRaces(done.slice(start, start + ps))
           setTotalPages(Math.ceil(done.length / ps) || 1)
-          setTotalCount(done.length)
+          setTableCount(done.length)
         })
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
@@ -435,7 +435,7 @@ export default function RaceManagement() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          <KpiCard title="Total"     value={totalCount} icon="sports"          iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
+          <KpiCard title="Total"     value={cards.length} icon="sports"          iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
           <KpiCard title="Live"      value={live}       icon="sensors"         iconColor="text-emerald-600" bgIcon="bg-emerald-50"  />
           <KpiCard title="Scheduled" value={scheduled}  icon="schedule"        iconColor="text-amber-600"   bgIcon="bg-amber-50"    />
           <KpiCard title="Completed" value={completed}  icon="flag"            iconColor="text-blue-600"    bgIcon="bg-blue-50"     />
@@ -551,7 +551,7 @@ export default function RaceManagement() {
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 bg-gray-950 rounded-full" />
               <h2 className="text-sm font-bold text-gray-900">{tab === 'active' ? 'Active Races' : 'Finished / Cancelled Races'}</h2>
-              <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
+              <span className="text-xs text-gray-400 font-medium">({tableCount} total)</span>
             </div>
           </div>
 
