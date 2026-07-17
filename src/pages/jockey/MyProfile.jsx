@@ -51,6 +51,14 @@ export default function JockeyProfile() {
 
   const handleSave = async e => {
     e.preventDefault()
+    if (form.weight && (Number(form.weight) < 20 || Number(form.weight) > 200)) {
+      setError('Weight must be between 20 and 200 kg.')
+      return
+    }
+    if (form.height && (Number(form.height) < 100 || Number(form.height) > 250)) {
+      setError('Height must be between 100 and 250 cm.')
+      return
+    }
     setError(''); setSaving(true); setSuccess(false)
     try {
       await updateJockeyProfile(user.id, {
@@ -221,6 +229,8 @@ export default function JockeyProfile() {
                   <input
                     type="number"
                     step="0.1"
+                    min="20"
+                    max="200"
                     value={form.weight}
                     onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
                     className={inputCls}
@@ -234,6 +244,8 @@ export default function JockeyProfile() {
                   <input
                     type="number"
                     step="0.1"
+                    min="100"
+                    max="250"
                     value={form.height}
                     onChange={e => setForm(f => ({ ...f, height: e.target.value }))}
                     className={inputCls}

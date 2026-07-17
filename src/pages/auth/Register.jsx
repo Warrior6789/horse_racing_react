@@ -24,6 +24,10 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    if (form.phone && !/^(0|\+84)[35789]\d{8}$/.test(form.phone)) {
+      setError('Phone must be a valid Vietnamese phone number (e.g. 0912345678).')
+      return
+    }
     setLoading(true)
     try {
       const fd = new FormData()
