@@ -96,6 +96,10 @@ export default function RoleUpgrade() {
     if (!fields.fullName.trim()) { setError('Full name is required.'); return }
     if (!fields.phone.trim())    { setError('Phone number is required.'); return }
     if (!/^(0|\+84)[35789]\d{8}$/.test(fields.phone.trim())) { setError('Phone must be a valid Vietnamese phone number (e.g. 0912345678).'); return }
+    if (selectedRole === 'Jockey') {
+      if (fields.weight && (Number(fields.weight) < 20 || Number(fields.weight) > 200)) { setError('Weight must be between 20 and 200 kg.'); return }
+      if (fields.height && (Number(fields.height) < 100 || Number(fields.height) > 250)) { setError('Height must be between 100 and 250 cm.'); return }
+    }
     setError(''); setLoading(true)
     try {
       const fd = new FormData()
@@ -272,11 +276,11 @@ export default function RoleUpgrade() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className={labelCls}>Weight (kg)</label>
-                          <input type="number" step="0.1" placeholder="55" className={inputCls} {...f('weight')} />
+                          <input type="number" step="0.1" min="20" max="200" placeholder="55" className={inputCls} {...f('weight')} />
                         </div>
                         <div>
                           <label className={labelCls}>Height (cm)</label>
-                          <input type="number" step="0.1" placeholder="165" className={inputCls} {...f('height')} />
+                          <input type="number" step="0.1" min="100" max="250" placeholder="165" className={inputCls} {...f('height')} />
                         </div>
                       </div>
                     </div>

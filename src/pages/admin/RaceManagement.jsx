@@ -332,7 +332,10 @@ export default function RaceManagement() {
     if (!form.raceName)      { setError('Race name is required.'); return }
     if (!form.racecourseId) { setError('Please select a racecourse.'); return }
     if (!form.raceNumber)   { setError('Race number is required.'); return }
+    if (Number(form.raceNumber) <= 0) { setError('Race number must be greater than 0.'); return }
     if (!form.startTime)    { setError('Start time is required.'); return }
+    if (form.trackLength && Number(form.trackLength) <= 0) { setError('Track length must be greater than 0.'); return }
+    if (form.maxParticipants && Number(form.maxParticipants) < 3) { setError('Max participants must be at least 3.'); return }
     setError(''); setSaving(true)
     try {
       if (editId) {
@@ -736,11 +739,11 @@ export default function RaceManagement() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Track Length (m)</label>
-                  <input type="number" min="0" className={inputCls} {...f('trackLength')} />
+                  <input type="number" min="0.01" step="0.01" className={inputCls} {...f('trackLength')} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Max Participants</label>
-                  <input type="number" min="1" className={inputCls} {...f('maxParticipants')} />
+                  <input type="number" min="3" className={inputCls} {...f('maxParticipants')} />
                 </div>
               </div>
               <div>
