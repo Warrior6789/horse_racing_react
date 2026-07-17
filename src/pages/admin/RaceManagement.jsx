@@ -412,7 +412,8 @@ export default function RaceManagement() {
 
   const live        = cards.filter(r => r.status === 'Live').length
   const scheduled   = cards.filter(r => r.status === 'Scheduled').length
-  const completed   = cards.filter(r => ['Finished', 'Cancelled'].includes(r.status)).length
+  const finished    = cards.filter(r => r.status === 'Finished').length
+  const cancelled   = cards.filter(r => r.status === 'Cancelled').length
   const activeCards = cards.filter(r => !['Finished', 'Cancelled'].includes(r.status))
 
   return (
@@ -435,11 +436,12 @@ export default function RaceManagement() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
           <KpiCard title="Total"     value={cards.length} icon="sports"          iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
           <KpiCard title="Live"      value={live}       icon="sensors"         iconColor="text-emerald-600" bgIcon="bg-emerald-50"  />
           <KpiCard title="Scheduled" value={scheduled}  icon="schedule"        iconColor="text-amber-600"   bgIcon="bg-amber-50"    />
-          <KpiCard title="Completed" value={completed}  icon="flag"            iconColor="text-blue-600"    bgIcon="bg-blue-50"     />
+          <KpiCard title="Finished"  value={finished}   icon="flag"            iconColor="text-blue-600"    bgIcon="bg-blue-50"     />
+          <KpiCard title="Cancelled" value={cancelled}  icon="cancel"          iconColor="text-red-500"     bgIcon="bg-red-50"      />
         </div>
 
         {/* Cards */}
