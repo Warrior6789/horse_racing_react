@@ -128,7 +128,12 @@ export default function AccountProfile({ onClose, variant = 'dark' }) {
   }
 
   const save = async () => {
-    setError(''); setSaving(true)
+    setError('')
+    if (form.phone.trim() && !/^(0|\+84)[35789]\d{8}$/.test(form.phone.trim())) {
+      setError('Phone must be a valid Vietnamese phone number (e.g. 0912345678).')
+      return
+    }
+    setSaving(true)
     try {
       const profileId = profile?.accountId || profile?.userId || profile?.id
       if (profileId) {

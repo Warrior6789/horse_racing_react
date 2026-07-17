@@ -95,6 +95,7 @@ export default function RoleUpgrade() {
     if (!selectedRole) { setError('Please select a role.'); return }
     if (!fields.fullName.trim()) { setError('Full name is required.'); return }
     if (!fields.phone.trim())    { setError('Phone number is required.'); return }
+    if (!/^(0|\+84)[35789]\d{8}$/.test(fields.phone.trim())) { setError('Phone must be a valid Vietnamese phone number (e.g. 0912345678).'); return }
     setError(''); setLoading(true)
     try {
       const fd = new FormData()
