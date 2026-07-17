@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trophy, Plus, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Trophy, Plus, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import CardCarousel from '../../components/CardCarousel'
 import { getHorses, deleteHorse } from '../../api/horses'
@@ -150,6 +150,7 @@ export default function MyHorses() {
   const [listPage, setListPage] = useState(1)
   const LIST_SIZE = 8
   const [regStatusByHorseId, setRegStatusByHorseId] = useState(new Map())
+  const [error, setError] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -174,8 +175,13 @@ export default function MyHorses() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this horse?')) return
-    await deleteHorse(id).catch(() => {})
-    load()
+    setError('')
+    try {
+      await deleteHorse(id)
+      load()
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to delete horse.')
+    }
   }
 
   const counts = {
@@ -192,6 +198,13 @@ export default function MyHorses() {
     <OwnerLayout>
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
+
+          {error && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+              {error}
+              <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+            </div>
+          )}
 
           {/* Title */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
