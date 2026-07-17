@@ -250,7 +250,7 @@ export default function RaceManagement() {
           const start = (p - 1) * ps
           setRaces(active.slice(start, start + ps))
           setTotalPages(Math.ceil(active.length / ps) || 1)
-          setTotalCount(r.data.data?.totalCount || 0)
+          setTotalCount(active.length)
         })
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
@@ -262,7 +262,7 @@ export default function RaceManagement() {
           const start = (p - 1) * ps
           setRaces(done.slice(start, start + ps))
           setTotalPages(Math.ceil(done.length / ps) || 1)
-          setTotalCount(r.data.data?.totalCount || 0)
+          setTotalCount(done.length)
         })
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
@@ -490,7 +490,7 @@ export default function RaceManagement() {
                     >
                       Edit
                     </button>
-                    {r.status !== 'Completed' && r.status !== 'Cancelled' && r.status !== 'Live' && (
+                    {r.status !== 'Completed' && r.status !== 'Finished' && r.status !== 'Cancelled' && r.status !== 'Live' && (
                       <button
                         onClick={() => handleAction(r.raceId, advanceRace)}
                         disabled={acting === r.raceId}
@@ -550,7 +550,7 @@ export default function RaceManagement() {
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 bg-gray-950 rounded-full" />
-              <h2 className="text-sm font-bold text-gray-900">All Races</h2>
+              <h2 className="text-sm font-bold text-gray-900">{tab === 'active' ? 'Active Races' : 'Finished / Cancelled Races'}</h2>
               <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
             </div>
           </div>
@@ -604,7 +604,7 @@ export default function RaceManagement() {
                           >
                             Edit
                           </button>
-                          {r.status !== 'Completed' && r.status !== 'Cancelled' && r.status !== 'Live' && (
+                          {r.status !== 'Completed' && r.status !== 'Finished' && r.status !== 'Cancelled' && r.status !== 'Live' && (
                             <button
                               onClick={() => handleAction(r.raceId, advanceRace)}
                               disabled={acting === r.raceId}
