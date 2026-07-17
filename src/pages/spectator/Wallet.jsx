@@ -66,7 +66,7 @@ export default function WalletPage() {
       }).catch(() => {}),
       getMyBetsPaged({ page: 1, pageSize: 100 }).then(r => {
         const items = r.data.data?.items || []
-        setTotalWinnings(items.filter(b => b.status === 'Won').reduce((s, b) => s + (b.potentialWinnings || 0), 0))
+        setTotalWinnings(items.filter(b => b.status === 'Won').reduce((s, b) => s + (b.betAmount || 0) * (b.payoutRatio || 0), 0))
         setPendingBets(items.filter(b => b.status === 'Active').length)
         setWonBets(items.filter(b => b.status === 'Won').length)
       }).catch(() => {}),
