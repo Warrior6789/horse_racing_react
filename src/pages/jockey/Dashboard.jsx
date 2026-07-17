@@ -55,6 +55,7 @@ export default function JockeyDashboard() {
   const [acting,        setActing]        = useState(null)
   const [refreshKey,    setRefreshKey]    = useState(0)
   const [selectedOwner, setSelectedOwner] = useState(null)
+  const [error, setError] = useState('')
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
 
@@ -87,6 +88,7 @@ export default function JockeyDashboard() {
 
   const handle = async (id, action) => {
     setActing(id)
+    setError('')
     try {
       if (action === 'accept') {
         await acceptRegistration(id)
@@ -94,7 +96,9 @@ export default function JockeyDashboard() {
         await rejectRegistration(id)
       }
       await fetchRegs()
-    } catch {}
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     finally { setActing(null) }
   }
 
@@ -137,6 +141,13 @@ export default function JockeyDashboard() {
             <p className="text-gray-400 text-sm">Welcome back, {displayName}. Here is your current performance outlook.</p>
           </div>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+          </div>
+        )}
 
         {/* Live Race Banner */}
         {liveRace && (

@@ -29,6 +29,7 @@ export default function JockeyRequests() {
   const [page, setPage]           = useState(1)
   const [selectedOwner, setSelectedOwner] = useState(null)
   const [selectedHorse, setSelectedHorse] = useState(null)
+  const [error, setError] = useState('')
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -52,6 +53,7 @@ export default function JockeyRequests() {
 
   const handle = async (id, action) => {
     setActing(id)
+    setError('')
     try {
       if (action === 'accept') {
         await acceptRegistration(id)
@@ -65,7 +67,9 @@ export default function JockeyRequests() {
         }).catch(() => {})
       }
       fetchData()
-    } catch {}
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     finally { setActing(null) }
   }
 
@@ -86,6 +90,13 @@ export default function JockeyRequests() {
           <h1 className="text-2xl font-black text-white mb-1">Race Invitations</h1>
           <p className="text-gray-400 text-sm">Review and respond to race assignment requests from horse owners.</p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+          </div>
+        )}
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">

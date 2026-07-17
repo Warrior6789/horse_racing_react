@@ -175,6 +175,7 @@ function RegistrationDetailView({ race, onBack }) {
   const [loading, setLoading]    = useState(true)
   const [acting, setActing]      = useState(null)
   const [jockeyMap, setJockeyMap] = useState({})
+  const [error, setError]        = useState('')
 
   const load = useCallback((p = page) => {
     setLoading(true)
@@ -208,7 +209,12 @@ function RegistrationDetailView({ race, onBack }) {
 
   const handle = async (id, fn) => {
     setActing(id)
-    try { await fn(id) } catch {}
+    setError('')
+    try {
+      await fn(id)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
     load(page)
   }
@@ -228,6 +234,15 @@ function RegistrationDetailView({ race, onBack }) {
         </h1>
         <p className="text-sm text-gray-500 mt-1">Approve or reject horse & jockey race entry registrations.</p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">

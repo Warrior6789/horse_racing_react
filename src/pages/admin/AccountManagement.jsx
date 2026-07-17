@@ -157,6 +157,7 @@ function UpgradeRequests({ onCountChange, refreshKey }) {
   const [page, setPage]           = useState(1)
   const [totalPages, setTotal]    = useState(1)
   const [totalCount, setCount]    = useState(0)
+  const [error, setError]         = useState('')
   const pageSize = 4
 
   const load = (p = page) => {
@@ -181,7 +182,12 @@ function UpgradeRequests({ onCountChange, refreshKey }) {
 
   const handle = async (accountId, fn) => {
     setActing(accountId)
-    try { await fn(accountId) } catch {}
+    setError('')
+    try {
+      await fn(accountId)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
     setSelected(null)
     load(page)
@@ -201,6 +207,14 @@ function UpgradeRequests({ onCountChange, refreshKey }) {
 
   return (
     <>
+      {error && (
+        <div className="flex items-center gap-2 mb-4 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+          </button>
+        </div>
+      )}
       <div className="space-y-4">
         {list.map(acc => (
           <div key={acc.accountId || acc.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -302,6 +316,7 @@ export default function AccountManagement() {
   const [pendingCount, setPendingCount]       = useState(0)
   const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
+  const [error, setError]         = useState('')
 
   const [countActive, setCountActive]       = useState(0)
   const [countSuspended, setCountSuspended] = useState(0)
@@ -349,6 +364,7 @@ export default function AccountManagement() {
 
   const handleAction = async (id, fn) => {
     setActing(id)
+    setError('')
     try {
       await fn(id)
       if (statusFilter === '') {
@@ -360,7 +376,9 @@ export default function AccountManagement() {
         loadAccounts(page, search, statusFilter)
       }
       loadCounts()
-    } catch {}
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
   }
 
@@ -379,6 +397,15 @@ export default function AccountManagement() {
           <h1 className="text-2xl font-bold text-gray-900">Account Management</h1>
           <p className="text-sm text-gray-500 mt-1">Manage user accounts and role upgrade requests.</p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex items-center gap-6 border-b border-gray-200">

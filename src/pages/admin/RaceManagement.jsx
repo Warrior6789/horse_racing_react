@@ -395,7 +395,13 @@ export default function RaceManagement() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this race?')) return
     setDeleting(id)
-    try { await deleteRace(id); loadCards(); load(page, pageSize) } catch {}
+    try {
+      await deleteRace(id)
+      loadCards()
+      load(page, pageSize)
+    } catch (e) {
+      showToast(extractError(e))
+    }
     setDeleting(null)
   }
 

@@ -66,6 +66,7 @@ export default function AdminRefereeReports() {
   const [rejected, setRejected]   = useState(0)
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
+  const [error, setError]         = useState('')
 
   const load = useCallback((p = page) => {
     setLoading(true)
@@ -89,7 +90,12 @@ export default function AdminRefereeReports() {
 
   const handle = async (id, fn) => {
     setActing(id)
-    try { await fn(id) } catch {}
+    setError('')
+    try {
+      await fn(id)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
     load(page)
   }
@@ -97,6 +103,14 @@ export default function AdminRefereeReports() {
   return (
     <DashboardLayout title="Referee Reports">
       <div className="space-y-8">
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+            </button>
+          </div>
+        )}
 
         {/* Page heading */}
         <div>

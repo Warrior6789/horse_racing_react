@@ -50,6 +50,7 @@ export default function WithdrawalManagement() {
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
   const [revealed, setRevealed]   = useState(new Set())
+  const [error, setError]         = useState('')
 
   const load = (p = page) => {
     setLoading(true)
@@ -67,7 +68,12 @@ export default function WithdrawalManagement() {
 
   const handle = async (id, fn) => {
     setActing(id)
-    try { await fn(id) } catch {}
+    setError('')
+    try {
+      await fn(id)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
     load(page)
   }
@@ -97,6 +103,15 @@ export default function WithdrawalManagement() {
           <h1 className="text-2xl font-bold text-zinc-950">Withdrawal Management</h1>
           <p className="text-sm text-zinc-500 mt-1">Review and process user withdrawal requests.</p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+            </button>
+          </div>
+        )}
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
