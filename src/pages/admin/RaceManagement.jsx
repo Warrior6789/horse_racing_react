@@ -410,9 +410,10 @@ export default function RaceManagement() {
   const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white'
   const f = (k) => ({ value: form[k], onChange: e => setForm(p => ({ ...p, [k]: e.target.value })) })
 
-  const live      = cards.filter(r => r.status === 'Live').length
-  const scheduled = cards.filter(r => r.status === 'Scheduled').length
-  const completed = cards.filter(r => ['Finished', 'Cancelled'].includes(r.status)).length
+  const live        = cards.filter(r => r.status === 'Live').length
+  const scheduled   = cards.filter(r => r.status === 'Scheduled').length
+  const completed   = cards.filter(r => ['Finished', 'Cancelled'].includes(r.status)).length
+  const activeCards = cards.filter(r => !['Finished', 'Cancelled'].includes(r.status))
 
   return (
     <DashboardLayout title="Race Management">
@@ -446,9 +447,9 @@ export default function RaceManagement() {
           <div className="flex items-center justify-center h-36">
             <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
           </div>
-        ) : cards.length === 0 ? null : (
-          <CardCarousel count={cards.length} dark={false}>
-            {cards.map(r => {
+        ) : activeCards.length === 0 ? null : (
+          <CardCarousel count={activeCards.length} dark={false}>
+            {activeCards.map(r => {
               const s = RACE_STATUS[r.status] || RACE_STATUS.Scheduled
               return (
                 <div key={r.raceId} className="snap-start shrink-0 w-[calc(33.333%-11px)] bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
