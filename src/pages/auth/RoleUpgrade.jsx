@@ -31,8 +31,8 @@ export default function RoleUpgrade() {
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'User'
   const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   const [selectedRole, setSelectedRole] = useState('')
-  const [docFile, setDocFile]           = useState(null)
-  const [docName, setDocName]           = useState(null)
+  const [certificateFile, setCertificateFile] = useState(null)
+  const [certificateName, setCertificateName] = useState(null)
   const [error, setError]               = useState('')
   const [loading, setLoading]           = useState(false)
   const [done, setDone]                 = useState(false)
@@ -85,9 +85,9 @@ export default function RoleUpgrade() {
     onChange: e => setFields(p => ({ ...p, [key]: e.target.value })),
   })
 
-  const handleDoc = e => {
+  const handleCertificateUpload = e => {
     const file = e.target.files[0]
-    if (file) { setDocFile(file); setDocName(file.name) }
+    if (file) { setCertificateFile(file); setCertificateName(file.name) }
   }
 
   const handleSubmit = async e => {
@@ -113,7 +113,7 @@ export default function RoleUpgrade() {
         if (fields.weight)        fd.append('Weight', fields.weight)
         if (fields.height)        fd.append('Height', fields.height)
       }
-      if (docFile) fd.append('CertificateImage', docFile)
+      if (certificateFile) fd.append('CertificateImage', certificateFile)
       localStorage.setItem('upgrade_fullName', fields.fullName.trim())
       localStorage.setItem('upgrade_phone', fields.phone.trim())
       await upgrade(fd)
@@ -286,21 +286,21 @@ export default function RoleUpgrade() {
                     </div>
                   )}
 
-                  {/* Document upload */}
+                  {/* Certificate upload */}
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-bold text-stone-500 tracking-wider uppercase">Supporting Documents</h4>
+                    <h4 className="text-[10px] font-bold text-stone-500 tracking-wider uppercase">Certificate</h4>
                     <label
-                      htmlFor="docUpload"
+                      htmlFor="certificateUpload"
                       className="border-2 border-dashed border-stone-700 bg-[#110e0b] rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#f7e0a3]/40 transition-colors"
                     >
-                      <div className={`p-2.5 rounded-lg mb-3 ${docFile ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#f7e0a3]/10 text-[#f7e0a3]'}`}>
-                        {docFile ? <CheckCircle2 size={20} /> : <UploadCloud size={20} />}
+                      <div className={`p-2.5 rounded-lg mb-3 ${certificateFile ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[#f7e0a3]/10 text-[#f7e0a3]'}`}>
+                        {certificateFile ? <CheckCircle2 size={20} /> : <UploadCloud size={20} />}
                       </div>
                       <p className="text-xs font-bold text-stone-300">
-                        {docName || 'Upload Documentation'}
+                        {certificateName || 'Upload Certificate'}
                       </p>
                       <p className="text-[10px] text-stone-600 mt-1">PDF, PNG or JPG up to 10MB</p>
-                      <input id="docUpload" type="file" accept=".pdf,.png,.jpg,.jpeg" className="hidden" onChange={handleDoc} />
+                      <input id="certificateUpload" type="file" accept=".pdf,.png,.jpg,.jpeg" className="hidden" onChange={handleCertificateUpload} />
                     </label>
                   </div>
                 </div>
