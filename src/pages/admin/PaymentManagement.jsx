@@ -31,11 +31,10 @@ export default function PaymentManagement() {
     getAllPayments({ page: 1, pageSize: 500 })
       .then(r => {
         const all = r.data.data?.items || []
-        const completed = all.filter(x => (x.status || '').toLowerCase() === 'completed')
         const start = (p - 1) * ps
-        setRows(completed.slice(start, start + ps))
-        setTotal(Math.ceil(completed.length / ps) || 1)
-        setCount(completed.length)
+        setRows(all.slice(start, start + ps))
+        setTotal(Math.ceil(all.length / ps) || 1)
+        setCount(all.length)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
