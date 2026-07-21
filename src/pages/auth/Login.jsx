@@ -40,6 +40,7 @@ export default function Login() {
         || err.message
         || 'Invalid email or password.'
       setError(msg)
+      setForm(f => ({ ...f, password: '' }))
     } finally {
       setLoading(false)
     }
