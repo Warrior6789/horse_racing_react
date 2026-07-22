@@ -18,8 +18,8 @@ test('unknown email shows an error and stays on the login page', async ({ page }
   await expect(page.getByText('Invalid email or password.')).toBeVisible()
 })
 
-test('a banned account cannot log in', async ({ page }) => {
-  const spectator = await registerFreshSpectator(page, 'banned-target')
+test('a suspended account cannot log in', async ({ page }) => {
+  const spectator = await registerFreshSpectator(page, 'suspended-target')
 
   await login(page, ADMIN)
   await expect(page).toHaveURL(/\/admin\/dashboard/)
@@ -29,11 +29,11 @@ test('a banned account cannot log in', async ({ page }) => {
 
   const row = page.locator('tr').filter({ hasText: spectator.email })
   await row.waitFor()
-  await row.getByRole('button', { name: 'Ban' }).click()
+  await row.getByRole('button', { name: 'Suspend' }).click()
   await expect(row.getByRole('button', { name: 'Restore' })).toBeVisible()
 
   await login(page, spectator)
 
   await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByText('Invalid email or password.')).not.toBeVisible()
+  await expect(page.getByText('Invalid email or password.')).toBeVisible()
 })
