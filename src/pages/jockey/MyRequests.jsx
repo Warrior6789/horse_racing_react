@@ -99,8 +99,9 @@ export default function JockeyRequests() {
         )}
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Pending"  value={pendingRegs.length} subtitle="Requires action"     icon={Clock}        />
+          <StatCard title="Accepted" value={regs.filter(r => r.jockeyConfirmation === true).length}  subtitle="Confirmed rides"     icon={Check}        />
           <StatCard title="Rejected" value={regs.filter(r => r.jockeyConfirmation === false).length} subtitle="Declined invitations" icon={AlertCircle}  />
           <StatCard title="Total"    value={regs.length}        subtitle="All invitations"      icon={CalendarDays} />
         </div>
