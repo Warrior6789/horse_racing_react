@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, Flag, Layers, Wallet, TrendingUp, UploadCloud, Send, CheckCircle2 } from 'lucide-react'
+import { Home, Flag, Layers, Wallet, TrendingUp, UserCircle, UploadCloud, Send, CheckCircle2 } from 'lucide-react'
 import { upgrade } from '../../api/auth'
 import { getMyProfile } from '../../api/userProfiles'
 import { getMyJockeyProfile } from '../../api/jockeyProfiles'
@@ -155,6 +155,9 @@ export default function RoleUpgrade() {
             </NavLink>
             <NavLink to="/spectator/wallet" className={navLinkCls}>
               <Wallet size={18} /><span>Wallet</span>
+            </NavLink>
+            <NavLink to="/spectator/profile" className={navLinkCls}>
+              <UserCircle size={18} /><span>My Profile</span>
             </NavLink>
             <NavLink to="/upgrade" className={navLinkCls}>
               <TrendingUp size={18} /><span>Upgrade Role</span>
