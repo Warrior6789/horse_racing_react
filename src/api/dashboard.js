@@ -1,3 +1,3 @@
 import client from './client'
 
-export const getDashboardSummary = (params) => client.get('/dashboard/summary', { params })
+export const getDashboardFinancial = (params) => client.get('/dashboard/financial', { params })
