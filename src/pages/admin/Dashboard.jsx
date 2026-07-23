@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, Clock, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getActiveHorsesPaged } from '../../api/horses'
 import { getWithdrawalsPaged } from '../../api/withdrawals'
-import { getAllPayments } from '../../api/payments'
+import { getDashboardSummary } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 // ── helpers ────────────────────────────────────────────────────────────────────
@@ -95,41 +95,33 @@ export default function AdminDashboard() {
   const [stats,      setStats]      = useState({ revenue: 0, horses: 0, pendingW: 0 })
   const [liveRaces,  setLiveRaces]  = useState([])
   const [chartData,  setChartData]  = useState([])
+  const [topHorses,  setTopHorses]  = useState([])
   const [loading,    setLoading]    = useState(true)
 
-  // fetch once on mount (payments + horses + withdrawals)
+  // fetch aggregated dashboard summary (real takeout revenue, revenue-by-day, top horses)
+  const fetchSummary = useCallback(({ silent = false } = {}) => {
+    getDashboardSummary()
+      .then(r => {
+        const data = r.data.data || {}
+        const financial = data.financial || {}
+        setStats(prev => ({ ...prev, revenue: financial.totalTakeoutRevenue || 0 }))
+        setChartData((data.revenueByDay || []).map(p => ({
+          date: dateLabel(p.date),
+          revenue: p.takeoutAmount || 0,
+        })))
+        setTopHorses(data.topHorses || [])
+      })
+      .catch(() => {})
+      .finally(() => { if (!silent) setLoading(false) })
+  }, [])
+
+  // fetch once on mount (dashboard summary + horses + withdrawals)
   useEffect(() => {
+    fetchSummary()
     Promise.allSettled([
-      getAllPayments({ page: 1, pageSize: 100 }),
       getActiveHorsesPaged({ page: 1, pageSize: 1 }),
       getWithdrawalsPaged({ page: 1, pageSize: 1 }),
-    ]).then(([paymentsRes, horsesRes, withdrawalsRes]) => {
-
-      // ── revenue & chart ──
-      const payments = paymentsRes.status === 'fulfilled'
-        ? (paymentsRes.value.data.data?.items || [])
-        : []
-      const deposits = payments.filter(p =>
-        (p.type || p.transactionType || '').toLowerCase() === 'deposit' &&
-        (p.status || '').toLowerCase() === 'completed'
-      )
-      const totalRevenue = deposits.reduce((s, p) => s + (p.amount || 0), 0)
-
-      const today = new Date()
-      const last7 = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(today)
-        d.setDate(today.getDate() - (6 - i))
-        return { label: dateLabel(d.toISOString()), date: d.toDateString(), total: 0 }
-      })
-      deposits.forEach(p => {
-        const d = new Date(p.createAt || p.createdAt || p.transactionDate || p.date || '')
-        const ds = d.toDateString()
-        const slot = last7.find(x => x.date === ds)
-        if (slot) slot.total += p.amount || 0
-      })
-      setChartData(last7.map(x => ({ date: x.label, revenue: x.total })))
-      setStats(prev => ({ ...prev, revenue: totalRevenue }))
-
+    ]).then(([horsesRes, withdrawalsRes]) => {
       // ── active horses ──
       if (horsesRes.status === 'fulfilled') {
         const d = horsesRes.value.data.data
@@ -142,9 +134,8 @@ export default function AdminDashboard() {
         const total = withdrawalsRes.value.data.data?.totalCount ?? (withdrawalsRes.value.data.data?.length ?? 0)
         setStats(prev => ({ ...prev, pendingW: total }))
       }
-
-    }).finally(() => setLoading(false))
-  }, [])
+    })
+  }, [fetchSummary])
 
   // fetch races — called on mount + mỗi khi SignalR báo RacesUpdated
   const fetchRaces = useCallback(() => {
@@ -163,35 +154,19 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchRaces() }, [fetchRaces])
 
-  const handlePaymentsUpdated = useCallback((data) => {
-    const amount = data?.amount || 0
-    const label  = (data?.createAt || data?.createdAt) ? dateLabel(data.createAt || data.createdAt) : null
-
-    setStats(prev => ({ ...prev, revenue: (prev.revenue || 0) + amount }))
-
-    if (label) {
-      setChartData(prev => {
-        const idx = prev.findLastIndex(p => p.date === label)
-        if (idx !== -1) {
-          const next = [...prev]
-          next[idx] = { ...next[idx], revenue: next[idx].revenue + amount }
-          return next
-        }
-        return prev
-      })
-    }
-  }, [])
-
   const handleWithdrawalsUpdated = useCallback((data) => {
     if (data?.pendingCount != null)
       setStats(prev => ({ ...prev, pendingW: data.pendingCount }))
   }, [])
 
+  // revenue/top-horses come from settlement (takeout), not from deposits — refetch summary silently
+  const handleTakeoutUpdated = useCallback(() => fetchSummary({ silent: true }), [fetchSummary])
+
   // realtime: lắng nghe các event từ backend
   useRaceHub(null, {
-    onRacesUpdated:      fetchRaces,
-    onPaymentsUpdated:   handlePaymentsUpdated,
-    onWithdrawalsUpdated: handleWithdrawalsUpdated,
+    onRacesUpdated:        fetchRaces,
+    onWithdrawalsUpdated:  handleWithdrawalsUpdated,
+    onTakeoutLedgerUpdated: handleTakeoutUpdated,
   })
 
   const yTickFmt = (v) => {
@@ -215,7 +190,7 @@ export default function AdminDashboard() {
           <StatCard
             title="Total Revenue"
             value={loading ? '—' : fmtVND(stats.revenue)}
-            sub="Completed deposits"
+            sub="Platform takeout revenue"
             accent="green"
             icon={<TrendingUp size={20} strokeWidth={2} />}
           />
@@ -250,7 +225,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Financial Performance</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Deposit revenue — last 7 days</p>
+                <p className="text-xs text-gray-400 mt-0.5">Takeout revenue by day</p>
               </div>
               <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg font-medium">VND</span>
             </div>
@@ -322,6 +297,43 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Top Horses */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Top Horses</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Ranked by total career wins</p>
+            </div>
+          </div>
+          {loading ? (
+            <div className="h-40 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+            </div>
+          ) : topHorses.length === 0 ? (
+            <div className="h-40 flex flex-col items-center justify-center text-gray-400">
+              <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>pets</span>
+              <p className="text-xs mt-2">No finished races yet</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={topHorses} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="horseName"
+                  width={140}
+                  tick={{ fontSize: 12, fill: '#374151' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip formatter={(v) => [`${v} wins`, 'Record wins']} />
+                <Bar dataKey="recordWins" fill="#111827" radius={[0, 6, 6, 0]} barSize={18} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Quick actions */}
