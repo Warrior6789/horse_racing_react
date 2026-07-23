@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
-  BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getActiveHorsesPaged } from '../../api/horses'
 import { getWithdrawalsPaged } from '../../api/withdrawals'
-import { getDashboardFinancial, getRaceStatusBreakdown, getBetTypeBreakdown } from '../../api/dashboard'
+import { getDashboardFinancial, getRaceStatusBreakdown, getBetTypeBreakdown, getTopHorses, getSignups } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 // ── chart palette (matches site's own gray-900 accent, not a generic blue) ─────
@@ -167,6 +167,26 @@ const BetTypeTooltip = ({ active, payload, label }) => {
   )
 }
 
+const TopHorsesTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
+      <p className="text-gray-500 mb-1">{label}</p>
+      <p className="font-bold text-gray-900">{payload[0].value} win{payload[0].value === 1 ? '' : 's'}</p>
+    </div>
+  )
+}
+
+const SignupsTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
+      <p className="text-gray-500 mb-1">{label}</p>
+      <p className="font-bold text-gray-900">{payload[0].value} signup{payload[0].value === 1 ? '' : 's'}</p>
+    </div>
+  )
+}
+
 function RaceStatusLegend({ data }) {
   return (
     <div className="flex flex-col gap-2">
@@ -186,9 +206,11 @@ function RaceStatusLegend({ data }) {
 // ── report tabs (add a new entry here + a matching block in the render below
 //    when a new chart category — e.g. Races, Betting — is ready) ──────────────
 const DASHBOARD_TABS = [
-  { key: 'financial', label: 'Transaction Breakdown' },
-  { key: 'races',     label: 'Races by Status' },
-  { key: 'bets',      label: 'Bet by Type' },
+  { key: 'financial',  label: 'Transaction Breakdown' },
+  { key: 'races',      label: 'Races by Status' },
+  { key: 'bets',       label: 'Bet by Type' },
+  { key: 'topHorses',  label: 'Top Horses' },
+  { key: 'signups',    label: 'Signups' },
 ]
 
 function DashboardTabBar({ tabs, active, onChange }) {
@@ -224,6 +246,13 @@ export default function AdminDashboard() {
 
   const [betsLoading,  setBetsLoading]  = useState(true)
   const [betTypeData,  setBetTypeData]  = useState([])
+
+  const [topHorsesLoading, setTopHorsesLoading] = useState(true)
+  const [topHorsesData,    setTopHorsesData]    = useState([])
+
+  const [signupsLoading,   setSignupsLoading]   = useState(true)
+  const [signupsTimeframe, setSignupsTimeframe] = useState('1M')
+  const [signupsChartData, setSignupsChartData] = useState([])
 
   // fetch financial summary (takeout revenue + transactions-by-period) for the selected timeframe
   const fetchFinancial = useCallback((timeframe, { silent = false } = {}) => {
@@ -322,6 +351,41 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchBetTypeBreakdown() }, [fetchBetTypeBreakdown])
 
+  // fetch top horses by wins for the "Top Horses" tab — mount + race settlement
+  const fetchTopHorses = useCallback(() => {
+    getTopHorses(10)
+      .then(r => {
+        const horses = r.data.data?.horses || []
+        setTopHorsesData(horses.map(h => ({
+          label: h.horseName,
+          wins:  h.recordWins,
+        })))
+      })
+      .catch(() => {})
+      .finally(() => setTopHorsesLoading(false))
+  }, [])
+
+  useEffect(() => { fetchTopHorses() }, [fetchTopHorses])
+
+  // fetch new-account signups for the "Signups" tab, for the selected timeframe
+  const fetchSignups = useCallback((timeframe) => {
+    const cfg  = TIMEFRAMES[timeframe] || TIMEFRAMES['1M']
+    const from = new Date(Date.now() - cfg.hours * 3600 * 1000).toISOString()
+
+    getSignups({ from, bucket: cfg.bucket })
+      .then(r => {
+        const points = r.data.data?.signupsByPeriod || []
+        setSignupsChartData(points.map(p => ({
+          label: formatBucketLabel(p.timestamp, cfg.bucket),
+          count: p.count || 0,
+        })))
+      })
+      .catch(() => {})
+      .finally(() => setSignupsLoading(false))
+  }, [])
+
+  useEffect(() => { fetchSignups(signupsTimeframe) }, [signupsTimeframe, fetchSignups])
+
   const handleWithdrawalsUpdated = useCallback((data) => {
     if (data?.pendingCount != null)
       setStats(prev => ({ ...prev, pendingW: data.pendingCount }))
@@ -331,7 +395,8 @@ export default function AdminDashboard() {
   const handleFinancialUpdated = useCallback(() => {
     fetchFinancial(timeframe, { silent: true })
     fetchBetTypeBreakdown()
-  }, [timeframe, fetchFinancial, fetchBetTypeBreakdown])
+    fetchTopHorses()
+  }, [timeframe, fetchFinancial, fetchBetTypeBreakdown, fetchTopHorses])
 
   const handleRacesUpdated = useCallback(() => {
     fetchRaces()
@@ -497,6 +562,75 @@ export default function AdminDashboard() {
                     <Tooltip content={<BetTypeTooltip />} cursor={{ fill: CHART_GRID }} />
                     <Bar dataKey="totalAmount" fill={SINGLE_SERIES_COLOR} radius={[4, 4, 0, 0]} maxBarSize={48} />
                   </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'topHorses' && (
+            <div className="p-6">
+              <p className="text-xs text-gray-400 mb-6">Top 10 ngựa theo số trận thắng</p>
+
+              {topHorsesLoading ? (
+                <div className="h-52 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+                </div>
+              ) : topHorsesData.length === 0 ? (
+                <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+                  <Activity size={28} strokeWidth={1.5} />
+                  <p className="text-xs mt-2">Chưa có ngựa nào thắng trận</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={Math.max(210, topHorsesData.length * 34)}>
+                  <BarChart
+                    data={topHorsesData}
+                    layout="vertical"
+                    margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
+                    barCategoryGap="25%"
+                  >
+                    <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="label" width={96} tick={{ fontSize: 12, fill: '#111827' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<TopHorsesTooltip />} cursor={{ fill: CHART_GRID }} />
+                    <Bar dataKey="wins" fill={SINGLE_SERIES_COLOR} radius={[0, 4, 4, 0]} maxBarSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'signups' && (
+            <div className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+                <p className="text-xs text-gray-400">Số tài khoản đăng ký mới theo thời gian</p>
+                <TimeframeToggle value={signupsTimeframe} onChange={setSignupsTimeframe} />
+              </div>
+
+              {signupsLoading ? (
+                <div className="h-52 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+                </div>
+              ) : signupsChartData.length === 0 ? (
+                <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+                  <Activity size={28} strokeWidth={1.5} />
+                  <p className="text-xs mt-2">Chưa có tài khoản mới trong khoảng này</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={210}>
+                  <LineChart data={signupsChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
+                    <Tooltip content={<SignupsTooltip />} cursor={{ stroke: CHART_GRID, strokeWidth: 1 }} />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke={SINGLE_SERIES_COLOR}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4, fill: SINGLE_SERIES_COLOR, stroke: '#fff', strokeWidth: 2 }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               )}
             </div>
