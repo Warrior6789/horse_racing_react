@@ -139,6 +139,26 @@ const TransactionsTooltip = ({ active, payload, label }) => {
   )
 }
 
+function TimeframeToggle({ value, onChange }) {
+  return (
+    <div className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl p-1">
+      {Object.keys(TIMEFRAMES).map(tf => (
+        <button
+          key={tf}
+          onClick={() => onChange(tf)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            value === tf
+              ? 'bg-gray-900 text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-900'
+          }`}
+        >
+          {tf}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function TransactionsLegend() {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -304,21 +324,7 @@ export default function AdminDashboard() {
                 {loading ? 'Loading…' : `Tổng nạp trong kỳ: ${fmtVND(depositTotal)}`}
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl p-1">
-              {Object.keys(TIMEFRAMES).map(tf => (
-                <button
-                  key={tf}
-                  onClick={() => setDepositTimeframe(tf)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    depositTimeframe === tf
-                      ? 'bg-gray-900 text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  {tf}
-                </button>
-              ))}
-            </div>
+            <TimeframeToggle value={depositTimeframe} onChange={setDepositTimeframe} />
           </div>
 
           {loading ? (
@@ -364,7 +370,10 @@ export default function AdminDashboard() {
               <h2 className="text-sm font-bold text-gray-900">Transaction Breakdown</h2>
               <p className="text-xs text-gray-400 mt-0.5">So sánh dòng tiền theo loại giao dịch</p>
             </div>
-            <TransactionsLegend />
+            <div className="flex flex-wrap items-center gap-3">
+              <TransactionsLegend />
+              <TimeframeToggle value={depositTimeframe} onChange={setDepositTimeframe} />
+            </div>
           </div>
 
           {loading ? (
