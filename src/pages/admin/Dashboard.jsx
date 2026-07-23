@@ -7,7 +7,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getActiveHorsesPaged } from '../../api/horses'
 import { getWithdrawalsPaged } from '../../api/withdrawals'
-import { getDashboardFinancial, getRaceStatusBreakdown } from '../../api/dashboard'
+import { getDashboardFinancial, getRaceStatusBreakdown, getBetTypeBreakdown } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 // ── chart palette (matches site's own gray-900 accent, not a generic blue) ─────
@@ -34,6 +34,10 @@ const RACE_STATUS_SERIES = [
   { key: 'Live',          label: 'Live',           color: '#dc2626' }, // red-600
   { key: 'Cancelled',     label: 'Cancelled',      color: '#0891b2' }, // cyan-600
 ]
+
+// ── single-series bar color (nominal categorical — one metric per bet type, so every
+//    bar takes the same slot-1 hue; the chart title names the metric, no legend needed) ──
+const SINGLE_SERIES_COLOR = '#111827' // gray-900 — same accent used elsewhere for primary data
 
 // ── deposit trend timeframes ────────────────────────────────────────────────────
 const TIMEFRAMES = {
@@ -151,6 +155,18 @@ const RaceStatusTooltip = ({ active, payload }) => {
   )
 }
 
+const BetTypeTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  const p = payload[0].payload
+  return (
+    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
+      <p className="text-gray-500 mb-1">{label}</p>
+      <p className="font-bold text-gray-900">{fmtVND(p.totalAmount)}</p>
+      <p className="text-gray-400 mt-0.5">{p.count} bet{p.count === 1 ? '' : 's'}</p>
+    </div>
+  )
+}
+
 function RaceStatusLegend({ data }) {
   return (
     <div className="flex flex-col gap-2">
@@ -172,6 +188,7 @@ function RaceStatusLegend({ data }) {
 const DASHBOARD_TABS = [
   { key: 'financial', label: 'Transaction Breakdown' },
   { key: 'races',     label: 'Races by Status' },
+  { key: 'bets',      label: 'Bet by Type' },
 ]
 
 function DashboardTabBar({ tabs, active, onChange }) {
@@ -204,6 +221,9 @@ export default function AdminDashboard() {
 
   const [racesLoading,   setRacesLoading]   = useState(true)
   const [raceStatusData, setRaceStatusData] = useState([])
+
+  const [betsLoading,  setBetsLoading]  = useState(true)
+  const [betTypeData,  setBetTypeData]  = useState([])
 
   // fetch financial summary (takeout revenue + transactions-by-period) for the selected timeframe
   const fetchFinancial = useCallback((timeframe, { silent = false } = {}) => {
@@ -285,16 +305,33 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchRaceStatus() }, [fetchRaceStatus])
 
+  // fetch bet-type breakdown for the "Bet by Type" tab — mount + race settlement
+  const fetchBetTypeBreakdown = useCallback(() => {
+    getBetTypeBreakdown()
+      .then(r => {
+        const byType = r.data.data?.byType || []
+        setBetTypeData(byType.map(b => ({
+          label:       b.betType,
+          count:       b.count,
+          totalAmount: b.totalAmount,
+        })))
+      })
+      .catch(() => {})
+      .finally(() => setBetsLoading(false))
+  }, [])
+
+  useEffect(() => { fetchBetTypeBreakdown() }, [fetchBetTypeBreakdown])
+
   const handleWithdrawalsUpdated = useCallback((data) => {
     if (data?.pendingCount != null)
       setStats(prev => ({ ...prev, pendingW: data.pendingCount }))
   }, [])
 
   // revenue changes on settlement (takeout), deposits change on completed payments — refetch silently
-  const handleFinancialUpdated = useCallback(
-    () => fetchFinancial(timeframe, { silent: true }),
-    [timeframe, fetchFinancial]
-  )
+  const handleFinancialUpdated = useCallback(() => {
+    fetchFinancial(timeframe, { silent: true })
+    fetchBetTypeBreakdown()
+  }, [timeframe, fetchFinancial, fetchBetTypeBreakdown])
 
   const handleRacesUpdated = useCallback(() => {
     fetchRaces()
@@ -434,6 +471,33 @@ export default function AdminDashboard() {
 
                   <RaceStatusLegend data={raceStatusData} />
                 </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'bets' && (
+            <div className="p-6">
+              <p className="text-xs text-gray-400 mb-6">Tổng tiền cược theo loại cược</p>
+
+              {betsLoading ? (
+                <div className="h-52 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+                </div>
+              ) : betTypeData.length === 0 ? (
+                <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+                  <Activity size={28} strokeWidth={1.5} />
+                  <p className="text-xs mt-2">Chưa có lượt cược nào trong hệ thống</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={210}>
+                  <BarChart data={betTypeData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
+                    <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
+                    <Tooltip content={<BetTypeTooltip />} cursor={{ fill: CHART_GRID }} />
+                    <Bar dataKey="totalAmount" fill={SINGLE_SERIES_COLOR} radius={[4, 4, 0, 0]} maxBarSize={48} />
+                  </BarChart>
+                </ResponsiveContainer>
               )}
             </div>
           )}
