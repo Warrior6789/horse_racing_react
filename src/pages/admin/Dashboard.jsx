@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getActiveHorsesPaged } from '../../api/horses'
 import { getWithdrawalsPaged } from '../../api/withdrawals'
-import { getDashboardFinancial } from '../../api/dashboard'
+import { getDashboardFinancial, getRaceStatusBreakdown } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 // ── chart palette (matches site's own gray-900 accent, not a generic blue) ─────
@@ -21,6 +21,18 @@ const TX_SERIES = [
   { key: 'withdrawal',  label: 'Withdrawal',  color: '#dc2626' }, // red-600
   { key: 'betPayout',   label: 'Bet Payout',  color: '#2563eb' }, // blue-600
   { key: 'prizePayout', label: 'Prize Payout', color: '#d97706' }, // amber-600
+]
+
+// ── race-status palette (fixed order validated colorblind-safe; worst adjacent pair
+//    — amber↔emerald — sits in the 6–8 CVD floor band, so it ships with the legend +
+//    tooltip labels below as required secondary encoding) ──────────────────────────
+const RACE_STATUS_SERIES = [
+  { key: 'Scheduled',     label: 'Scheduled',      color: '#2563eb' }, // blue-600
+  { key: 'BettingOpen',   label: 'Betting Open',   color: '#059669' }, // emerald-600
+  { key: 'BettingClosed', label: 'Betting Closed', color: '#d97706' }, // amber-600
+  { key: 'Finished',      label: 'Finished',       color: '#7c3aed' }, // violet-600
+  { key: 'Live',          label: 'Live',           color: '#dc2626' }, // red-600
+  { key: 'Cancelled',     label: 'Cancelled',      color: '#0891b2' }, // cyan-600
 ]
 
 // ── deposit trend timeframes ────────────────────────────────────────────────────
@@ -125,12 +137,73 @@ function TransactionsLegend() {
   )
 }
 
+const RaceStatusTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
+  const p = payload[0].payload
+  return (
+    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+        <span className="text-gray-500">{p.label}</span>
+      </div>
+      <p className="font-bold text-gray-900 mt-1">{p.count} race{p.count === 1 ? '' : 's'} ({p.percent}%)</p>
+    </div>
+  )
+}
+
+function RaceStatusLegend({ data }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {data.map(s => (
+        <div key={s.key} className="flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+            <span className="text-gray-500">{s.label}</span>
+          </div>
+          <span className="font-semibold text-gray-900">{s.count}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── report tabs (add a new entry here + a matching block in the render below
+//    when a new chart category — e.g. Races, Betting — is ready) ──────────────
+const DASHBOARD_TABS = [
+  { key: 'financial', label: 'Transaction Breakdown' },
+  { key: 'races',     label: 'Races by Status' },
+]
+
+function DashboardTabBar({ tabs, active, onChange }) {
+  return (
+    <div className="flex items-center gap-1 px-4 border-b border-gray-100">
+      {tabs.map(t => (
+        <button
+          key={t.key}
+          onClick={() => onChange(t.key)}
+          className={`px-4 py-3.5 text-sm font-semibold border-b-2 -mb-px transition ${
+            active === t.key
+              ? 'border-gray-900 text-gray-900'
+              : 'border-transparent text-gray-400 hover:text-gray-700'
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── main component ─────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [stats,       setStats]       = useState({ revenue: 0, horses: 0, pendingW: 0 })
   const [loading,     setLoading]     = useState(true)
+  const [activeTab,   setActiveTab]   = useState(DASHBOARD_TABS[0].key)
   const [timeframe,   setTimeframe]   = useState('1M')
   const [txChartData, setTxChartData] = useState([])
+
+  const [racesLoading,   setRacesLoading]   = useState(true)
+  const [raceStatusData, setRaceStatusData] = useState([])
 
   // fetch financial summary (takeout revenue + transactions-by-period) for the selected timeframe
   const fetchFinancial = useCallback((timeframe, { silent = false } = {}) => {
@@ -193,6 +266,25 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchRaces() }, [fetchRaces])
 
+  // fetch race-status breakdown for the "Races by Status" tab — mount + RacesUpdated
+  const fetchRaceStatus = useCallback(() => {
+    getRaceStatusBreakdown()
+      .then(r => {
+        const data     = r.data.data || {}
+        const byStatus = data.byStatus || []
+        const total    = data.totalRaces || 0
+
+        setRaceStatusData(RACE_STATUS_SERIES.map(s => {
+          const count = byStatus.find(b => b.status === s.key)?.count || 0
+          return { ...s, count, percent: total > 0 ? Math.round((count / total) * 100) : 0 }
+        }))
+      })
+      .catch(() => {})
+      .finally(() => setRacesLoading(false))
+  }, [])
+
+  useEffect(() => { fetchRaceStatus() }, [fetchRaceStatus])
+
   const handleWithdrawalsUpdated = useCallback((data) => {
     if (data?.pendingCount != null)
       setStats(prev => ({ ...prev, pendingW: data.pendingCount }))
@@ -204,9 +296,14 @@ export default function AdminDashboard() {
     [timeframe, fetchFinancial]
   )
 
+  const handleRacesUpdated = useCallback(() => {
+    fetchRaces()
+    fetchRaceStatus()
+  }, [fetchRaces, fetchRaceStatus])
+
   // realtime: lắng nghe các event từ backend
   useRaceHub(null, {
-    onRacesUpdated:         fetchRaces,
+    onRacesUpdated:         handleRacesUpdated,
     onWithdrawalsUpdated:   handleWithdrawalsUpdated,
     onTakeoutLedgerUpdated: handleFinancialUpdated,
     onPaymentsUpdated:      handleFinancialUpdated,
@@ -254,40 +351,91 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Transaction Breakdown */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
-            <div>
-              <h2 className="text-sm font-bold text-gray-900">Transaction Breakdown</h2>
-              <p className="text-xs text-gray-400 mt-0.5">So sánh dòng tiền theo loại giao dịch</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <TransactionsLegend />
-              <TimeframeToggle value={timeframe} onChange={setTimeframe} />
-            </div>
-          </div>
+        {/* Reports */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <DashboardTabBar tabs={DASHBOARD_TABS} active={activeTab} onChange={setActiveTab} />
 
-          {loading ? (
-            <div className="h-52 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+          {activeTab === 'financial' && (
+            <div className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+                <p className="text-xs text-gray-400">So sánh dòng tiền theo loại giao dịch</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <TransactionsLegend />
+                  <TimeframeToggle value={timeframe} onChange={setTimeframe} />
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="h-52 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+                </div>
+              ) : txChartData.length === 0 ? (
+                <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+                  <Activity size={28} strokeWidth={1.5} />
+                  <p className="text-xs mt-2">Chưa có giao dịch trong khoảng này</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={210}>
+                  <BarChart data={txChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2} barCategoryGap="20%">
+                    <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
+                    <Tooltip content={<TransactionsTooltip />} cursor={{ fill: CHART_GRID }} shared={false} />
+                    {TX_SERIES.map(s => (
+                      <Bar key={s.key} dataKey={s.key} fill={s.color} radius={[4, 4, 0, 0]} maxBarSize={24} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
-          ) : txChartData.length === 0 ? (
-            <div className="h-52 flex flex-col items-center justify-center text-gray-400">
-              <Activity size={28} strokeWidth={1.5} />
-              <p className="text-xs mt-2">Chưa có giao dịch trong khoảng này</p>
+          )}
+
+          {activeTab === 'races' && (
+            <div className="p-6">
+              <p className="text-xs text-gray-400 mb-6">Phân bổ số lượng race theo trạng thái hiện tại</p>
+
+              {racesLoading ? (
+                <div className="h-52 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+                </div>
+              ) : raceStatusData.every(s => s.count === 0) ? (
+                <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+                  <Activity size={28} strokeWidth={1.5} />
+                  <p className="text-xs mt-2">Chưa có race nào trong hệ thống</p>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center gap-8">
+                  <div className="relative w-full sm:w-56 h-52 shrink-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={raceStatusData}
+                          dataKey="count"
+                          nameKey="label"
+                          innerRadius="62%"
+                          outerRadius="100%"
+                          paddingAngle={2}
+                          stroke="none"
+                        >
+                          {raceStatusData.map(s => (
+                            <Cell key={s.key} fill={s.count > 0 ? s.color : CHART_GRID} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<RaceStatusTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <p className="text-2xl font-extrabold text-gray-900 leading-tight">
+                        {raceStatusData.reduce((sum, s) => sum + s.count, 0)}
+                      </p>
+                      <p className="text-[11px] text-gray-400">Total Races</p>
+                    </div>
+                  </div>
+
+                  <RaceStatusLegend data={raceStatusData} />
+                </div>
+              )}
             </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={210}>
-              <BarChart data={txChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
-                <Tooltip content={<TransactionsTooltip />} cursor={{ fill: CHART_GRID }} shared={false} />
-                {TX_SERIES.map(s => (
-                  <Bar key={s.key} dataKey={s.key} fill={s.color} radius={[4, 4, 0, 0]} maxBarSize={24} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
           )}
         </div>
 
