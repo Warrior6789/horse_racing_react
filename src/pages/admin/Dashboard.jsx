@@ -1,20 +1,28 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, BarChart, Bar, LabelList, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, Clock, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getActiveHorsesPaged } from '../../api/horses'
 import { getWithdrawalsPaged } from '../../api/withdrawals'
-import { getDashboardSummary } from '../../api/dashboard'
+import { getDashboardFinancial } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
-// ── chart palette (sequential blue — single-series magnitude) ──────────────────
-const CHART_SERIES    = '#2a78d6'
-const CHART_GRID      = '#e1e0d9'
-const CHART_AXIS_TEXT = '#898781'
+// ── chart palette (matches site's own gray-900 accent, not a generic blue) ─────
+const CHART_SERIES    = '#111827' // Tailwind gray-900 — same as active nav/buttons across the app
+const CHART_GRID      = '#f3f4f6' // Tailwind gray-100 — same as card borders
+const CHART_AXIS_TEXT = '#9ca3af' // Tailwind gray-400 — same as other muted text in this page
+
+// ── deposit trend timeframes ────────────────────────────────────────────────────
+const TIMEFRAMES = {
+  '1D': { hours: 24,       bucket: 'hour'  },
+  '1W': { hours: 24 * 7,   bucket: 'day'   },
+  '1M': { hours: 24 * 30,  bucket: 'day'   },
+  '1Y': { hours: 24 * 365, bucket: 'month' },
+}
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function fmtVND(n) {
@@ -23,9 +31,17 @@ function fmtVND(n) {
   return `${n.toLocaleString()} VND`
 }
 
-function dateLabel(iso) {
+function formatBucketLabel(iso, bucket) {
   const d = new Date(iso)
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  if (bucket === 'hour')  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  if (bucket === 'month') return `Th ${d.getMonth() + 1}`
+  return `${d.getDate()}/${d.getMonth() + 1}`
+}
+
+function yTickFmt(v) {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`
+  if (v >= 1_000)     return `${(v / 1_000).toFixed(0)}K`
+  return v
 }
 
 // ── sub-components ─────────────────────────────────────────────────────────────
@@ -83,7 +99,7 @@ function LiveEventRow({ race, onClick }) {
   )
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
+const DepositTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
@@ -96,50 +112,43 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-const TopHorsesTooltip = ({ active, payload }) => {
-  if (!active || !payload?.length) return null
-  const p = payload[0].payload
-  return (
-    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
-      <p className="text-gray-500 mb-1">{p.horseName}</p>
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CHART_SERIES }} />
-        <p className="font-bold text-gray-900">{p.recordWins} wins</p>
-      </div>
-    </div>
-  )
-}
-
 // ── main component ─────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate = useNavigate()
 
-  const [stats,      setStats]      = useState({ revenue: 0, horses: 0, pendingW: 0 })
-  const [liveRaces,  setLiveRaces]  = useState([])
-  const [chartData,  setChartData]  = useState([])
-  const [topHorses,  setTopHorses]  = useState([])
-  const [loading,    setLoading]    = useState(true)
+  const [stats,             setStats]             = useState({ revenue: 0, horses: 0, pendingW: 0 })
+  const [liveRaces,         setLiveRaces]         = useState([])
+  const [loading,           setLoading]           = useState(true)
+  const [depositTimeframe,  setDepositTimeframe]  = useState('1M')
+  const [depositChartData,  setDepositChartData]  = useState([])
+  const [depositTotal,      setDepositTotal]      = useState(0)
 
-  // fetch aggregated dashboard summary (real takeout revenue, revenue-by-day, top horses)
-  const fetchSummary = useCallback(({ silent = false } = {}) => {
-    getDashboardSummary()
+  // fetch financial summary (takeout revenue + deposits-by-period) for the selected timeframe
+  const fetchFinancial = useCallback((timeframe, { silent = false } = {}) => {
+    const cfg  = TIMEFRAMES[timeframe] || TIMEFRAMES['1M']
+    const from = new Date(Date.now() - cfg.hours * 3600 * 1000).toISOString()
+
+    getDashboardFinancial({ from, bucket: cfg.bucket })
       .then(r => {
-        const data = r.data.data || {}
+        const data      = r.data.data || {}
         const financial = data.financial || {}
+        const points    = data.depositsByPeriod || []
+
         setStats(prev => ({ ...prev, revenue: financial.totalTakeoutRevenue || 0 }))
-        setChartData((data.revenueByDay || []).map(p => ({
-          date: dateLabel(p.date),
-          revenue: p.takeoutAmount || 0,
+        setDepositChartData(points.map(p => ({
+          label:  formatBucketLabel(p.timestamp, cfg.bucket),
+          amount: p.amount || 0,
         })))
-        setTopHorses(data.topHorses || [])
+        setDepositTotal(points.reduce((s, p) => s + (p.amount || 0), 0))
       })
       .catch(() => {})
       .finally(() => { if (!silent) setLoading(false) })
   }, [])
 
-  // fetch once on mount (dashboard summary + horses + withdrawals)
+  useEffect(() => { fetchFinancial(depositTimeframe) }, [depositTimeframe, fetchFinancial])
+
+  // fetch once on mount (horses + withdrawals)
   useEffect(() => {
-    fetchSummary()
     Promise.allSettled([
       getActiveHorsesPaged({ page: 1, pageSize: 1 }),
       getWithdrawalsPaged({ page: 1, pageSize: 1 }),
@@ -157,7 +166,7 @@ export default function AdminDashboard() {
         setStats(prev => ({ ...prev, pendingW: total }))
       }
     })
-  }, [fetchSummary])
+  }, [])
 
   // fetch races — called on mount + mỗi khi SignalR báo RacesUpdated
   const fetchRaces = useCallback(() => {
@@ -181,21 +190,19 @@ export default function AdminDashboard() {
       setStats(prev => ({ ...prev, pendingW: data.pendingCount }))
   }, [])
 
-  // revenue/top-horses come from settlement (takeout), not from deposits — refetch summary silently
-  const handleTakeoutUpdated = useCallback(() => fetchSummary({ silent: true }), [fetchSummary])
+  // revenue changes on settlement (takeout), deposits change on completed payments — refetch silently
+  const handleFinancialUpdated = useCallback(
+    () => fetchFinancial(depositTimeframe, { silent: true }),
+    [depositTimeframe, fetchFinancial]
+  )
 
   // realtime: lắng nghe các event từ backend
   useRaceHub(null, {
-    onRacesUpdated:        fetchRaces,
-    onWithdrawalsUpdated:  handleWithdrawalsUpdated,
-    onTakeoutLedgerUpdated: handleTakeoutUpdated,
+    onRacesUpdated:         fetchRaces,
+    onWithdrawalsUpdated:   handleWithdrawalsUpdated,
+    onTakeoutLedgerUpdated: handleFinancialUpdated,
+    onPaymentsUpdated:      handleFinancialUpdated,
   })
-
-  const yTickFmt = (v) => {
-    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`
-    if (v >= 1_000)     return `${(v / 1_000).toFixed(0)}K`
-    return v
-  }
 
   return (
     <DashboardLayout title="Overview of platform activity">
@@ -239,130 +246,104 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Main 2-col grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-          {/* Financial chart */}
-          <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-sm font-bold text-gray-900">Financial Performance</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Takeout revenue by day</p>
-              </div>
-              <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg font-medium">VND</span>
+        {/* Deposit Trend */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Deposit Trend</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {loading ? 'Loading…' : `Tổng nạp trong kỳ: ${fmtVND(depositTotal)}`}
+              </p>
             </div>
+            <div className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl p-1">
+              {Object.keys(TIMEFRAMES).map(tf => (
+                <button
+                  key={tf}
+                  onClick={() => setDepositTimeframe(tf)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    depositTimeframe === tf
+                      ? 'bg-gray-900 text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {tf}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="h-52 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+            </div>
+          ) : depositChartData.length === 0 ? (
+            <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+              <TrendingUp size={28} strokeWidth={1.5} />
+              <p className="text-xs mt-2">Chưa có giao dịch nạp trong khoảng này</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={210}>
+              <AreaChart data={depositChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="depositGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor={CHART_SERIES} stopOpacity={0.10} />
+                    <stop offset="95%" stopColor={CHART_SERIES} stopOpacity={0}    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
+                <Tooltip content={<DepositTooltip />} cursor={{ stroke: CHART_GRID, strokeWidth: 1 }} />
+                <Area
+                  type="monotone"
+                  dataKey="amount"
+                  stroke={CHART_SERIES}
+                  strokeWidth={2}
+                  fill="url(#depositGrad)"
+                  dot={false}
+                  activeDot={{ r: 4, fill: CHART_SERIES, stroke: '#fff', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Live Oversight */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-gray-900">Live Oversight</h2>
+            <Clock size={16} className="text-gray-300" />
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="h-52 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+              <div className="flex items-center justify-center h-32">
+                <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+              </div>
+            ) : liveRaces.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+                <Activity size={28} strokeWidth={1.5} />
+                <p className="text-xs mt-2">No active races right now</p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={210}>
-                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={CHART_SERIES} stopOpacity={0.10} />
-                      <stop offset="95%" stopColor={CHART_SERIES} stopOpacity={0}    />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
-                  <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_GRID, strokeWidth: 1 }} />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke={CHART_SERIES}
-                    strokeWidth={2}
-                    fill="url(#revGrad)"
-                    dot={false}
-                    activeDot={{ r: 4, fill: CHART_SERIES, stroke: '#fff', strokeWidth: 2 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              liveRaces.map(race => (
+                <LiveEventRow
+                  key={race.raceId}
+                  race={race}
+                  onClick={() => navigate(`/admin/races`)}
+                />
+              ))
             )}
           </div>
 
-          {/* Live Oversight */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-gray-900">Live Oversight</h2>
-              <Clock size={16} className="text-gray-300" />
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
-                </div>
-              ) : liveRaces.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-gray-400">
-                  <Activity size={28} strokeWidth={1.5} />
-                  <p className="text-xs mt-2">No active races right now</p>
-                </div>
-              ) : (
-                liveRaces.map(race => (
-                  <LiveEventRow
-                    key={race.raceId}
-                    race={race}
-                    onClick={() => navigate(`/admin/races`)}
-                  />
-                ))
-              )}
-            </div>
-
-            <div className="px-4 py-3 border-t border-gray-50">
-              <button
-                onClick={() => navigate('/admin/races')}
-                className="w-full text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                View all races →
-              </button>
-            </div>
+          <div className="px-4 py-3 border-t border-gray-50">
+            <button
+              onClick={() => navigate('/admin/races')}
+              className="w-full text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              View all races →
+            </button>
           </div>
-        </div>
-
-        {/* Top Horses */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-sm font-bold text-gray-900">Top Horses</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Ranked by total career wins</p>
-            </div>
-          </div>
-          {loading ? (
-            <div className="h-40 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
-            </div>
-          ) : topHorses.length === 0 ? (
-            <div className="h-40 flex flex-col items-center justify-center text-gray-400">
-              <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>pets</span>
-              <p className="text-xs mt-2">No finished races yet</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={topHorses} layout="vertical" margin={{ top: 4, right: 28, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} horizontal={false} />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
-                <YAxis
-                  type="category"
-                  dataKey="horseName"
-                  width={140}
-                  tick={{ fontSize: 12, fill: '#374151' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<TopHorsesTooltip />} cursor={{ fill: CHART_SERIES, fillOpacity: 0.06 }} />
-                <Bar dataKey="recordWins" fill={CHART_SERIES} radius={[0, 4, 4, 0]} barSize={18}>
-                  <LabelList
-                    dataKey="recordWins"
-                    position="right"
-                    formatter={(v) => `${v}`}
-                    style={{ fill: '#52514e', fontSize: 11, fontWeight: 600 }}
-                  />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
         </div>
 
         {/* Quick actions */}
