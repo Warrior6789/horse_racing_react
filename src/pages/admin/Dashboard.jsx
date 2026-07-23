@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar, LabelList, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, Clock, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
@@ -10,6 +10,11 @@ import { getActiveHorsesPaged } from '../../api/horses'
 import { getWithdrawalsPaged } from '../../api/withdrawals'
 import { getDashboardSummary } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
+
+// ── chart palette (sequential blue — single-series magnitude) ──────────────────
+const CHART_SERIES    = '#2a78d6'
+const CHART_GRID      = '#e1e0d9'
+const CHART_AXIS_TEXT = '#898781'
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 function fmtVND(n) {
@@ -83,7 +88,24 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
       <p className="text-gray-500 mb-1">{label}</p>
-      <p className="font-bold text-gray-900">{fmtVND(payload[0].value)}</p>
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CHART_SERIES }} />
+        <p className="font-bold text-gray-900">{fmtVND(payload[0].value)}</p>
+      </div>
+    </div>
+  )
+}
+
+const TopHorsesTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
+  const p = payload[0].payload
+  return (
+    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
+      <p className="text-gray-500 mb-1">{p.horseName}</p>
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CHART_SERIES }} />
+        <p className="font-bold text-gray-900">{p.recordWins} wins</p>
+      </div>
     </div>
   )
 }
@@ -238,22 +260,22 @@ export default function AdminDashboard() {
                 <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#111827" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#111827" stopOpacity={0}    />
+                      <stop offset="5%"  stopColor={CHART_SERIES} stopOpacity={0.10} />
+                      <stop offset="95%" stopColor={CHART_SERIES} stopOpacity={0}    />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={48} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: CHART_GRID, strokeWidth: 1 }} />
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#111827"
+                    stroke={CHART_SERIES}
                     strokeWidth={2}
                     fill="url(#revGrad)"
                     dot={false}
-                    activeDot={{ r: 4, fill: '#111827' }}
+                    activeDot={{ r: 4, fill: CHART_SERIES, stroke: '#fff', strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -318,9 +340,9 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={topHorses} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <BarChart data={topHorses} layout="vertical" margin={{ top: 4, right: 28, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} horizontal={false} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
                 <YAxis
                   type="category"
                   dataKey="horseName"
@@ -329,8 +351,15 @@ export default function AdminDashboard() {
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip formatter={(v) => [`${v} wins`, 'Record wins']} />
-                <Bar dataKey="recordWins" fill="#111827" radius={[0, 6, 6, 0]} barSize={18} />
+                <Tooltip content={<TopHorsesTooltip />} cursor={{ fill: CHART_SERIES, fillOpacity: 0.06 }} />
+                <Bar dataKey="recordWins" fill={CHART_SERIES} radius={[0, 4, 4, 0]} barSize={18}>
+                  <LabelList
+                    dataKey="recordWins"
+                    position="right"
+                    formatter={(v) => `${v}`}
+                    style={{ fill: '#52514e', fontSize: 11, fontWeight: 600 }}
+                  />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
