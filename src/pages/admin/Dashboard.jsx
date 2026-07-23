@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, Clock, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
@@ -15,6 +15,15 @@ import { useRaceHub } from '../../hooks/useRaceHub'
 const CHART_SERIES    = '#111827' // Tailwind gray-900 — same as active nav/buttons across the app
 const CHART_GRID      = '#f3f4f6' // Tailwind gray-100 — same as card borders
 const CHART_AXIS_TEXT = '#9ca3af' // Tailwind gray-400 — same as other muted text in this page
+
+// ── transaction-type palette (reuses the same 4 accents as the stat cards above,
+//    validated colorblind-safe in fixed order: deposit → withdrawal → bet payout → prize payout) ─
+const TX_SERIES = [
+  { key: 'deposit',     label: 'Deposit',     color: '#059669' }, // emerald-600
+  { key: 'withdrawal',  label: 'Withdrawal',  color: '#dc2626' }, // red-600
+  { key: 'betPayout',   label: 'Bet Payout',  color: '#2563eb' }, // blue-600
+  { key: 'prizePayout', label: 'Prize Payout', color: '#d97706' }, // amber-600
+]
 
 // ── deposit trend timeframes ────────────────────────────────────────────────────
 const TIMEFRAMES = {
@@ -112,6 +121,37 @@ const DepositTooltip = ({ active, payload, label }) => {
   )
 }
 
+const TransactionsTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs space-y-1.5 min-w-[160px]">
+      <p className="text-gray-500 mb-1">{label}</p>
+      {payload.map(p => (
+        <div key={p.dataKey} className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+            <span className="text-gray-500">{TX_SERIES.find(s => s.key === p.dataKey)?.label}</span>
+          </div>
+          <span className="font-bold text-gray-900">{fmtVND(p.value)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TransactionsLegend() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+      {TX_SERIES.map(s => (
+        <div key={s.key} className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+          <span className="text-xs text-gray-500">{s.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── main component ─────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -122,17 +162,19 @@ export default function AdminDashboard() {
   const [depositTimeframe,  setDepositTimeframe]  = useState('1M')
   const [depositChartData,  setDepositChartData]  = useState([])
   const [depositTotal,      setDepositTotal]      = useState(0)
+  const [txChartData,       setTxChartData]       = useState([])
 
-  // fetch financial summary (takeout revenue + deposits-by-period) for the selected timeframe
+  // fetch financial summary (takeout revenue + deposits-by-period + transactions-by-period) for the selected timeframe
   const fetchFinancial = useCallback((timeframe, { silent = false } = {}) => {
     const cfg  = TIMEFRAMES[timeframe] || TIMEFRAMES['1M']
     const from = new Date(Date.now() - cfg.hours * 3600 * 1000).toISOString()
 
     getDashboardFinancial({ from, bucket: cfg.bucket })
       .then(r => {
-        const data      = r.data.data || {}
-        const financial = data.financial || {}
-        const points    = data.depositsByPeriod || []
+        const data       = r.data.data || {}
+        const financial  = data.financial || {}
+        const points     = data.depositsByPeriod || []
+        const txPoints   = data.transactionsByPeriod || []
 
         setStats(prev => ({ ...prev, revenue: financial.totalTakeoutRevenue || 0 }))
         setDepositChartData(points.map(p => ({
@@ -140,6 +182,13 @@ export default function AdminDashboard() {
           amount: p.amount || 0,
         })))
         setDepositTotal(points.reduce((s, p) => s + (p.amount || 0), 0))
+        setTxChartData(txPoints.map(p => ({
+          label:        formatBucketLabel(p.timestamp, cfg.bucket),
+          deposit:      p.deposit || 0,
+          withdrawal:   p.withdrawal || 0,
+          betPayout:    p.betPayout || 0,
+          prizePayout:  p.prizePayout || 0,
+        })))
       })
       .catch(() => {})
       .finally(() => { if (!silent) setLoading(false) })
@@ -304,6 +353,40 @@ export default function AdminDashboard() {
                   activeDot={{ r: 4, fill: CHART_SERIES, stroke: '#fff', strokeWidth: 2 }}
                 />
               </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Transaction Breakdown */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Transaction Breakdown</h2>
+              <p className="text-xs text-gray-400 mt-0.5">So sánh dòng tiền theo loại giao dịch</p>
+            </div>
+            <TransactionsLegend />
+          </div>
+
+          {loading ? (
+            <div className="h-52 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+            </div>
+          ) : txChartData.length === 0 ? (
+            <div className="h-52 flex flex-col items-center justify-center text-gray-400">
+              <Activity size={28} strokeWidth={1.5} />
+              <p className="text-xs mt-2">Chưa có giao dịch trong khoảng này</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={210}>
+              <BarChart data={txChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={2} barCategoryGap="20%">
+                <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
+                <Tooltip content={<TransactionsTooltip />} cursor={{ fill: CHART_GRID }} />
+                {TX_SERIES.map(s => (
+                  <Bar key={s.key} dataKey={s.key} fill={s.color} radius={[4, 4, 0, 0]} maxBarSize={24} />
+                ))}
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>
