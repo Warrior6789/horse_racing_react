@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { TrendingUp, Clock, AlertCircle, Activity } from 'lucide-react'
+import { TrendingUp, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getRacesPaged } from '../../api/races'
 import { getActiveHorsesPaged } from '../../api/horses'
@@ -75,38 +74,6 @@ function StatCard({ title, value, sub, icon, accent }) {
   )
 }
 
-const LIVE_STATUS_STYLE = {
-  Live:          'bg-red-100 text-red-700',
-  BettingOpen:   'bg-emerald-100 text-emerald-700',
-  BettingClosed: 'bg-orange-100 text-orange-700',
-  Scheduled:     'bg-gray-100 text-gray-600',
-}
-
-function LiveEventRow({ race, onClick }) {
-  const s   = race.status || 'Scheduled'
-  const cls = LIVE_STATUS_STYLE[s] || LIVE_STATUS_STYLE.Scheduled
-  const isLive = s === 'Live'
-  return (
-    <button
-      onClick={onClick}
-      className="w-full text-left px-3 py-2.5"
-    >
-      <div className="bg-gray-100/80 backdrop-blur-md border border-gray-200/60 shadow-sm rounded-xl px-4 py-3 hover:bg-gray-100 transition-colors">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-semibold text-gray-900 truncate mr-2">
-          {race.raceName || `Race #${race.raceNumber}`}
-        </span>
-        <span className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full flex items-center gap-1 ${cls}`}>
-          {isLive && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
-          {s}
-        </span>
-      </div>
-      <p className="text-xs text-gray-500 truncate">{race.racecourseName || '—'}</p>
-      </div>
-    </button>
-  )
-}
-
 const TransactionsTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -160,10 +127,7 @@ function TransactionsLegend() {
 
 // ── main component ─────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
-  const navigate = useNavigate()
-
   const [stats,       setStats]       = useState({ revenue: 0, horses: 0, pendingW: 0 })
-  const [liveRaces,   setLiveRaces]   = useState([])
   const [loading,     setLoading]     = useState(true)
   const [timeframe,   setTimeframe]   = useState('1M')
   const [txChartData, setTxChartData] = useState([])
@@ -215,16 +179,13 @@ export default function AdminDashboard() {
     })
   }, [])
 
-  // fetch races — called on mount + mỗi khi SignalR báo RacesUpdated
+  // fetch total race count — called on mount + mỗi khi SignalR báo RacesUpdated
   const fetchRaces = useCallback(() => {
-    getRacesPaged({ page: 1, pageSize: 500 })
+    getRacesPaged({ page: 1, pageSize: 1 })
       .then(res => {
-        const all = res.data.data?.items || []
-        const active = all.filter(r => ['Live', 'BettingOpen', 'BettingClosed'].includes(r.status))
-        setLiveRaces(active.slice(0, 8))
         setStats(prev => ({
           ...prev,
-          activeRaces: res.data.data?.totalCount || all.length,
+          activeRaces: res.data.data?.totalCount ?? 0,
         }))
       })
       .catch(() => {})
@@ -321,75 +282,13 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
-                <Tooltip content={<TransactionsTooltip />} cursor={{ fill: CHART_GRID }} />
+                <Tooltip content={<TransactionsTooltip />} cursor={{ fill: CHART_GRID }} shared={false} />
                 {TX_SERIES.map(s => (
                   <Bar key={s.key} dataKey={s.key} fill={s.color} radius={[4, 4, 0, 0]} maxBarSize={24} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
-
-        {/* Live Oversight */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-gray-900">Live Oversight</h2>
-            <Clock size={16} className="text-gray-300" />
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
-              </div>
-            ) : liveRaces.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-400">
-                <Activity size={28} strokeWidth={1.5} />
-                <p className="text-xs mt-2">No active races right now</p>
-              </div>
-            ) : (
-              liveRaces.map(race => (
-                <LiveEventRow
-                  key={race.raceId}
-                  race={race}
-                  onClick={() => navigate(`/admin/races`)}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="px-4 py-3 border-t border-gray-50">
-            <button
-              onClick={() => navigate('/admin/races')}
-              className="w-full text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
-            >
-              View all races →
-            </button>
-          </div>
-        </div>
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Manage Accounts',    icon: 'manage_accounts', to: '/admin/accounts'   },
-            { label: 'Manage Races',       icon: 'sports',          to: '/admin/races'      },
-            { label: 'Withdrawals',        icon: 'payments',        to: '/admin/withdrawals', badge: stats.pendingW > 0 ? stats.pendingW : null },
-            { label: 'Configuration',      icon: 'settings',        to: '/admin/config'     },
-          ].map(a => (
-            <button
-              key={a.to}
-              onClick={() => navigate(a.to)}
-              className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 hover:border-gray-300 hover:shadow-md transition-all text-left"
-            >
-              <span className="material-symbols-outlined text-gray-400 shrink-0" style={{ fontSize: '20px' }}>{a.icon}</span>
-              <span className="text-sm font-semibold text-gray-700">{a.label}</span>
-              {a.badge != null && (
-                <span className="absolute top-3 right-3 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {a.badge > 9 ? '9+' : a.badge}
-                </span>
-              )}
-            </button>
-          ))}
         </div>
 
       </div>
