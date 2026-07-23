@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { TrendingUp, Clock, AlertCircle, Activity } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
@@ -12,7 +12,6 @@ import { getDashboardFinancial } from '../../api/dashboard'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 // ── chart palette (matches site's own gray-900 accent, not a generic blue) ─────
-const CHART_SERIES    = '#111827' // Tailwind gray-900 — same as active nav/buttons across the app
 const CHART_GRID      = '#f3f4f6' // Tailwind gray-100 — same as card borders
 const CHART_AXIS_TEXT = '#9ca3af' // Tailwind gray-400 — same as other muted text in this page
 
@@ -108,19 +107,6 @@ function LiveEventRow({ race, onClick }) {
   )
 }
 
-const DepositTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-4 py-3 text-xs">
-      <p className="text-gray-500 mb-1">{label}</p>
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CHART_SERIES }} />
-        <p className="font-bold text-gray-900">{fmtVND(payload[0].value)}</p>
-      </div>
-    </div>
-  )
-}
-
 const TransactionsTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -176,15 +162,13 @@ function TransactionsLegend() {
 export default function AdminDashboard() {
   const navigate = useNavigate()
 
-  const [stats,             setStats]             = useState({ revenue: 0, horses: 0, pendingW: 0 })
-  const [liveRaces,         setLiveRaces]         = useState([])
-  const [loading,           setLoading]           = useState(true)
-  const [depositTimeframe,  setDepositTimeframe]  = useState('1M')
-  const [depositChartData,  setDepositChartData]  = useState([])
-  const [depositTotal,      setDepositTotal]      = useState(0)
-  const [txChartData,       setTxChartData]       = useState([])
+  const [stats,       setStats]       = useState({ revenue: 0, horses: 0, pendingW: 0 })
+  const [liveRaces,   setLiveRaces]   = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [timeframe,   setTimeframe]   = useState('1M')
+  const [txChartData, setTxChartData] = useState([])
 
-  // fetch financial summary (takeout revenue + deposits-by-period + transactions-by-period) for the selected timeframe
+  // fetch financial summary (takeout revenue + transactions-by-period) for the selected timeframe
   const fetchFinancial = useCallback((timeframe, { silent = false } = {}) => {
     const cfg  = TIMEFRAMES[timeframe] || TIMEFRAMES['1M']
     const from = new Date(Date.now() - cfg.hours * 3600 * 1000).toISOString()
@@ -193,15 +177,9 @@ export default function AdminDashboard() {
       .then(r => {
         const data       = r.data.data || {}
         const financial  = data.financial || {}
-        const points     = data.depositsByPeriod || []
         const txPoints   = data.transactionsByPeriod || []
 
         setStats(prev => ({ ...prev, revenue: financial.totalTakeoutRevenue || 0 }))
-        setDepositChartData(points.map(p => ({
-          label:  formatBucketLabel(p.timestamp, cfg.bucket),
-          amount: p.amount || 0,
-        })))
-        setDepositTotal(points.reduce((s, p) => s + (p.amount || 0), 0))
         setTxChartData(txPoints.map(p => ({
           label:        formatBucketLabel(p.timestamp, cfg.bucket),
           deposit:      p.deposit || 0,
@@ -214,7 +192,7 @@ export default function AdminDashboard() {
       .finally(() => { if (!silent) setLoading(false) })
   }, [])
 
-  useEffect(() => { fetchFinancial(depositTimeframe) }, [depositTimeframe, fetchFinancial])
+  useEffect(() => { fetchFinancial(timeframe) }, [timeframe, fetchFinancial])
 
   // fetch once on mount (horses + withdrawals)
   useEffect(() => {
@@ -261,8 +239,8 @@ export default function AdminDashboard() {
 
   // revenue changes on settlement (takeout), deposits change on completed payments — refetch silently
   const handleFinancialUpdated = useCallback(
-    () => fetchFinancial(depositTimeframe, { silent: true }),
-    [depositTimeframe, fetchFinancial]
+    () => fetchFinancial(timeframe, { silent: true }),
+    [timeframe, fetchFinancial]
   )
 
   // realtime: lắng nghe các event từ backend
@@ -315,54 +293,6 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Deposit Trend */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-            <div>
-              <h2 className="text-sm font-bold text-gray-900">Deposit Trend</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {loading ? 'Loading…' : `Tổng nạp trong kỳ: ${fmtVND(depositTotal)}`}
-              </p>
-            </div>
-            <TimeframeToggle value={depositTimeframe} onChange={setDepositTimeframe} />
-          </div>
-
-          {loading ? (
-            <div className="h-52 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
-            </div>
-          ) : depositChartData.length === 0 ? (
-            <div className="h-52 flex flex-col items-center justify-center text-gray-400">
-              <TrendingUp size={28} strokeWidth={1.5} />
-              <p className="text-xs mt-2">Chưa có giao dịch nạp trong khoảng này</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={210}>
-              <AreaChart data={depositChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="depositGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={CHART_SERIES} stopOpacity={0.10} />
-                    <stop offset="95%" stopColor={CHART_SERIES} stopOpacity={0}    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="none" stroke={CHART_GRID} vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={yTickFmt} tick={{ fontSize: 11, fill: CHART_AXIS_TEXT }} axisLine={false} tickLine={false} width={48} />
-                <Tooltip content={<DepositTooltip />} cursor={{ stroke: CHART_GRID, strokeWidth: 1 }} />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke={CHART_SERIES}
-                  strokeWidth={2}
-                  fill="url(#depositGrad)"
-                  dot={false}
-                  activeDot={{ r: 4, fill: CHART_SERIES, stroke: '#fff', strokeWidth: 2 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
         {/* Transaction Breakdown */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
@@ -372,7 +302,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <TransactionsLegend />
-              <TimeframeToggle value={depositTimeframe} onChange={setDepositTimeframe} />
+              <TimeframeToggle value={timeframe} onChange={setTimeframe} />
             </div>
           </div>
 
