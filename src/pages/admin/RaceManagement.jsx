@@ -175,7 +175,7 @@ export default function RaceManagement() {
     setError(''); setSaving(true)
     try {
       if (editId) {
-        const toISO = (s) => s.length === 16 ? s + ':00' : s
+        const toISO = (s) => new Date(s).toISOString()
         const startTimeChanged = form.startTime && form.startTime !== origStartTime
         if (startTimeChanged) {
           const minAllowed = Date.now() + 90 * 60 * 1000
@@ -201,7 +201,7 @@ export default function RaceManagement() {
         if (form.raceName) fd.append('RaceName', form.raceName)
         fd.append('RacecourseId', form.racecourseId)
         fd.append('RaceNumber', form.raceNumber)
-        fd.append('StartTime', form.startTime.length === 16 ? form.startTime + ':00' : form.startTime)
+        fd.append('StartTime', new Date(form.startTime).toISOString())
         if (form.trackLength)     fd.append('TrackLength', form.trackLength)
         if (form.maxParticipants) fd.append('MaxParticipants', form.maxParticipants)
         if (imageFile) fd.append('Image', imageFile)
