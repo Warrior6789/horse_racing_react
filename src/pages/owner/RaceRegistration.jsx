@@ -17,13 +17,13 @@ function Highlight({ text, query }) {
 
 function rawDate(st) {
   if (!st) return null
-  const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
-  return new Date(y, mo - 1, d)
+  return new Date(st)
 }
 function rawTimeStr(st) {
-  if (!st || st.length < 16) return null
-  const h = parseInt(st.substring(11, 13), 10)
-  const m = st.substring(14, 16)
+  if (!st) return null
+  const d = new Date(st)
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
   return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
 }
 import {

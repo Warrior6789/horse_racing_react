@@ -9,6 +9,23 @@ import { useRaceHub } from '../../hooks/useRaceHub'
 
 const blank = { raceName: '', racecourseId: '', raceNumber: '', startTime: '', trackLength: '', maxParticipants: '' }
 
+const pad2 = (n) => String(n).padStart(2, '0')
+
+function toLocalInputValue(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+function toLocalDisplay(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  const h24 = d.getHours()
+  const h12 = h24 % 12 || 12
+  const ampm = h24 < 12 ? 'AM' : 'PM'
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(h12)}:${pad2(d.getMinutes())} ${ampm}`
+}
+
 const RACE_STATUS = {
   Scheduled:     { cls: 'bg-amber-50 text-amber-700 ring-amber-500/20',       dot: false, label: 'Scheduled'      },
   BettingOpen:   { cls: 'bg-emerald-50 text-emerald-700 ring-emerald-500/20', dot: true,  label: 'Betting Open'   },
@@ -128,7 +145,7 @@ export default function RaceManagement() {
   const validGuid = (id) => (id && id !== '00000000-0000-0000-0000-000000000000') ? id.toLowerCase() : null
 
   const openEdit = (r) => {
-    const st = r.startTime?.slice(0, 16) || ''
+    const st = toLocalInputValue(r.startTime)
     setOrigStartTime(st)
     const resolvedRacecourseId =
       validGuid(r.racecourseId) ||
@@ -319,7 +336,7 @@ export default function RaceManagement() {
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '14px' }}>schedule</span>
-                      {r.startTime ? r.startTime.slice(0, 16).replace('T', ' ') + ' ' + (parseInt(r.startTime.slice(11, 13)) < 12 ? 'AM' : 'PM') : '—'}
+                      {toLocalDisplay(r.startTime)}
                     </div>
                   </div>
                   <div className="flex gap-2 pt-1 border-t border-gray-100">
@@ -408,7 +425,7 @@ export default function RaceManagement() {
                       </td>
 
                       <td className="py-4 px-4 text-xs text-gray-500 whitespace-nowrap">
-                        {r.startTime ? r.startTime.slice(0, 16).replace('T', ' ') + ' ' + (parseInt(r.startTime.slice(11, 13)) < 12 ? 'AM' : 'PM') : '—'}
+                        {toLocalDisplay(r.startTime)}
                       </td>
 
                       <td className="py-4 px-4 text-xs text-gray-500 font-medium text-center">
