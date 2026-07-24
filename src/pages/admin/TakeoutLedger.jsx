@@ -50,7 +50,7 @@ export default function TakeoutLedger() {
     load(page, betType, true)
   }, [load, page, betType])
 
-  useRaceHub(null, { onTakeoutLedgerUpdated: handleTakeoutLedgerUpdated })
+  useRaceHub(null, { onTakeoutLedgerUpdated: handleTakeoutLedgerUpdated, onRacesUpdated: handleTakeoutLedgerUpdated })
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 

@@ -71,6 +71,11 @@ export default function AdminRefereeReports() {
   const [selectedRace, setSelectedRace]     = useState(null)
   const [raceSummaries, setRaceSummaries]   = useState([])
   const [racesLoading, setRacesLoading]     = useState(true)
+  const [racePage, setRacePage]             = useState(1)
+
+  const RACE_PAGE_SIZE = 10
+  const raceTotalPages = Math.max(1, Math.ceil(raceSummaries.length / RACE_PAGE_SIZE))
+  const pagedRaceSummaries = raceSummaries.slice((racePage - 1) * RACE_PAGE_SIZE, racePage * RACE_PAGE_SIZE)
 
   const loadRaceSummaries = useCallback(() => {
     setRacesLoading(true)
@@ -102,6 +107,10 @@ export default function AdminRefereeReports() {
 
   useEffect(() => { loadRaceSummaries() }, [loadRaceSummaries])
 
+  useEffect(() => {
+    setRacePage(p => Math.min(p, Math.max(1, Math.ceil(raceSummaries.length / RACE_PAGE_SIZE))))
+  }, [raceSummaries])
+
   const load = useCallback((p = page) => {
     if (!selectedRace) return
     setLoading(true)
@@ -121,7 +130,10 @@ export default function AdminRefereeReports() {
 
   useEffect(() => { if (selectedRace) load(page) }, [page, selectedRace, load])
 
-  useRaceHub(null, { onReportUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) } })
+  useRaceHub(null, {
+    onReportUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) },
+    onRacesUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) },
+  })
 
   const openRace = (race) => {
     setSelectedRace(race)
@@ -192,7 +204,7 @@ export default function AdminRefereeReports() {
               <div className="text-center py-16 text-sm font-semibold text-gray-400">No reports found.</div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {raceSummaries.map(r => (
+                {pagedRaceSummaries.map(r => (
                   <div
                     key={r.raceId}
                     onClick={() => openRace(r)}
@@ -230,6 +242,32 @@ export default function AdminRefereeReports() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* Pagination */}
+            {raceSummaries.length > 0 && (
+              <footer className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-gray-500">
+                <div>
+                  Showing page <span className="text-gray-900 font-bold">{racePage}</span> of <span className="text-gray-900 font-bold">{raceTotalPages}</span>
+                  <span className="ml-2 text-gray-400">({raceSummaries.length} total)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setRacePage(p => Math.max(1, p - 1))}
+                    disabled={racePage === 1}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-white transition-colors disabled:opacity-40"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setRacePage(p => Math.min(raceTotalPages, p + 1))}
+                    disabled={racePage === raceTotalPages}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-white transition-colors disabled:opacity-40"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </footer>
             )}
           </div>
         ) : (
