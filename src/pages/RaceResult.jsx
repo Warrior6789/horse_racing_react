@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Trophy, TrendingUp, Wallet, AlertTriangle } from 'lucide-react'
 import SpectatorLayout from '../components/SpectatorLayout'
 import { getRace, getRaceResults, getRaceRegistrations } from '../api/races'
 import { getMyBetsPaged } from '../api/bets'
+import { useRaceHub } from '../hooks/useRaceHub'
 
 /* ─── Podium ─────────────────────────────────────────────────────── */
 function Podium({ top3 }) {
@@ -57,7 +58,7 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
   const [bets,    setBets]    = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     Promise.all([
       getRace(raceId),
       getRaceResults(raceId).catch(() => null),
@@ -76,6 +77,12 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
       if (betsRes)    setBets(betsRes.data.data?.items || [])
     }).catch(() => {}).finally(() => setLoading(false))
   }, [raceId])
+
+  useEffect(() => { load() }, [load])
+
+  useRaceHub(raceId, {
+    onReportUpdated: (data) => { if (String(data.raceId) === String(raceId)) load() },
+  })
 
   // Build a lookup from registrationId → full reg data (jockey, owner, horse)
   const regMap = Object.fromEntries(regs.map(r => [r.registrationId, r]))

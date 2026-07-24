@@ -177,45 +177,61 @@ export default function AdminRefereeReports() {
         )}
 
         {!selectedRace ? (
-          racesLoading ? (
-            <div className="flex items-center justify-center h-48 bg-white rounded-2xl border border-gray-100">
-              <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
-            </div>
-          ) : raceSummaries.length === 0 ? (
-            <div className="text-center py-16 text-sm font-semibold text-gray-400 bg-white rounded-2xl border border-gray-100">No reports found.</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {raceSummaries.map(r => (
-                <button
-                  key={r.raceId}
-                  onClick={() => openRace(r)}
-                  className="text-left bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
-                >
-                  <h3 className="font-bold text-gray-900 text-sm truncate">{r.raceName || `Race #${r.raceNumber}`}</h3>
-                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 truncate">
-                    <MapPin size={12} className="shrink-0" /> {r.racecourseName || '—'}
-                  </p>
-                  <div className="flex items-center gap-2 mt-4">
-                    {r.pending > 0 && (
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-amber-50 text-amber-600 ring-amber-500/20">
-                        {r.pending} Pending
-                      </span>
-                    )}
-                    {r.approved > 0 && (
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-emerald-50 text-emerald-600 ring-emerald-500/20">
-                        {r.approved} Approved
-                      </span>
-                    )}
-                    {r.rejected > 0 && (
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-red-50 text-red-600 ring-red-500/20">
-                        {r.rejected} Rejected
-                      </span>
-                    )}
-                  </div>
-                </button>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] px-5 py-3 bg-gray-50 border-b border-gray-100">
+              {['Race', 'Racecourse', 'Pending', 'Approved', 'Rejected', ''].map(col => (
+                <span key={col} className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{col}</span>
               ))}
             </div>
-          )
+
+            {racesLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
+              </div>
+            ) : raceSummaries.length === 0 ? (
+              <div className="text-center py-16 text-sm font-semibold text-gray-400">No reports found.</div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {raceSummaries.map(r => (
+                  <div
+                    key={r.raceId}
+                    onClick={() => openRace(r)}
+                    className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] items-center px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors gap-x-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-900 text-sm truncate">{r.raceName || `Race #${r.raceNumber}`}</p>
+                      <p className="text-gray-400 text-xs truncate">{r.raceNumber ? `#${r.raceNumber}` : '—'}</p>
+                    </div>
+                    <p className="text-gray-500 text-xs truncate flex items-center gap-1.5">
+                      <MapPin size={12} className="shrink-0" /> {r.racecourseName || '—'}
+                    </p>
+                    <div>
+                      {r.pending > 0 ? (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-amber-50 text-amber-600 ring-amber-500/20">
+                          {r.pending}
+                        </span>
+                      ) : <span className="text-gray-300 text-xs">—</span>}
+                    </div>
+                    <div>
+                      {r.approved > 0 ? (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-emerald-50 text-emerald-600 ring-emerald-500/20">
+                          {r.approved}
+                        </span>
+                      ) : <span className="text-gray-300 text-xs">—</span>}
+                    </div>
+                    <div>
+                      {r.rejected > 0 ? (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-red-50 text-red-600 ring-red-500/20">
+                          {r.rejected}
+                        </span>
+                      ) : <span className="text-gray-300 text-xs">—</span>}
+                    </div>
+                    <span className="text-gray-300 text-base text-center">›</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
           <>
         {/* KPI Cards */}
