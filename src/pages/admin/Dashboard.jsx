@@ -353,7 +353,7 @@ export default function AdminDashboard() {
 
   // fetch top horses by wins for the "Top Horses" tab — mount + race settlement
   const fetchTopHorses = useCallback(() => {
-    getTopHorses(10)
+    getTopHorses(5)
       .then(r => {
         const horses = r.data.data?.horses || []
         setTopHorsesData(horses.map(h => ({
@@ -569,7 +569,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'topHorses' && (
             <div className="p-6">
-              <p className="text-xs text-gray-400 mb-6">Top 10 ngựa theo số trận thắng</p>
+              <p className="text-xs text-gray-400 mb-6">Top 5 ngựa theo số trận thắng</p>
 
               {topHorsesLoading ? (
                 <div className="h-52 flex items-center justify-center">
