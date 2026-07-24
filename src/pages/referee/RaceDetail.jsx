@@ -71,18 +71,19 @@ function TrackVisualization({ tracks }) {
 }
 
 /* ── Edit Modal ── */
-const PENALTY_OPTIONS = ['Warning', 'Fine', 'Disqualification']
+const PENALTY_OPTIONS = ['Warning', 'Disqualification']
 
 function EditModal({ report, onClose, onSaved }) {
   const [form, setForm] = useState({
     incidentDescription: report.incidentDescription || '',
-    penaltyApplied: report.penaltyApplied || '',
+    penaltyType: report.penaltyType || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
 
   const save = async () => {
     if (form.incidentDescription.length < 10) { setError('Description must be at least 10 characters.'); return }
+    if (!form.penaltyType) { setError('Please select a penalty type.'); return }
     setSaving(true); setError('')
     try { await updateReport(report.reportId, form); onSaved() }
     catch (e) { setError(e.response?.data?.message || 'Failed to update.') }
@@ -102,10 +103,10 @@ function EditModal({ report, onClose, onSaved }) {
             value={form.incidentDescription} onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))} />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Applied</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Penalty Type *</label>
           <select className="w-full border border-gray-300 rounded-lg py-2.5 px-3 text-sm focus:outline-none"
-            value={form.penaltyApplied} onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}>
-            <option value="">— None —</option>
+            value={form.penaltyType} onChange={e => setForm(f => ({ ...f, penaltyType: e.target.value }))}>
+            <option value="">— Select —</option>
             {PENALTY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
@@ -138,7 +139,7 @@ export default function RefereeRaceDetail() {
   const [horses,     setHorses]     = useState([])
   const [liveStatus, setLiveStatus] = useState(null)
 
-  const [form, setForm]       = useState({ registrationId: '', incidentDescription: '', penaltyApplied: '' })
+  const [form, setForm]       = useState({ registrationId: '', incidentDescription: '', penaltyType: '' })
   const [formError, setFormError]   = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -194,10 +195,11 @@ export default function RefereeRaceDetail() {
     e.preventDefault()
     if (!form.registrationId)                { setFormError('Please select a participant.'); return }
     if (form.incidentDescription.length < 10) { setFormError('Description must be at least 10 characters.'); return }
+    if (!form.penaltyType)                   { setFormError('Please select a penalty type.'); return }
     setFormError(''); setSubmitting(true)
     try {
-      await createReport({ raceId, registrationId: form.registrationId, incidentDescription: form.incidentDescription, penaltyApplied: form.penaltyApplied || undefined })
-      setForm({ registrationId: '', incidentDescription: '', penaltyApplied: '' })
+      await createReport({ raceId, registrationId: form.registrationId, incidentDescription: form.incidentDescription, penaltyType: form.penaltyType })
+      setForm({ registrationId: '', incidentDescription: '', penaltyType: '' })
       showToast('Report submitted successfully')
       loadReports()
     } catch (e) { setFormError(e.response?.data?.message || 'Submission failed.') }
@@ -450,15 +452,15 @@ export default function RefereeRaceDetail() {
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                  Penalty Applied (Optional)
+                  Penalty Type <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <select
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 appearance-none focus:outline-none focus:border-slate-300"
-                    value={form.penaltyApplied}
-                    onChange={e => setForm(f => ({ ...f, penaltyApplied: e.target.value }))}
+                    value={form.penaltyType}
+                    onChange={e => setForm(f => ({ ...f, penaltyType: e.target.value }))}
                   >
-                    <option value="">— None —</option>
+                    <option value="">— Select —</option>
                     {PENALTY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                   <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />

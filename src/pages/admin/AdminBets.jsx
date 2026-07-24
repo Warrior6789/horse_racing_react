@@ -26,7 +26,10 @@ function StatusBadge({ status }) {
 
 const PAGE_SIZE = 10
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+const todayISO = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function fmtDateTime(dt) {
   if (!dt) return '—'
