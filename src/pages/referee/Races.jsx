@@ -160,17 +160,18 @@ export default function RefereeRaces() {
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Referee'
   const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
-  const fetchRaces = useCallback(() => {
-    setLoading(true)
+  const fetchRaces = useCallback(({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     getMyRefereeRaces()
       .then(r => setAllRaces(r.data.data || []))
       .catch(() => {})
-      .finally(() => setLoading(false))
+      .finally(() => { if (!silent) setLoading(false) })
   }, [])
 
   useEffect(() => { fetchRaces() }, [fetchRaces])
 
-  useRaceHub(null, { onRacesUpdated: fetchRaces })
+  const handleRacesUpdated = useCallback(() => fetchRaces({ silent: true }), [fetchRaces])
+  useRaceHub(null, { onRacesUpdated: handleRacesUpdated })
 
   const STATUS_OPTIONS = tab === 'active'
     ? ['', 'Scheduled', 'BettingOpen', 'BettingClosed', 'Live', 'Completed']

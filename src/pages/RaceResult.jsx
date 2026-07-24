@@ -91,7 +91,7 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
 
   // fallback: if no API results, use registrations as unranked list
   const displayList = standings.length > 0 ? standings : regs.map((r, i) => ({ ...r, finalPosition: i + 1 }))
-  const top3        = displayList.filter(r => (r.finalPosition ?? r.rank ?? r.position) <= 3)
+  const top3        = displayList.filter(r => !r.isDisqualified && (r.finalPosition ?? r.rank ?? r.position) <= 3)
 
   const regIds  = new Set(regs.map(r => r.registrationId))
   const raceBets = bets.filter(b => b.raceId === raceId || regIds.has(b.registrationId))
@@ -166,7 +166,8 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
           ) : (
             <div className="divide-y divide-stone-800/60">
               {displayList.map((item, i) => {
-                const pos     = item.finalPosition ?? item.rank ?? item.position ?? (i + 1)
+                const isDsq   = item.isDisqualified === true
+                const pos     = item.finalPosition ?? item.rank ?? item.position ?? (isDsq ? null : i + 1)
                 const horse   = item.horse  || {}
                 const name    = horse.horseName || item.horseName || `Horse #${item.gateNumber ?? '?'}`
                 const jockey  = item.jockeyName || item.jockey?.fullName || '—'
@@ -174,16 +175,17 @@ export default function RaceResult({ Layout = SpectatorLayout, backUrl = '/spect
                 const gate    = item.gateNumber ?? '?'
                 const img     = horse.imageUrl || item.imageUrl
                 const time    = item.finishTime || item.raceTime || null
-                const isMedal = pos <= 3
+                const isMedal = !isDsq && pos <= 3
                 return (
                   <div key={item.registrationId ?? i} className="flex items-center gap-3 px-5 py-3 hover:bg-stone-800/20 transition-colors">
                     {/* Position badge */}
                     <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-black
-                      ${pos === 1 ? 'bg-[#f7e0a3] text-[#110e0b]'
+                      ${isDsq ? 'bg-red-950/60 text-red-400'
+                      : pos === 1 ? 'bg-[#f7e0a3] text-[#110e0b]'
                       : pos === 2 ? 'bg-stone-300 text-black'
                       : pos === 3 ? 'bg-amber-700 text-white'
                       : 'bg-stone-800 text-stone-400'}`}>
-                      {pos}
+                      {isDsq ? 'DSQ' : pos}
                     </div>
 
                     {/* Horse image */}
