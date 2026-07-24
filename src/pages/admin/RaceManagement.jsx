@@ -528,7 +528,7 @@ export default function RaceManagement() {
                 <input
                   type="datetime-local"
                   className={inputCls}
-                  min={new Date(Date.now() + 90 * 60 * 1000).toISOString().slice(0, 16)}
+                  min={toLocalInputValue(new Date(Date.now() + 90 * 60 * 1000))}
                   {...f('startTime')}
                 />
                 <p className="text-[11px] text-gray-400 mt-1">Must be ≥ 90 minutes from now</p>
