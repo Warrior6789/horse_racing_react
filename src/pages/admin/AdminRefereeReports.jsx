@@ -160,7 +160,12 @@ export default function AdminRefereeReports() {
 
                       {/* Race & Horse */}
                       <td className="py-5 px-5 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 text-xs">Race #{row.raceNumber}</div>
+                        <div className="font-bold text-gray-900 text-xs">
+                          {row.raceName || `Race #${row.raceNumber}`}
+                        </div>
+                        <div className="text-gray-400 text-[11px] mt-0.5">
+                          {row.racecourseName || '—'}{row.raceNumber ? ` · #${row.raceNumber}` : ''}
+                        </div>
                         <div className="text-gray-500 text-xs mt-0.5">{row.horseName || '—'}</div>
                       </td>
 
