@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ShieldAlert, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ShieldAlert, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getReports, approveReport, rejectReport } from '../../api/refereeReports'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -68,9 +68,44 @@ export default function AdminRefereeReports() {
   const [acting, setActing]       = useState(null)
   const [error, setError]         = useState('')
 
+  const [selectedRace, setSelectedRace]     = useState(null)
+  const [raceSummaries, setRaceSummaries]   = useState([])
+  const [racesLoading, setRacesLoading]     = useState(true)
+
+  const loadRaceSummaries = useCallback(() => {
+    setRacesLoading(true)
+    getReports({ page: 1, pageSize: 200 })
+      .then(r => {
+        const all = r.data.data?.items || []
+        const map = new Map()
+        all.forEach(row => {
+          if (!map.has(row.raceId)) {
+            map.set(row.raceId, {
+              raceId: row.raceId,
+              raceName: row.raceName,
+              raceNumber: row.raceNumber,
+              racecourseName: row.racecourseName,
+              total: 0, pending: 0, approved: 0, rejected: 0,
+            })
+          }
+          const s = map.get(row.raceId)
+          s.total += 1
+          if (row.status === 'Pending') s.pending += 1
+          else if (row.status === 'Approved') s.approved += 1
+          else if (row.status === 'Rejected') s.rejected += 1
+        })
+        setRaceSummaries(Array.from(map.values()))
+      })
+      .catch(() => {})
+      .finally(() => setRacesLoading(false))
+  }, [])
+
+  useEffect(() => { loadRaceSummaries() }, [loadRaceSummaries])
+
   const load = useCallback((p = page) => {
+    if (!selectedRace) return
     setLoading(true)
-    getReports({ page: p, pageSize: 4 })
+    getReports({ raceId: selectedRace.raceId, page: p, pageSize: 4 })
       .then(r => {
         const d = r.data.data || {}
         setItems(d.items || [])
@@ -82,11 +117,21 @@ export default function AdminRefereeReports() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [page])
+  }, [page, selectedRace])
 
-  useEffect(() => { load(page) }, [page])
+  useEffect(() => { if (selectedRace) load(page) }, [page, selectedRace, load])
 
-  useRaceHub(null, { onReportUpdated: () => load(page) })
+  useRaceHub(null, { onReportUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) } })
+
+  const openRace = (race) => {
+    setSelectedRace(race)
+    setPage(1)
+  }
+
+  const backToRaces = () => {
+    setSelectedRace(null)
+    loadRaceSummaries()
+  }
 
   const handle = async (id, fn) => {
     setActing(id)
@@ -98,6 +143,7 @@ export default function AdminRefereeReports() {
     }
     setActing(null)
     load(page)
+    loadRaceSummaries()
   }
 
   return (
@@ -113,11 +159,65 @@ export default function AdminRefereeReports() {
         )}
 
         {/* Page heading */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Referee Reports</h1>
-          <p className="text-sm text-gray-500 mt-1">Review and approve incident reports submitted by referees.</p>
-        </div>
+        {selectedRace ? (
+          <div>
+            <button onClick={backToRaces} className="text-xs font-bold text-gray-500 hover:text-gray-800 flex items-center gap-1 mb-3">
+              <ChevronLeft size={14} /> Back to Races
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">{selectedRace.raceName || `Race #${selectedRace.raceNumber}`}</h1>
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+              <MapPin size={13} /> {selectedRace.racecourseName || '—'}
+            </p>
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Referee Reports</h1>
+            <p className="text-sm text-gray-500 mt-1">Select a race to review its incident reports.</p>
+          </div>
+        )}
 
+        {!selectedRace ? (
+          racesLoading ? (
+            <div className="flex items-center justify-center h-48 bg-white rounded-2xl border border-gray-100">
+              <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
+            </div>
+          ) : raceSummaries.length === 0 ? (
+            <div className="text-center py-16 text-sm font-semibold text-gray-400 bg-white rounded-2xl border border-gray-100">No reports found.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {raceSummaries.map(r => (
+                <button
+                  key={r.raceId}
+                  onClick={() => openRace(r)}
+                  className="text-left bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+                >
+                  <h3 className="font-bold text-gray-900 text-sm truncate">{r.raceName || `Race #${r.raceNumber}`}</h3>
+                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 truncate">
+                    <MapPin size={12} className="shrink-0" /> {r.racecourseName || '—'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-4">
+                    {r.pending > 0 && (
+                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-amber-50 text-amber-600 ring-amber-500/20">
+                        {r.pending} Pending
+                      </span>
+                    )}
+                    {r.approved > 0 && (
+                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-emerald-50 text-emerald-600 ring-emerald-500/20">
+                        {r.approved} Approved
+                      </span>
+                    )}
+                    {r.rejected > 0 && (
+                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-red-50 text-red-600 ring-red-500/20">
+                        {r.rejected} Rejected
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )
+        ) : (
+          <>
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <KpiCard title="Total Reports" value={totalCount}  icon={<ShieldAlert size={20} />}   iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
@@ -245,6 +345,8 @@ export default function AdminRefereeReports() {
             </div>
           </footer>
         </div>
+          </>
+        )}
 
       </div>
     </DashboardLayout>
