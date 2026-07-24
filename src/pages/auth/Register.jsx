@@ -156,7 +156,7 @@ export default function Register() {
 
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-[#7a6b7c]" htmlFor="phone">
-                  Phone (optional)
+                  Phone
                 </label>
                 <input
                   id="phone"

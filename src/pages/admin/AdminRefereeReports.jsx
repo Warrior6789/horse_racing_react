@@ -130,7 +130,10 @@ export default function AdminRefereeReports() {
 
   useEffect(() => { if (selectedRace) load(page) }, [page, selectedRace, load])
 
-  useRaceHub(null, { onReportUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) } })
+  useRaceHub(null, {
+    onReportUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) },
+    onRacesUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) },
+  })
 
   const openRace = (race) => {
     setSelectedRace(race)
