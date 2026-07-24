@@ -17,22 +17,23 @@ function Highlight({ text, query }) {
 
 function rawDate(st) {
   if (!st) return null
-  const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
-  return new Date(y, mo - 1, d)
+  return new Date(st)
 }
 function rawTimeStr(st) {
-  if (!st || st.length < 16) return null
-  const h = parseInt(st.substring(11, 13), 10)
-  const m = st.substring(14, 16)
+  if (!st) return null
+  const d = new Date(st)
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
   return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
 }
 import {
-  ChevronLeft, ChevronRight, Calendar, MapPin, Route, Wallet,
+  ChevronLeft, ChevronRight, ChevronDown, Calendar, MapPin, Route, Wallet,
   PawPrint, User, UserPlus, Search, X, MessageSquare, CheckCircle2
 } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
-import { getRace, registerHorseToRace, getRaceRegistrations } from '../../api/races'
+import { getRace, registerHorseToRace, getRaceRegistrations, getTakenGateNumbers } from '../../api/races'
 import { getHorses } from '../../api/horses'
+import { getOwnerAllRegistrations } from '../../api/registrations'
 import { getJockeysPaged, getJockeyProfile } from '../../api/jockeyProfiles'
 import { getBalance } from '../../api/payments'
 import { getActiveRegistrationFeeConfig } from '../../api/config'
@@ -380,6 +381,7 @@ export default function RaceRegistration() {
   const [selectedJockey,  setSelectedJockey]  = useState(null)
   const [jockeyDetail,    setJockeyDetail]    = useState(null)
   const [gateNumber,      setGateNumber]      = useState('')
+  const [takenGates,      setTakenGates]      = useState([])
   const [agreed,          setAgreed]          = useState(false)
   const [horseModalOpen,  setHorseModalOpen]  = useState(false)
   const [jockeyModalOpen, setJockeyModalOpen] = useState(false)
@@ -396,10 +398,20 @@ export default function RaceRegistration() {
       getBalance(),
       getActiveRegistrationFeeConfig().catch(() => null),
       getRaceRegistrations(raceId).catch(() => null),
-    ]).then(([r, h, bal, fee, regsRes]) => {
+      getOwnerAllRegistrations().catch(() => ({ data: { data: [] } })),
+      getTakenGateNumbers(raceId).catch(() => null),
+    ]).then(([r, h, bal, fee, regsRes, ownerRegsRes, gatesRes]) => {
       setRace(r.data.data || r.data)
       const hList = h.data.data?.items || h.data.data || []
-      setHorses(hList.filter(h => h.status === 'Healthy' || !h.status))
+      const ownerRegs = ownerRegsRes.data.data || ownerRegsRes.data || []
+      const activeHorseIds = new Set(
+        ownerRegs
+          .filter(reg => reg.status !== 'Rejected' && reg.status !== 'Scratched'
+            && !['Completed', 'Finished', 'Cancelled'].includes(reg.race?.status))
+          .map(reg => reg.horseId || reg.horse?.id || reg.horse?.horseId)
+          .filter(Boolean)
+      )
+      setHorses(hList.filter(h => (h.status === 'Healthy' || !h.status) && !activeHorseIds.has(h.horseId ?? h.id)))
       const prof = bal.data.data || bal.data
       setBalance(prof?.balance ?? prof?.walletBalance ?? null)
       if (fee) {
@@ -415,6 +427,9 @@ export default function RaceRegistration() {
             .filter(Boolean)
         )
         setBookedJockeyIds(ids)
+      }
+      if (gatesRes) {
+        setTakenGates(gatesRes.data.data || gatesRes.data || [])
       }
     }).catch(() => {})
      .finally(() => setLoading(false))
@@ -476,6 +491,35 @@ export default function RaceRegistration() {
       <OwnerLayout>
         <div className="flex items-center justify-center h-full">
           <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
+        </div>
+      </OwnerLayout>
+    )
+  }
+
+  if (status !== 'Scheduled') {
+    return (
+      <OwnerLayout>
+        <div className="p-6 md:p-8 max-w-6xl mx-auto pb-12">
+          <div className="flex items-center gap-2 text-[11px] font-bold mb-4 tracking-wide">
+            <Link to="/owner/races" className="text-gray-400 hover:text-gray-300 transition-colors">Available Races</Link>
+            <ChevronRight size={12} className="text-gray-600" />
+            <span className="text-[#facc15]">Race Registration</span>
+          </div>
+          <div className="bg-[#161a23] rounded-2xl border border-gray-800/80 p-10 text-center">
+            <h2 className="text-xl font-bold text-white mb-2">
+              {race?.raceName || `Race #${race?.raceNumber}`} is no longer open for registration
+            </h2>
+            <p className="text-gray-400 text-sm mb-6">
+              This race has moved to <span className="font-bold text-gray-300">{status || 'an unknown'}</span> status.
+              New entries are only accepted while a race is Scheduled.
+            </p>
+            <button
+              onClick={() => navigate('/owner/races')}
+              className="px-6 py-3 bg-[#facc15] hover:bg-yellow-400 text-black text-sm font-bold rounded-xl transition-colors"
+            >
+              Back to Available Races
+            </button>
+          </div>
         </div>
       </OwnerLayout>
     )
@@ -558,12 +602,14 @@ export default function RaceRegistration() {
                   )}
                 </div>
 
-                <div className="mt-6 bg-[#1a1f2b] border border-gray-800/60 rounded-xl p-4">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Prize Pool</p>
-                  <p className="text-2xl font-black text-[#facc15]">
-                    {prize} <span className="text-sm text-gray-400 ml-0.5">VND</span>
-                  </p>
-                </div>
+                {status !== 'Scheduled' && (
+                  <div className="mt-6 bg-[#1a1f2b] border border-gray-800/60 rounded-xl p-4">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Prize Pool</p>
+                    <p className="text-2xl font-black text-[#facc15]">
+                      {prize} <span className="text-sm text-gray-400 ml-0.5">VND</span>
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -658,11 +704,24 @@ export default function RaceRegistration() {
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                   Gate Number <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number" min="1" placeholder="e.g. 3"
-                  value={gateNumber} onChange={e => setGateNumber(e.target.value)}
-                  className="w-32 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 outline-none focus:border-yellow-500/40 transition-colors"
-                />
+                <div className="relative w-48">
+                  <select
+                    value={gateNumber}
+                    onChange={e => setGateNumber(e.target.value)}
+                    className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-200 outline-none focus:border-yellow-500/40 transition-colors appearance-none"
+                  >
+                    <option value="" disabled>Select a gate</option>
+                    {Array.from({ length: race?.maxParticipants || 12 }, (_, i) => i + 1).map(g => {
+                      const taken = takenGates.includes(g)
+                      return (
+                        <option key={g} value={g} disabled={taken}>
+                          Gate {g}{taken ? ' (Taken)' : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
               </div>
             </div>
 

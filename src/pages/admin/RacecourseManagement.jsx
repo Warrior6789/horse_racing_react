@@ -30,6 +30,7 @@ export default function RacecourseManagement() {
   const [error, setError]         = useState('')
   const [saving, setSaving]       = useState(false)
   const [deleting, setDeleting]   = useState(null)
+  const [deleteError, setDeleteError] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
 
@@ -102,7 +103,14 @@ export default function RacecourseManagement() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this racecourse?')) return
     setDeleting(id)
-    try { await deleteRacecourse(id); loadCards(); load(page, pageSize) } catch {}
+    setDeleteError('')
+    try {
+      await deleteRacecourse(id)
+      loadCards()
+      load(page, pageSize)
+    } catch (e) {
+      setDeleteError(e.response?.data?.message || 'Failed to delete racecourse.')
+    }
     setDeleting(null)
   }
 
@@ -112,6 +120,15 @@ export default function RacecourseManagement() {
   return (
     <DashboardLayout title="Racecourse Management">
       <div className="space-y-8">
+
+        {deleteError && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+            {deleteError}
+            <button onClick={() => setDeleteError('')} className="ml-auto text-red-400 hover:text-red-600">
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+            </button>
+          </div>
+        )}
 
         {/* Heading */}
         <div className="flex items-start justify-between">
@@ -210,8 +227,12 @@ export default function RacecourseManagement() {
                     <tr key={rcId(item)} className="hover:bg-gray-50/40 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>stadium</span>
+                          <div className="w-8 h-8 rounded-lg bg-gray-950 text-white flex items-center justify-center shrink-0 overflow-hidden">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.racecourseName} className="w-full h-full object-cover block" />
+                            ) : (
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>stadium</span>
+                            )}
                           </div>
                           <span className="font-semibold text-gray-900">{item.racecourseName}</span>
                         </div>

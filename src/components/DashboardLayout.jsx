@@ -15,6 +15,7 @@ const ROLE_NAV = {
     { to: '/admin/referee-reports', icon: 'gavel',                    label: 'Referee Reports' },
     { to: '/admin/bets',            icon: 'casino',                   label: 'Bets' },
     { to: '/admin/takeout-ledger',  icon: 'receipt_long',             label: 'Takeout Ledger' },
+    { to: '/admin/wallet-ledger',   icon: 'account_balance_wallet',   label: 'Wallet Ledger' },
     { to: '/admin/withdrawals',     icon: 'payments',                 label: 'Withdrawals' },
     { to: '/admin/payments',        icon: 'credit_card',              label: 'Payments' },
     { to: '/admin/config',          icon: 'settings',                 label: 'Configuration' },

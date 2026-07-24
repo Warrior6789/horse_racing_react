@@ -58,7 +58,7 @@ export default function SpectatorLayout({ children }) {
   const initials    = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
-    <div className="casino-theme flex min-h-screen bg-[#110e0b] text-stone-200 font-sans">
+    <div className="spectator-soft-dark flex min-h-screen bg-[#110e0b] text-stone-200 font-sans">
 
       {/* Desktop Sidebar */}
       <aside className={`${collapsed ? 'w-16' : 'w-64'} bg-[#171410] border-r border-stone-900 shrink-0 hidden md:flex flex-col transition-all duration-200`}>

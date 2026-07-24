@@ -41,6 +41,10 @@ export default function UserProfilePage({ Layout, roleName, badgeColor }) {
   const handleSave = async e => {
     e.preventDefault()
     if (!form.fullName.trim()) { setError('Full name is required.'); return }
+    if (form.phone.trim() && !/^(0|\+84)[35789]\d{8}$/.test(form.phone.trim())) {
+      setError('Phone must be a valid Vietnamese phone number (e.g. 0912345678).')
+      return
+    }
     setError(''); setSaving(true); setSuccess(false)
     try {
       const id = profile?.accountId || profile?.userId || profile?.id

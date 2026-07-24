@@ -3,6 +3,7 @@ import { Wallet, ArrowDownLeft, ArrowUpRight, Plus, X, TrendingDown, TrendingUp,
 import OwnerLayout from '../../components/OwnerLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'
+import { getMyWalletTransactions } from '../../api/walletTransactions'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
 
@@ -25,6 +26,21 @@ const BALANCE_REASON_MSG = {
   RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND registration fee refund`,
   BetPayout:             (amount) => `+${amount.toLocaleString()} VND winning bet payout`,
   RefundBet:             (amount) => `+${amount.toLocaleString()} VND bet refund`,
+  RegistrationFeeCharged:(amount) => `-${Math.abs(amount).toLocaleString()} VND registration fee charged`,
+  Fine:                  (amount) => `-${Math.abs(amount).toLocaleString()} VND fine applied`,
+}
+
+const LEDGER_TYPE_LABEL = {
+  Deposit:                'Deposit',
+  Withdrawal:             'Withdrawal',
+  BetPlaced:              'Bet Placed',
+  BetPayout:              'Bet Payout',
+  BetRefund:              'Bet Refund',
+  RegistrationFeeCharged: 'Registration Fee',
+  RegistrationFeeRefund:  'Registration Fee Refund',
+  PrizePayout:            'Prize Payout',
+  PrizeAdjustment:        'Prize Adjustment',
+  Fine:                   'Fine',
 }
 
 export default function OwnerWallet() {
@@ -49,6 +65,28 @@ export default function OwnerWallet() {
 
   // computed stats from all transactions (fetch once for stats)
   const [allTx, setAllTx] = useState([])
+
+  const [ledger, setLedger]             = useState([])
+  const [ledgerPage, setLedgerPage]     = useState(1)
+  const [ledgerTotalPages, setLedgerTotalPages] = useState(1)
+  const [ledgerTotalCount, setLedgerTotalCount] = useState(0)
+  const [ledgerLoading, setLedgerLoading] = useState(true)
+  const LEDGER_PAGE_SIZE = 8
+
+  const fetchLedger = useCallback((p) => {
+    setLedgerLoading(true)
+    getMyWalletTransactions({ page: p, pageSize: LEDGER_PAGE_SIZE })
+      .then(r => {
+        const data = r.data?.data
+        setLedger(data?.items || [])
+        setLedgerTotalPages(Math.ceil((data?.totalCount || 0) / LEDGER_PAGE_SIZE) || 1)
+        setLedgerTotalCount(data?.totalCount || 0)
+      })
+      .catch(() => {})
+      .finally(() => setLedgerLoading(false))
+  }, [])
+
+  useEffect(() => { fetchLedger(ledgerPage) }, [ledgerPage, fetchLedger])
 
   const fetchData = useCallback((p) => {
     setLoading(true)
@@ -84,7 +122,9 @@ export default function OwnerWallet() {
       setTotalCount(completed.length)
       setPage(1)
     }).catch(() => {})
-  }, [user])
+    setLedgerPage(1)
+    fetchLedger(1)
+  }, [user, fetchLedger])
 
   useRaceHub(null, { onBalanceUpdated: handleBalanceUpdated })
 
@@ -296,6 +336,68 @@ export default function OwnerWallet() {
                   Prev
                 </button>
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40 text-xs font-bold transition-colors">
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Wallet Ledger — every balance-affecting event, not just deposits/withdrawals */}
+        <section className="bg-[#1a1c23] rounded-xl border border-gray-800 overflow-hidden">
+          <div className="p-4 flex justify-between items-center border-b border-gray-800">
+            <h3 className="font-bold text-sm text-gray-200">Wallet Ledger</h3>
+            <span className="text-[11px] text-gray-500 font-medium">{ledgerTotalCount} total</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-gray-300">
+              <thead className="bg-[#16181d] text-gray-500 font-bold uppercase text-[10px] tracking-wider border-b border-gray-800/50">
+                <tr>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4 text-right">Amount</th>
+                  <th className="p-4 text-right">Balance After</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800/60">
+                {ledgerLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>{Array.from({ length: 4 }).map((_, j) => (
+                      <td key={j} className="p-4"><div className="h-4 bg-gray-800 rounded animate-pulse w-20" /></td>
+                    ))}</tr>
+                  ))
+                ) : ledger.length === 0 ? (
+                  <tr><td colSpan={4} className="p-12 text-center text-gray-500">No wallet activity yet.</td></tr>
+                ) : (
+                  ledger.map((tx) => {
+                    const positive = (tx.amount || 0) >= 0
+                    return (
+                      <tr key={tx.walletTransactionId} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="p-4 font-bold text-gray-200">{LEDGER_TYPE_LABEL[tx.type] || tx.type}</td>
+                        <td className="p-4 text-gray-500">{fmtDate(tx.createdAt)}</td>
+                        <td className={`p-4 text-right font-bold ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {positive ? '+' : ''}{(tx.amount || 0).toLocaleString()} VND
+                        </td>
+                        <td className="p-4 text-right text-gray-400">{(tx.balanceAfter || 0).toLocaleString()} VND</td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {ledgerTotalPages > 1 && (
+            <div className="p-4 border-t border-gray-800 flex items-center justify-between">
+              <span className="text-[11px] text-gray-500">Page {ledgerPage} / {ledgerTotalPages}</span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setLedgerPage(p => Math.max(1, p - 1))} disabled={ledgerPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40 text-xs font-bold transition-colors">
+                  Prev
+                </button>
+                <button onClick={() => setLedgerPage(p => Math.min(ledgerTotalPages, p + 1))} disabled={ledgerPage === ledgerTotalPages}
                   className="px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40 text-xs font-bold transition-colors">
                   Next
                 </button>

@@ -7,18 +7,25 @@ import { getMyJockeyProfile, getMyJockeyRewards } from '../../api/jockeyProfiles
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const PAGE_SIZE = 5
+const ACTIVE_RACE_STATUSES = ['Scheduled', 'BettingOpen', 'BettingClosed', 'Live']
+const PAST_RACE_STATUSES   = ['Completed', 'Finished', 'Cancelled']
 
 function rawDate(st) {
   if (!st) return null
-  const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
-  return new Date(y, mo - 1, d)
+  return new Date(st)
 }
 
 function rawTimeStr(st) {
-  if (!st || st.length < 16) return null
-  const h = parseInt(st.substring(11, 13), 10)
-  const m = st.substring(14, 16)
+  if (!st) return null
+  const d = new Date(st)
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
   return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
+}
+
+function localDateKey(st) {
+  const d = new Date(st)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function statusInfo(reg) {
@@ -60,7 +67,7 @@ function CalendarView({ items }) {
     const m = {}
     filtered.forEach(reg => {
       if (!reg.race?.startTime) return
-      const key = reg.race.startTime.slice(0, 10)
+      const key = localDateKey(reg.race.startTime)
       if (!m[key]) m[key] = []
       m[key].push(reg)
     })
@@ -211,6 +218,7 @@ export default function JockeySchedule() {
   const [refreshKey,  setRefreshKey]  = useState(0)
   const [view,        setView]        = useState('table')
   const [page,        setPage]        = useState(1)
+  const [timeFilter,  setTimeFilter]  = useState('upcoming')
 
   const handleUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
   useRaceHub(null, { onRacesUpdated: handleUpdated, onRegistrationsUpdated: handleUpdated })
@@ -230,8 +238,10 @@ export default function JockeySchedule() {
   }, [refreshKey])
 
   const now       = new Date()
-  const confirmed = regs.filter(r => r.jockeyConfirmation === true)
-  const pending   = regs.filter(r => r.jockeyConfirmation === null || r.jockeyConfirmation === undefined)
+  const activeRegs = regs.filter(r => ACTIVE_RACE_STATUSES.includes(r.race?.status))
+  const pastRegs   = regs.filter(r => PAST_RACE_STATUSES.includes(r.race?.status))
+  const confirmed = activeRegs.filter(r => r.jockeyConfirmation === true)
+  const pending   = activeRegs.filter(r => r.jockeyConfirmation === null || r.jockeyConfirmation === undefined)
 
   const nextRace = [...confirmed]
     .filter(r => r.race?.startTime && new Date(r.race.startTime) > now)
@@ -246,7 +256,7 @@ export default function JockeySchedule() {
   const totalWins  = profile?.totalWins  ?? 0
   const winRate    = totalRaces > 0 ? Math.round((totalWins / totalRaces) * 100) : 0
 
-  const tableItems = regs.filter(r => r.jockeyConfirmation !== false)
+  const tableItems = (timeFilter === 'past' ? pastRegs : activeRegs).filter(r => r.jockeyConfirmation !== false)
   const totalPages = Math.max(1, Math.ceil(tableItems.length / PAGE_SIZE))
   const safePage   = Math.min(page, totalPages)
   const pageItems  = tableItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
@@ -275,7 +285,7 @@ export default function JockeySchedule() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard title="Total Assignments" value={regs.length}       sub={`${pending.length} pending`} />
+          <StatCard title="Total Assignments" value={activeRegs.length} sub={`${pending.length} pending`} />
           <StatCard title="Confirmed Races"   value={confirmed.length}  sub="Ready to race" accent />
           <StatCard title="Next Race"         value={nextRaceName}      sub={nextRaceTime} leftBorder />
           <StatCard title="Win Rate"          value={`${winRate}%`}     sub={`${totalWins} wins / ${totalRaces} races`} />
@@ -286,7 +296,23 @@ export default function JockeySchedule() {
         {view === 'table' && (
           <div className="bg-[#161a23] rounded-2xl border border-gray-800/80 flex flex-col overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-800/50 flex justify-between items-center bg-[#1a1f2b]/30">
-              <h2 className="text-sm font-bold text-gray-300">Assignment Roster</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-sm font-bold text-gray-300">Assignment Roster</h2>
+                <div className="flex bg-[#0f1219] p-1 rounded-lg border border-gray-800">
+                  <button
+                    onClick={() => { setTimeFilter('upcoming'); setPage(1) }}
+                    className={`px-3 py-1 text-xs font-bold rounded transition-colors ${timeFilter === 'upcoming' ? 'bg-[#facc15] text-black' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    Upcoming
+                  </button>
+                  <button
+                    onClick={() => { setTimeFilter('past'); setPage(1) }}
+                    className={`px-3 py-1 text-xs font-bold rounded transition-colors ${timeFilter === 'past' ? 'bg-[#facc15] text-black' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    Past
+                  </button>
+                </div>
+              </div>
               <span className="text-gray-500 text-xs font-medium">{tableItems.length} races</span>
             </div>
             <div className="overflow-x-auto">
@@ -295,7 +321,9 @@ export default function JockeySchedule() {
                   <div className="w-8 h-8 border-2 border-gray-700 border-t-yellow-500 rounded-full animate-spin" />
                 </div>
               ) : tableItems.length === 0 ? (
-                <div className="text-center py-16 text-gray-500 text-sm">No race assignments yet.</div>
+                <div className="text-center py-16 text-gray-500 text-sm">
+                  {timeFilter === 'past' ? 'No past races.' : 'No race assignments yet.'}
+                </div>
               ) : (
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <thead>

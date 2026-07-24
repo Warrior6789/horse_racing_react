@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Trophy, ChevronRight, Bell, TrendingUp } from 'lucide-react'
+import { MapPin, Trophy, ChevronRight, TrendingUp } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import SpectatorLayout from '../../components/SpectatorLayout'
 import { getRacesPaged } from '../../api/races'
@@ -59,7 +59,7 @@ export default function SpectatorDashboard() {
 
       Promise.all([
         getMyBetsPaged({ page: 1, pageSize: 1 }),
-        getMyBetsPaged({ page: 1, pageSize: 1, status: 'Pending' }),
+        getMyBetsPaged({ page: 1, pageSize: 1, status: 'Active' }),
         getMyBetsPaged({ page: 1, pageSize: 1, status: 'Won' }),
         getMyBetsPaged({ page: 1, pageSize: 500 }),
       ]).then(([all, pending, won, allItems]) => {
@@ -86,9 +86,6 @@ export default function SpectatorDashboard() {
             <span className="text-[#f7e0a3] mr-2">₫</span>
             <span className="text-stone-200">{loading ? '—' : (balance ?? 0).toLocaleString()}</span>
           </div>
-          <button className="p-2 bg-[#1a1612] border border-stone-800 rounded-full hover:bg-stone-800 transition-colors text-stone-400">
-            <Bell size={18} />
-          </button>
         </div>
       </header>
 
@@ -101,7 +98,7 @@ export default function SpectatorDashboard() {
           </p>
         </div>
         <div className="bg-[#141210] border border-stone-800 p-4 rounded-2xl">
-          <p className="text-xs text-stone-500 uppercase font-bold mb-2 tracking-wider">Pending</p>
+          <p className="text-xs text-stone-500 uppercase font-bold mb-2 tracking-wider">Active</p>
           <p className="text-2xl font-bold text-[#f7e0a3]">
             {loading || betStats.pending === null ? '—' : betStats.pending}
           </p>

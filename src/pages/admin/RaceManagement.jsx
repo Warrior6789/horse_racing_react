@@ -3,11 +3,28 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import CardCarousel from '../../components/CardCarousel'
-import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace, resetRace, overrideResult, getRaceRegistrations, collectPool } from '../../api/races'
+import { getRacesPaged, createRace, updateRace, uploadRaceImage, deleteRace, advanceRace } from '../../api/races'
 import { getRacecoursesPaged } from '../../api/racecourses'
 import { useRaceHub } from '../../hooks/useRaceHub'
 
 const blank = { raceName: '', racecourseId: '', raceNumber: '', startTime: '', trackLength: '', maxParticipants: '' }
+
+const pad2 = (n) => String(n).padStart(2, '0')
+
+function toLocalInputValue(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+function toLocalDisplay(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  const h24 = d.getHours()
+  const h12 = h24 % 12 || 12
+  const ampm = h24 < 12 ? 'AM' : 'PM'
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(h12)}:${pad2(d.getMinutes())} ${ampm}`
+}
 
 const RACE_STATUS = {
   Scheduled:     { cls: 'bg-amber-50 text-amber-700 ring-amber-500/20',       dot: false, label: 'Scheduled'      },
@@ -26,168 +43,6 @@ function StatusBadge({ status }) {
       {s.dot && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse" />}
       {s.label}
     </span>
-  )
-}
-
-function SetResultModal({ race, onClose, onSuccess }) {
-  const [regs, setRegs]       = useState([])
-  const [ranks, setRanks]     = useState({})
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState('')
-
-  useEffect(() => {
-    getRaceRegistrations(race.raceId)
-      .then(r => {
-        const payload = r.data?.data
-        const list = Array.isArray(payload) ? payload : payload?.items || []
-        setRegs(list)
-        const init = {}
-        list.forEach((reg, i) => { init[reg.registrationId] = String(i + 1) })
-        setRanks(init)
-      })
-      .catch(() => setError('Failed to load registrations.'))
-      .finally(() => setLoading(false))
-  }, [race.raceId])
-
-  const setRank = (regId, val) => setRanks(prev => ({ ...prev, [regId]: val }))
-
-  const confirm = async () => {
-    const values = Object.values(ranks)
-    const unique = new Set(values)
-    if (unique.size !== values.length) { setError('Two horses cannot share the same rank.'); return }
-
-    const body = regs.map(reg => ({
-      horseId: reg.horse?.horseId || reg.horse?.id || reg.horseId,
-      rank: Number(ranks[reg.registrationId]),
-    }))
-
-    setSaving(true); setError('')
-    try {
-      await overrideResult(race.raceId, body)
-      onSuccess()
-    } catch (e) {
-      setError(e.response?.data?.message || 'Failed to set result.')
-    } finally { setSaving(false) }
-  }
-
-  const n = regs.length
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl space-y-4 my-auto">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-gray-900">Set Result — Race #{race.raceNumber}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
-          </div>
-        ) : regs.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">No registered horses found.</p>
-        ) : (
-          <div className="space-y-2">
-            {regs.map(reg => (
-              <div key={reg.registrationId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-lg">
-                  {reg.horse?.imageUrl
-                    ? <img src={reg.horse.imageUrl} alt="" className="w-full h-full object-cover" />
-                    : '🐎'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate">{reg.horse?.horseName || `Horse #${reg.gateNumber}`}</p>
-                  <p className="text-[11px] text-gray-400">Gate #{reg.gateNumber ?? '?'}</p>
-                </div>
-                <select
-                  value={ranks[reg.registrationId] || '1'}
-                  onChange={e => setRank(reg.registrationId, e.target.value)}
-                  className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:border-gray-400 bg-white"
-                >
-                  {Array.from({ length: n }, (_, i) => i + 1).map(v => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {error && <p className="text-xs text-red-500">{error}</p>}
-
-        <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className="flex-1 h-11 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={confirm}
-            disabled={saving || regs.length === 0}
-            className="flex-1 h-11 bg-gray-950 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : 'Confirm'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function CollectPoolModal({ race, onClose, onSuccess }) {
-  const [amount, setAmount] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError]   = useState('')
-
-  const confirm = async () => {
-    const val = Number(amount)
-    if (!amount || isNaN(val) || val <= 0) { setError('Please enter a valid amount.'); return }
-    setSaving(true); setError('')
-    try {
-      await collectPool(race.raceId, { amountPerSpectator: val, betType: 'Win' })
-      onSuccess()
-    } catch (e) {
-      setError(e.response?.data?.message || 'Failed to collect pool.')
-    } finally { setSaving(false) }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-gray-900">Collect Pool — Race #{race.raceNumber}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
-          </button>
-        </div>
-        <div>
-          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Amount Per Spectator (VND)</label>
-          <input
-            type="number"
-            min="0"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            placeholder="e.g. 50000"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white"
-          />
-          <p className="text-[11px] text-gray-400 mt-1">Bet type: Win</p>
-        </div>
-        {error && <p className="text-xs text-red-500">{error}</p>}
-        <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className="flex-1 h-11 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={confirm}
-            disabled={saving}
-            className="flex-1 h-11 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-500 transition-colors disabled:opacity-60"
-          >
-            {saving ? 'Collecting…' : 'Collect'}
-          </button>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -214,7 +69,7 @@ export default function RaceManagement() {
   const [page, setPage]             = useState(1)
   const [pageSize] = useState(4)
   const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
+  const [tableCount, setTableCount] = useState(0)
   const [loading, setLoading]       = useState(true)
   const [acting, setActing]         = useState(null)
 
@@ -228,8 +83,6 @@ export default function RaceManagement() {
   const [imageFile, setImageFile]       = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [origStartTime, setOrigStartTime] = useState('')
-  const [resultRace, setResultRace]     = useState(null)
-  const [collectRace, setCollectRace]   = useState(null)
   const [toast, setToast]               = useState('')
 
   const loadCards = ({ silent = false } = {}) => {
@@ -250,7 +103,7 @@ export default function RaceManagement() {
           const start = (p - 1) * ps
           setRaces(active.slice(start, start + ps))
           setTotalPages(Math.ceil(active.length / ps) || 1)
-          setTotalCount(r.data.data?.totalCount || 0)
+          setTableCount(active.length)
         })
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
@@ -262,7 +115,7 @@ export default function RaceManagement() {
           const start = (p - 1) * ps
           setRaces(done.slice(start, start + ps))
           setTotalPages(Math.ceil(done.length / ps) || 1)
-          setTotalCount(r.data.data?.totalCount || 0)
+          setTableCount(done.length)
         })
         .catch(() => {})
         .finally(() => { if (!silent) setLoading(false) })
@@ -292,7 +145,7 @@ export default function RaceManagement() {
   const validGuid = (id) => (id && id !== '00000000-0000-0000-0000-000000000000') ? id.toLowerCase() : null
 
   const openEdit = (r) => {
-    const st = r.startTime?.slice(0, 16) || ''
+    const st = toLocalInputValue(r.startTime)
     setOrigStartTime(st)
     const resolvedRacecourseId =
       validGuid(r.racecourseId) ||
@@ -332,11 +185,14 @@ export default function RaceManagement() {
     if (!form.raceName)      { setError('Race name is required.'); return }
     if (!form.racecourseId) { setError('Please select a racecourse.'); return }
     if (!form.raceNumber)   { setError('Race number is required.'); return }
+    if (Number(form.raceNumber) <= 0) { setError('Race number must be greater than 0.'); return }
     if (!form.startTime)    { setError('Start time is required.'); return }
+    if (form.trackLength && Number(form.trackLength) <= 0) { setError('Track length must be greater than 0.'); return }
+    if (form.maxParticipants && Number(form.maxParticipants) < 3) { setError('Max participants must be at least 3.'); return }
     setError(''); setSaving(true)
     try {
       if (editId) {
-        const toISO = (s) => s.length === 16 ? s + ':00' : s
+        const toISO = (s) => new Date(s).toISOString()
         const startTimeChanged = form.startTime && form.startTime !== origStartTime
         if (startTimeChanged) {
           const minAllowed = Date.now() + 90 * 60 * 1000
@@ -362,7 +218,7 @@ export default function RaceManagement() {
         if (form.raceName) fd.append('RaceName', form.raceName)
         fd.append('RacecourseId', form.racecourseId)
         fd.append('RaceNumber', form.raceNumber)
-        fd.append('StartTime', form.startTime.length === 16 ? form.startTime + ':00' : form.startTime)
+        fd.append('StartTime', new Date(form.startTime).toISOString())
         if (form.trackLength)     fd.append('TrackLength', form.trackLength)
         if (form.maxParticipants) fd.append('MaxParticipants', form.maxParticipants)
         if (imageFile) fd.append('Image', imageFile)
@@ -392,7 +248,13 @@ export default function RaceManagement() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this race?')) return
     setDeleting(id)
-    try { await deleteRace(id); loadCards(); load(page, pageSize) } catch {}
+    try {
+      await deleteRace(id)
+      loadCards()
+      load(page, pageSize)
+    } catch (e) {
+      showToast(extractError(e))
+    }
     setDeleting(null)
   }
 
@@ -401,9 +263,11 @@ export default function RaceManagement() {
   const inputCls = 'w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none text-sm bg-white'
   const f = (k) => ({ value: form[k], onChange: e => setForm(p => ({ ...p, [k]: e.target.value })) })
 
-  const live      = cards.filter(r => r.status === 'Live').length
-  const scheduled = cards.filter(r => r.status === 'Scheduled').length
-  const completed = cards.filter(r => ['Finished', 'Cancelled'].includes(r.status)).length
+  const live        = cards.filter(r => r.status === 'Live').length
+  const scheduled   = cards.filter(r => r.status === 'Scheduled').length
+  const finished    = cards.filter(r => r.status === 'Finished').length
+  const cancelled   = cards.filter(r => r.status === 'Cancelled').length
+  const activeCards = cards.filter(r => !['Finished', 'Cancelled'].includes(r.status))
 
   return (
     <DashboardLayout title="Race Management">
@@ -425,11 +289,12 @@ export default function RaceManagement() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          <KpiCard title="Total"     value={totalCount} icon="sports"          iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
+          <KpiCard title="Total"     value={cards.length} icon="sports"          iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
           <KpiCard title="Live"      value={live}       icon="sensors"         iconColor="text-emerald-600" bgIcon="bg-emerald-50"  />
           <KpiCard title="Scheduled" value={scheduled}  icon="schedule"        iconColor="text-amber-600"   bgIcon="bg-amber-50"    />
-          <KpiCard title="Completed" value={completed}  icon="flag"            iconColor="text-blue-600"    bgIcon="bg-blue-50"     />
+          <KpiCard title="Finished"  value={finished}   icon="flag"            iconColor="text-blue-600"    bgIcon="bg-blue-50"     />
+          <KpiCard title="Cancelled" value={cancelled}  icon="cancel"          iconColor="text-red-500"     bgIcon="bg-red-50"      />
         </div>
 
         {/* Cards */}
@@ -437,9 +302,9 @@ export default function RaceManagement() {
           <div className="flex items-center justify-center h-36">
             <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
           </div>
-        ) : cards.length === 0 ? null : (
-          <CardCarousel count={cards.length} dark={false}>
-            {cards.map(r => {
+        ) : activeCards.length === 0 ? null : (
+          <CardCarousel count={activeCards.length} dark={false}>
+            {activeCards.map(r => {
               const s = RACE_STATUS[r.status] || RACE_STATUS.Scheduled
               return (
                 <div key={r.raceId} className="snap-start shrink-0 w-[calc(33.333%-11px)] bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
@@ -471,7 +336,7 @@ export default function RaceManagement() {
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-gray-300" style={{ fontSize: '14px' }}>schedule</span>
-                      {r.startTime ? r.startTime.slice(0, 16).replace('T', ' ') + ' ' + (parseInt(r.startTime.slice(11, 13)) < 12 ? 'AM' : 'PM') : '—'}
+                      {toLocalDisplay(r.startTime)}
                     </div>
                   </div>
                   <div className="flex gap-2 pt-1 border-t border-gray-100">
@@ -481,29 +346,13 @@ export default function RaceManagement() {
                     >
                       Edit
                     </button>
-                    {r.status !== 'Completed' && r.status !== 'Cancelled' && r.status !== 'Live' && (
+                    {r.status !== 'Completed' && r.status !== 'Finished' && r.status !== 'Cancelled' && r.status !== 'Live' && (
                       <button
                         onClick={() => handleAction(r.raceId, advanceRace)}
                         disabled={acting === r.raceId}
                         className="flex-1 py-1.5 bg-gray-950 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors disabled:opacity-50"
                       >
                         Advance
-                      </button>
-                    )}
-                    {r.status === 'BettingClosed' && (
-                      <button
-                        onClick={() => setCollectRace(r)}
-                        className="flex-1 py-1.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-500 transition-colors"
-                      >
-                        Collect Pool
-                      </button>
-                    )}
-                    {(r.status === 'BettingClosed' || r.status === 'Live') && (
-                      <button
-                        onClick={() => setResultRace(r)}
-                        className="flex-1 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-500 transition-colors"
-                      >
-                        Set Result
                       </button>
                     )}
                     <button
@@ -541,8 +390,8 @@ export default function RaceManagement() {
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 bg-gray-950 rounded-full" />
-              <h2 className="text-sm font-bold text-gray-900">All Races</h2>
-              <span className="text-xs text-gray-400 font-medium">({totalCount} total)</span>
+              <h2 className="text-sm font-bold text-gray-900">{tab === 'active' ? 'Active Races' : 'Finished / Cancelled Races'}</h2>
+              <span className="text-xs text-gray-400 font-medium">({tableCount} total)</span>
             </div>
           </div>
 
@@ -576,7 +425,7 @@ export default function RaceManagement() {
                       </td>
 
                       <td className="py-4 px-4 text-xs text-gray-500 whitespace-nowrap">
-                        {r.startTime ? r.startTime.slice(0, 16).replace('T', ' ') + ' ' + (parseInt(r.startTime.slice(11, 13)) < 12 ? 'AM' : 'PM') : '—'}
+                        {toLocalDisplay(r.startTime)}
                       </td>
 
                       <td className="py-4 px-4 text-xs text-gray-500 font-medium text-center">
@@ -595,7 +444,7 @@ export default function RaceManagement() {
                           >
                             Edit
                           </button>
-                          {r.status !== 'Completed' && r.status !== 'Cancelled' && r.status !== 'Live' && (
+                          {r.status !== 'Completed' && r.status !== 'Finished' && r.status !== 'Cancelled' && r.status !== 'Live' && (
                             <button
                               onClick={() => handleAction(r.raceId, advanceRace)}
                               disabled={acting === r.raceId}
@@ -604,34 +453,11 @@ export default function RaceManagement() {
                               {acting === r.raceId ? '…' : 'Advance'}
                             </button>
                           )}
-                          {r.status === 'BettingClosed' && (
-                            <button
-                              onClick={() => setCollectRace(r)}
-                              className="px-2.5 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-500 transition-colors"
-                            >
-                              Collect Pool
-                            </button>
-                          )}
-                          {(r.status === 'BettingClosed' || r.status === 'Live') && (
-                            <button
-                              onClick={() => setResultRace(r)}
-                              className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-500 transition-colors"
-                            >
-                              Set Result
-                            </button>
-                          )}
                           <button
                             onClick={() => navigate(`/admin/bets/${r.raceId}#prize-preview`)}
                             className="px-2.5 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors"
                           >
                             Prize Preview
-                          </button>
-                          <button
-                            onClick={() => handleAction(r.raceId, resetRace)}
-                            disabled={acting === r.raceId}
-                            className="px-2.5 py-1.5 border border-amber-200 text-amber-600 rounded-lg text-xs font-bold hover:bg-amber-50 transition-colors disabled:opacity-50"
-                          >
-                            Reset
                           </button>
                           <button
                             onClick={() => handleDelete(r.raceId)}
@@ -676,32 +502,6 @@ export default function RaceManagement() {
         </div>
       )}
 
-      {/* Set Result Modal */}
-      {resultRace && (
-        <SetResultModal
-          race={resultRace}
-          onClose={() => setResultRace(null)}
-          onSuccess={() => {
-            setResultRace(null)
-            showToast('Race result set successfully.')
-            loadCards(); load(page, pageSize)
-          }}
-        />
-      )}
-
-      {/* Collect Pool Modal */}
-      {collectRace && (
-        <CollectPoolModal
-          race={collectRace}
-          onClose={() => setCollectRace(null)}
-          onSuccess={() => {
-            setCollectRace(null)
-            showToast('Pool collected successfully!')
-            loadCards(); load(page, pageSize)
-          }}
-        />
-      )}
-
       {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -728,7 +528,7 @@ export default function RaceManagement() {
                 <input
                   type="datetime-local"
                   className={inputCls}
-                  min={new Date(Date.now() + 90 * 60 * 1000).toISOString().slice(0, 16)}
+                  min={toLocalInputValue(new Date(Date.now() + 90 * 60 * 1000))}
                   {...f('startTime')}
                 />
                 <p className="text-[11px] text-gray-400 mt-1">Must be ≥ 90 minutes from now</p>
@@ -736,11 +536,11 @@ export default function RaceManagement() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Track Length (m)</label>
-                  <input type="number" min="0" className={inputCls} {...f('trackLength')} />
+                  <input type="number" min="0.01" step="0.01" className={inputCls} {...f('trackLength')} />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Max Participants</label>
-                  <input type="number" min="1" className={inputCls} {...f('maxParticipants')} />
+                  <input type="number" min="3" className={inputCls} {...f('maxParticipants')} />
                 </div>
               </div>
               <div>

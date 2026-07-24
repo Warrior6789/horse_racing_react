@@ -55,6 +55,7 @@ export default function JockeyDashboard() {
   const [acting,        setActing]        = useState(null)
   const [refreshKey,    setRefreshKey]    = useState(0)
   const [selectedOwner, setSelectedOwner] = useState(null)
+  const [error, setError] = useState('')
 
   const handleRacesUpdated = useCallback(() => setRefreshKey(k => k + 1), [])
 
@@ -87,6 +88,7 @@ export default function JockeyDashboard() {
 
   const handle = async (id, action) => {
     setActing(id)
+    setError('')
     try {
       if (action === 'accept') {
         await acceptRegistration(id)
@@ -94,7 +96,9 @@ export default function JockeyDashboard() {
         await rejectRegistration(id)
       }
       await fetchRegs()
-    } catch {}
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     finally { setActing(null) }
   }
 
@@ -106,7 +110,8 @@ export default function JockeyDashboard() {
   const acceptedRaceIds = new Set(confirmed.map(r => r.race?.raceId || r.raceId).filter(Boolean))
   const pending         = regs.filter(r =>
     (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
-    !acceptedRaceIds.has(r.race?.raceId || r.raceId)
+    !acceptedRaceIds.has(r.race?.raceId || r.raceId) &&
+    !['Completed', 'Finished', 'Cancelled'].includes(r.race?.status)
   )
 
   const STATUS_PRIORITY = { Live: 0, BettingOpen: 1, BettingClosed: 2, Scheduled: 3 }
@@ -136,6 +141,13 @@ export default function JockeyDashboard() {
             <p className="text-gray-400 text-sm">Welcome back, {displayName}. Here is your current performance outlook.</p>
           </div>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+          </div>
+        )}
 
         {/* Live Race Banner */}
         {liveRace && (
@@ -208,6 +220,11 @@ export default function JockeyDashboard() {
                         <p className="text-xs text-gray-400 mt-1">
                           📍 {featuredRace.race?.racecourseName || '—'}
                         </p>
+                        {featuredRace.owner?.fullName && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            🤝 Owner: <span className="text-gray-300 font-medium">{featuredRace.owner.fullName}</span>
+                          </p>
+                        )}
                       </div>
                       {featuredRace.gateNumber && (
                         <span className="text-[10px] font-black uppercase text-gray-500">Gate #{featuredRace.gateNumber}</span>

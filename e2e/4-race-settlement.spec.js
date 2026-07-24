@@ -4,6 +4,7 @@ const ADMIN = { email: 'e2e-admin-fixed@test.com', password: 'Passw0rd!123' }
 const OWNER = { email: 'e2e-owner-fixed@test.com', password: 'Passw0rd!123' }
 const JOCKEY = { email: 'e2e-jockey-fixed@test.com', password: 'Passw0rd!123' }
 const RACE_ID = '14ea7401-47d2-4304-a197-3fa6baf14008'
+const HORSE_ID = 'd0b1c4f3-8456-41e3-9d1e-caddb71d4c3a'
 const API_BASE = process.env.VITE_API_URL || ''
 
 async function fetchRaceStatus(page) {
@@ -12,11 +13,19 @@ async function fetchRaceStatus(page) {
   return json.data?.status
 }
 
+async function fetchHorseFinishPosition(page) {
+  const res = await page.request.get(`${API_BASE}/api/races/${RACE_ID}/results`)
+  const json = await res.json()
+  const entry = json.data?.find((r) => r.horse?.id === HORSE_ID)
+  return entry?.position ?? null
+}
+
 async function login(page, { email, password }) {
   await page.goto('/login')
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(password)
   await page.getByRole('button', { name: 'Sign In' }).click()
+  await page.waitForURL(/\/(admin|owner|jockey|spectator|referee)\/(dashboard|races)/)
 }
 
 async function balanceOn(page, walletPath) {
@@ -51,13 +60,22 @@ test('admin advances a race through to Finished and prizes are paid out', async 
   }
   expect(finished).toBe(true)
 
+  // Jockey only earns a cut for a 1st/2nd place finish (see RaceSettlementService.DistributePrizesAsync),
+  // and the race engine picks finish order randomly, so the jockey payout expectation depends on how
+  // the E2E horse actually placed.
+  const finishPosition = await fetchHorseFinishPosition(page)
+
   await login(page, OWNER)
   const ownerBalance = await balanceOn(page, '/owner/wallet')
   expect(ownerBalance).toBeGreaterThan(0)
 
   await login(page, JOCKEY)
   const jockeyBalance = await balanceOn(page, '/jockey/wallet')
-  expect(jockeyBalance).toBeGreaterThan(0)
+  if (finishPosition === 1 || finishPosition === 2) {
+    expect(jockeyBalance).toBeGreaterThan(0)
+  } else {
+    expect(jockeyBalance).toBe(0)
+  }
 
   await login(page, OWNER)
   const ownerBalanceAgain = await balanceOn(page, '/owner/wallet')

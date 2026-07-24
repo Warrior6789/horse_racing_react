@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trophy, Plus, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Trophy, Plus, LayoutGrid, List, CalendarPlus, Edit2, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import CardCarousel from '../../components/CardCarousel'
 import { getHorses, deleteHorse } from '../../api/horses'
@@ -37,15 +37,21 @@ function FilterPill({ label, count, status, active, onClick }) {
   )
 }
 
-function HorseCard({ horse, onEdit, onDelete, onRegister, hasActiveReg }) {
+function HorseCard({ horse, onEdit, onDelete, onRegister, regStatus }) {
   const status = horse.status || 'Healthy'
+  const isConfirmed = regStatus === 'Confirmed'
+  const isPending   = regStatus === 'Pending'
+  const hasActiveReg = isConfirmed || isPending
   const isAvailable = status === 'Healthy' && !hasActiveReg
 
   let primaryBtnCls  = 'bg-[#1a2031] text-gray-400 border border-gray-700 cursor-default'
   let primaryBtnText = 'Resting'
-  if (hasActiveReg) {
+  if (isConfirmed) {
     primaryBtnCls  = 'bg-green-900/20 text-green-400 border border-green-900/50 cursor-not-allowed'
     primaryBtnText = '✓ In Race'
+  } else if (isPending) {
+    primaryBtnCls  = 'bg-amber-900/20 text-amber-400 border border-amber-900/50 cursor-not-allowed'
+    primaryBtnText = 'Awaiting Jockey'
   } else if (status === 'Healthy') {
     primaryBtnCls  = 'bg-[#facc15] text-black hover:bg-yellow-400 font-bold'
     primaryBtnText = 'Register to Race'
@@ -67,9 +73,13 @@ function HorseCard({ horse, onEdit, onDelete, onRegister, hasActiveReg }) {
           <StatusDot status={status} />
           <span className="text-white text-[10px] font-bold">{status}</span>
         </div>
-        {hasActiveReg ? (
+        {isConfirmed ? (
           <div className="absolute top-3 right-3 z-20 bg-green-900/60 backdrop-blur-sm border border-green-700/50 text-green-400 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide">
             IN RACE
+          </div>
+        ) : isPending ? (
+          <div className="absolute top-3 right-3 z-20 bg-amber-900/60 backdrop-blur-sm border border-amber-700/50 text-amber-400 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide">
+            PENDING
           </div>
         ) : isAvailable && (
           <div className="absolute top-3 right-3 z-20 bg-[#facc15]/20 backdrop-blur-sm border border-[#facc15]/30 text-[#facc15] px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide">
@@ -139,7 +149,8 @@ export default function MyHorses() {
   const [view, setView]         = useState('grid')
   const [listPage, setListPage] = useState(1)
   const LIST_SIZE = 8
-  const [activeRegHorseIds, setActiveRegHorseIds] = useState(new Set())
+  const [regStatusByHorseId, setRegStatusByHorseId] = useState(new Map())
+  const [error, setError] = useState('')
 
   const load = () => {
     setLoading(true)
@@ -149,20 +160,28 @@ export default function MyHorses() {
     ]).then(([hRes, rRes]) => {
       setHorses(hRes.data.data?.items || [])
       const regs = rRes.data.data || []
-      setActiveRegHorseIds(new Set(
-        regs
-          .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched')
-          .map(r => r.horseId || r.horse?.horseId)
-          .filter(Boolean)
-      ))
+      const map = new Map()
+      regs
+        .filter(r => r.status !== 'Rejected' && r.status !== 'Scratched'
+          && !['Completed', 'Finished', 'Cancelled'].includes(r.race?.status))
+        .forEach(r => {
+          const hId = r.horseId || r.horse?.id || r.horse?.horseId
+          if (hId) map.set(hId, r.status)
+        })
+      setRegStatusByHorseId(map)
     }).finally(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this horse?')) return
-    await deleteHorse(id).catch(() => {})
-    load()
+    setError('')
+    try {
+      await deleteHorse(id)
+      load()
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to delete horse.')
+    }
   }
 
   const counts = {
@@ -179,6 +198,13 @@ export default function MyHorses() {
     <OwnerLayout>
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
+
+          {error && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+              {error}
+              <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+            </div>
+          )}
 
           {/* Title */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -230,7 +256,7 @@ export default function MyHorses() {
               <CardCarousel count={displayed.length}>
                 {displayed.map(h => (
                   <div key={h.horseId ?? h.id} className="snap-start shrink-0 w-[calc(33.333%-11px)]">
-                    <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} hasActiveReg={activeRegHorseIds.has(h.horseId ?? h.id)} />
+                    <HorseCard horse={h} onEdit={h => navigate(`/owner/horses/${h.horseId ?? h.id}/edit`)} onDelete={handleDelete} onRegister={h => navigate('/owner/races', { state: { preselectedHorseId: h.horseId ?? h.id } })} regStatus={regStatusByHorseId.get(h.horseId ?? h.id)} />
                   </div>
                 ))}
               </CardCarousel>
@@ -285,8 +311,11 @@ export default function MyHorses() {
                               <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-1 text-gray-400">
                                   {status === 'Active' && (
-                                    activeRegHorseIds.has(hId) ? (
-                                      <span title="Already in a race" className="p-2 text-green-600 cursor-not-allowed">
+                                    regStatusByHorseId.has(hId) ? (
+                                      <span
+                                        title={regStatusByHorseId.get(hId) === 'Confirmed' ? 'Already in a race' : 'Awaiting jockey confirmation'}
+                                        className={`p-2 cursor-not-allowed ${regStatusByHorseId.get(hId) === 'Confirmed' ? 'text-green-600' : 'text-amber-500'}`}
+                                      >
                                         <CalendarPlus size={18} />
                                       </span>
                                     ) : (

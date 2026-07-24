@@ -3,8 +3,8 @@ import { Wallet, WalletCards, Plus, X, TrendingDown, TrendingUp, Clock, CheckCir
 import JockeyLayout from '../../components/JockeyLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'
-import { getJockeyMyRequests } from '../../api/registrations'
-import { getMyJockeyRewards } from '../../api/jockeyProfiles'
+import { getMyJockeyRaceHistory } from '../../api/jockeyProfiles'
+import { getMyWalletTransactions } from '../../api/walletTransactions'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
 
@@ -27,6 +27,20 @@ const BALANCE_REASON_MSG = {
   BetPayout:   (amount) => `+${amount.toLocaleString()} VND winning bet payout`,
   RefundBet:   (amount) => `+${amount.toLocaleString()} VND bet refund`,
   RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND registration fee refund`,
+  Fine:        (amount) => `-${Math.abs(amount).toLocaleString()} VND fine applied`,
+}
+
+const LEDGER_TYPE_LABEL = {
+  Deposit:                'Deposit',
+  Withdrawal:             'Withdrawal',
+  BetPlaced:              'Bet Placed',
+  BetPayout:              'Bet Payout',
+  BetRefund:              'Bet Refund',
+  RegistrationFeeCharged: 'Registration Fee',
+  RegistrationFeeRefund:  'Registration Fee Refund',
+  PrizePayout:            'Prize Payout',
+  PrizeAdjustment:        'Prize Adjustment',
+  Fine:                   'Fine',
 }
 
 export default function JockeyWallet() {
@@ -50,8 +64,30 @@ export default function JockeyWallet() {
 
   const [allTx, setAllTx] = useState([])
   const [races, setRaces] = useState([])
-  const [rewardMap, setRewardMap] = useState({})
+  const [raceCount, setRaceCount] = useState(0)
   const [toast, setToast] = useState(null)
+
+  const [ledger, setLedger]             = useState([])
+  const [ledgerPage, setLedgerPage]     = useState(1)
+  const [ledgerTotalPages, setLedgerTotalPages] = useState(1)
+  const [ledgerTotalCount, setLedgerTotalCount] = useState(0)
+  const [ledgerLoading, setLedgerLoading] = useState(true)
+  const LEDGER_PAGE_SIZE = 8
+
+  const fetchLedger = useCallback((p) => {
+    setLedgerLoading(true)
+    getMyWalletTransactions({ page: p, pageSize: LEDGER_PAGE_SIZE })
+      .then(r => {
+        const data = r.data?.data
+        setLedger(data?.items || [])
+        setLedgerTotalPages(Math.ceil((data?.totalCount || 0) / LEDGER_PAGE_SIZE) || 1)
+        setLedgerTotalCount(data?.totalCount || 0)
+      })
+      .catch(() => {})
+      .finally(() => setLedgerLoading(false))
+  }, [])
+
+  useEffect(() => { fetchLedger(ledgerPage) }, [ledgerPage, fetchLedger])
 
   const fetchData = useCallback((p) => {
     setLoading(true)
@@ -89,27 +125,19 @@ export default function JockeyWallet() {
       setTotalCount(completed.length)
       setPage(1)
     }).catch(() => {})
-  }, [user])
+    setLedgerPage(1)
+    fetchLedger(1)
+  }, [user, fetchLedger])
 
   useRaceHub(null, { onBalanceUpdated: handleBalanceUpdated })
 
   useEffect(() => {
-    Promise.all([
-      getJockeyMyRequests()
-        .then(r => setRaces((r.data.data || []).filter(reg => reg.jockeyConfirmation === true)))
-        .catch(() => {}),
-      getMyJockeyRewards({ page: 1, pageSize: 200 })
-        .then(r => {
-          const items = r.data.data?.rewards?.items || []
-          const map = {}
-          items.forEach(item => {
-            const key = item.raceNumber
-            map[key] = (map[key] || 0) + (item.amount || 0)
-          })
-          setRewardMap(map)
-        })
-        .catch(() => {}),
-    ])
+    getMyJockeyRaceHistory({ page: 1, pageSize: 5 })
+      .then(r => {
+        setRaces(r.data.data?.items || [])
+        setRaceCount(r.data.data?.totalCount || 0)
+      })
+      .catch(() => {})
   }, [])
 
 
@@ -254,24 +282,22 @@ export default function JockeyWallet() {
               <div className="space-y-4">
                 {(() => {
                   const COLORS = ['bg-yellow-500', 'bg-blue-400', 'bg-emerald-400', 'bg-gray-400', 'bg-gray-600']
-                  return races.slice(0, 5).map((reg, idx) => (
-                    <div key={reg.registrationId} className="flex justify-between items-center bg-[#1a2130] p-4 rounded-lg border border-gray-700/50">
+                  return races.map((item, idx) => (
+                    <div key={item.registrationId} className="flex justify-between items-center bg-[#1a2130] p-4 rounded-lg border border-gray-700/50">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${COLORS[idx % COLORS.length]}`} />
                         <span className="font-bold text-sm text-white truncate">
-                          {reg.race?.raceName || `Race #${reg.race?.raceNumber || '—'}`}
+                          {item.raceName || `Race #${item.raceNumber || '—'}`}
                         </span>
                       </div>
                       <span className="font-black text-sm text-gray-300 shrink-0 ml-2">
-                        {rewardMap[reg.race?.raceNumber] != null
-                          ? `${rewardMap[reg.race.raceNumber].toLocaleString()} VND`
-                          : '—'}
+                        {item.earnings != null ? `${item.earnings.toLocaleString()} VND` : '—'}
                       </span>
                     </div>
                   ))
                 })()}
-                {races.length > 5 && (
-                  <p className="text-[11px] text-gray-500 text-center pt-1">+{races.length - 5} more races</p>
+                {raceCount > 5 && (
+                  <p className="text-[11px] text-gray-500 text-center pt-1">+{raceCount - 5} more races</p>
                 )}
               </div>
             )}
@@ -346,6 +372,68 @@ export default function JockeyWallet() {
             </div>
           </div>
         </div>
+
+        {/* Wallet Ledger — every balance-affecting event, not just deposits/withdrawals */}
+        <section className="bg-[#1a1c23] rounded-xl border border-gray-800 overflow-hidden">
+          <div className="p-4 flex justify-between items-center border-b border-gray-800">
+            <h3 className="font-bold text-sm text-gray-200">Wallet Ledger</h3>
+            <span className="text-[11px] text-gray-500 font-medium">{ledgerTotalCount} total</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-gray-300">
+              <thead className="bg-[#16181d] text-gray-500 font-bold uppercase text-[10px] tracking-wider border-b border-gray-800/50">
+                <tr>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4 text-right">Amount</th>
+                  <th className="p-4 text-right">Balance After</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800/60">
+                {ledgerLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>{Array.from({ length: 4 }).map((_, j) => (
+                      <td key={j} className="p-4"><div className="h-4 bg-gray-800 rounded animate-pulse w-20" /></td>
+                    ))}</tr>
+                  ))
+                ) : ledger.length === 0 ? (
+                  <tr><td colSpan={4} className="p-12 text-center text-gray-500">No wallet activity yet.</td></tr>
+                ) : (
+                  ledger.map((tx) => {
+                    const positive = (tx.amount || 0) >= 0
+                    return (
+                      <tr key={tx.walletTransactionId} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="p-4 font-bold text-gray-200">{LEDGER_TYPE_LABEL[tx.type] || tx.type}</td>
+                        <td className="p-4 text-gray-500">{fmtDate(tx.createdAt)}</td>
+                        <td className={`p-4 text-right font-bold ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {positive ? '+' : ''}{(tx.amount || 0).toLocaleString()} VND
+                        </td>
+                        <td className="p-4 text-right text-gray-400">{(tx.balanceAfter || 0).toLocaleString()} VND</td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {ledgerTotalPages > 1 && (
+            <div className="p-4 border-t border-gray-800 flex items-center justify-between">
+              <span className="text-[11px] text-gray-500">Page {ledgerPage} / {ledgerTotalPages}</span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setLedgerPage(p => Math.max(1, p - 1))} disabled={ledgerPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40 text-xs font-bold transition-colors">
+                  Prev
+                </button>
+                <button onClick={() => setLedgerPage(p => Math.min(ledgerTotalPages, p + 1))} disabled={ledgerPage === ledgerTotalPages}
+                  className="px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:bg-gray-800 disabled:opacity-40 text-xs font-bold transition-colors">
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
 
       {/* Deposit Modal */}

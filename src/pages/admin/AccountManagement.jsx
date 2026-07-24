@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Users, CheckCircle2, AlertTriangle, Ban, Search, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react'
+import { Users, CheckCircle2, AlertTriangle, Search, ChevronLeft, ChevronRight, X, FileText } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
-import { getAccountsPaged, suspendAccount, banAccount, restoreAccount, getUpgradeRequests, getUpgradeDetail, approveUpgrade, rejectUpgrade } from '../../api/accounts'
+import { getAccountsPaged, suspendAccount, restoreAccount, getUpgradeRequests, getUpgradeDetail, approveUpgrade, rejectUpgrade } from '../../api/accounts'
 import { useRaceHub } from '../../hooks/useRaceHub'
 const ROLE_COLOR = {
   Admin:      'bg-red-50 text-red-600 border-red-200',
@@ -35,14 +35,9 @@ function StatusCell({ status }) {
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />Active
     </span>
   )
-  if (status === 'Suspended') return (
+  return (
     <span className="flex items-center text-xs font-semibold text-gray-700">
       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />Suspended
-    </span>
-  )
-  return (
-    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-wide border border-rose-300 text-rose-500 bg-rose-50 uppercase ring-1 ring-inset ring-rose-500/20">
-      Banned
     </span>
   )
 }
@@ -157,6 +152,7 @@ function UpgradeRequests({ onCountChange, refreshKey }) {
   const [page, setPage]           = useState(1)
   const [totalPages, setTotal]    = useState(1)
   const [totalCount, setCount]    = useState(0)
+  const [error, setError]         = useState('')
   const pageSize = 4
 
   const load = (p = page) => {
@@ -181,7 +177,12 @@ function UpgradeRequests({ onCountChange, refreshKey }) {
 
   const handle = async (accountId, fn) => {
     setActing(accountId)
-    try { await fn(accountId) } catch {}
+    setError('')
+    try {
+      await fn(accountId)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
     setSelected(null)
     load(page)
@@ -201,6 +202,14 @@ function UpgradeRequests({ onCountChange, refreshKey }) {
 
   return (
     <>
+      {error && (
+        <div className="flex items-center gap-2 mb-4 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+          </button>
+        </div>
+      )}
       <div className="space-y-4">
         {list.map(acc => (
           <div key={acc.accountId || acc.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -302,10 +311,10 @@ export default function AccountManagement() {
   const [pendingCount, setPendingCount]       = useState(0)
   const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
+  const [error, setError]         = useState('')
 
   const [countActive, setCountActive]       = useState(0)
   const [countSuspended, setCountSuspended] = useState(0)
-  const [countBanned, setCountBanned]       = useState(0)
 
   const loadAccounts = (p = page, q = search, s = statusFilter) => {
     setLoading(true)
@@ -324,8 +333,6 @@ export default function AccountManagement() {
       .then(r => setCountActive(r.data.data?.totalCount || 0)).catch(() => {})
     getAccountsPaged({ page: 1, pageSize: 1, status: 'Suspended' })
       .then(r => setCountSuspended(r.data.data?.totalCount || 0)).catch(() => {})
-    getAccountsPaged({ page: 1, pageSize: 1, status: 'Banned' })
-      .then(r => setCountBanned(r.data.data?.totalCount || 0)).catch(() => {})
   }
 
   useEffect(() => {
@@ -349,18 +356,19 @@ export default function AccountManagement() {
 
   const handleAction = async (id, fn) => {
     setActing(id)
+    setError('')
     try {
       await fn(id)
       if (statusFilter === '') {
-        const nextStatus =
-          fn === suspendAccount ? 'Suspended' :
-          fn === banAccount     ? 'Banned'    : 'Active'
+        const nextStatus = fn === suspendAccount ? 'Suspended' : 'Active'
         setAccounts(prev => prev.map(a => a.id === id ? { ...a, status: nextStatus } : a))
       } else {
         loadAccounts(page, search, statusFilter)
       }
       loadCounts()
-    } catch {}
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
   }
 
@@ -379,6 +387,15 @@ export default function AccountManagement() {
           <h1 className="text-2xl font-bold text-gray-900">Account Management</h1>
           <p className="text-sm text-gray-500 mt-1">Manage user accounts and role upgrade requests.</p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex items-center gap-6 border-b border-gray-200">
@@ -406,7 +423,7 @@ export default function AccountManagement() {
         ) : (
           <>
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
               <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-start">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Total</p>
@@ -428,13 +445,6 @@ export default function AccountManagement() {
                 </div>
                 <div className="p-2.5 bg-amber-50 rounded-xl text-amber-500"><AlertTriangle size={20} /></div>
               </div>
-              <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-start">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Banned</p>
-                  <p className="text-3xl font-extrabold text-gray-900 mt-2">{countBanned}</p>
-                </div>
-                <div className="p-2.5 bg-rose-50 rounded-xl text-rose-500"><Ban size={20} /></div>
-              </div>
             </div>
 
             {/* Table */}
@@ -444,7 +454,7 @@ export default function AccountManagement() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-gray-900">All Accounts</h2>
                   <div className="flex items-center gap-1">
-                    {[['', 'All'], ['Active', 'Active'], ['Suspended', 'Suspended'], ['Banned', 'Banned']].map(([val, label]) => (
+                    {[['', 'All'], ['Active', 'Active'], ['Suspended', 'Suspended']].map(([val, label]) => (
                       <button
                         key={val}
                         type="button"
@@ -495,8 +505,12 @@ export default function AccountManagement() {
                         <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-gray-800 text-white font-bold text-xs flex items-center justify-center shrink-0 tracking-wider">
-                                {initials(acc.email)}
+                              <div className="w-9 h-9 rounded-full bg-gray-800 text-white font-bold text-xs flex items-center justify-center shrink-0 tracking-wider overflow-hidden">
+                                {acc.avatarUrl ? (
+                                  <img src={acc.avatarUrl} alt={acc.email} className="w-full h-full object-cover block" />
+                                ) : (
+                                  initials(acc.email)
+                                )}
                               </div>
                               <span className="font-medium text-gray-900 text-sm"><Highlight text={acc.email} query={search} /></span>
                             </div>
@@ -515,22 +529,13 @@ export default function AccountManagement() {
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-2">
                               {acc.status === 'Active' ? (
-                                <>
-                                  <button
-                                    onClick={() => handleAction(acc.id, suspendAccount)}
-                                    disabled={acting === acc.id}
-                                    className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
-                                  >
-                                    Suspend
-                                  </button>
-                                  <button
-                                    onClick={() => handleAction(acc.id, banAccount)}
-                                    disabled={acting === acc.id}
-                                    className="px-3 py-1.5 border border-rose-200 text-rose-600 rounded-lg text-xs font-bold hover:bg-rose-50 transition-colors disabled:opacity-50"
-                                  >
-                                    Ban
-                                  </button>
-                                </>
+                                <button
+                                  onClick={() => handleAction(acc.id, suspendAccount)}
+                                  disabled={acting === acc.id}
+                                  className="px-3 py-1.5 border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                >
+                                  Suspend
+                                </button>
                               ) : (
                                 <button
                                   onClick={() => handleAction(acc.id, restoreAccount)}

@@ -50,7 +50,7 @@ export default function TakeoutLedger() {
     load(page, betType, true)
   }, [load, page, betType])
 
-  useRaceHub(null, { onTakeoutLedgerUpdated: handleTakeoutLedgerUpdated })
+  useRaceHub(null, { onTakeoutLedgerUpdated: handleTakeoutLedgerUpdated, onRacesUpdated: handleTakeoutLedgerUpdated })
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -149,11 +149,10 @@ export default function TakeoutLedger() {
                   key={r.takeoutLedgerId}
                   className="grid grid-cols-[2fr_0.8fr_1fr_0.8fr_1fr_1.2fr] items-center px-5 py-4 gap-x-2"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0" title={r.raceId}>
                     <p className="font-bold text-gray-900 text-sm truncate">
                       {r.raceName || 'Deleted race'}{r.raceNumber != null && ` (#${r.raceNumber})`}
                     </p>
-                    <p className="text-gray-400 text-xs truncate">{r.raceId}</p>
                   </div>
 
                   <div>

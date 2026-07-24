@@ -21,12 +21,12 @@ const TABS = [
     createFn:   createRegistrationFeeConfig,
     activateFn: activateRegistrationFeeConfig,
     activeMetrics: (d) => [
-      { label: 'Fee per Race (coins)', value: coin(d.feeAmount) },
+      { label: 'Fee per Race (VND)', value: coin(d.feeAmount) },
     ],
     formDef: [
-      { key: 'feeAmount', label: 'Fee Amount (coins)', raw: true, step: '1', placeholder: '1000' },
+      { key: 'feeAmount', label: 'Fee Amount (VND)', raw: true, step: '1', placeholder: '1000' },
     ],
-    tableHeaders: ['Fee Amount (coins)'],
+    tableHeaders: ['Fee Amount (VND)'],
     rowCells: (r) => [coin(r.feeAmount)],
   },
   {
@@ -112,6 +112,7 @@ function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, f
   const [form,      setForm]      = useState(() => Object.fromEntries(formDef.map(f => [f.key, ''])))
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
+  const [activateError, setActivateError] = useState('')
 
   const loadActive = () =>
     getActive().then(r => setActive(r.data.data || null)).catch(() => {})
@@ -137,7 +138,13 @@ function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, f
 
   const handleActivate = async (id) => {
     setActivating(id)
-    try { await activateFn(id); reload() } catch {}
+    setActivateError('')
+    try {
+      await activateFn(id)
+      reload()
+    } catch (e) {
+      setActivateError(e.response?.data?.message || 'Failed to activate.')
+    }
     setActivating(null)
   }
 
@@ -164,6 +171,15 @@ function ConfigTab({ getActive, getPaged, createFn, activateFn, activeMetrics, f
 
   return (
     <div className="space-y-5">
+
+      {activateError && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+          {activateError}
+          <button onClick={() => setActivateError('')} className="ml-auto text-red-400 hover:text-red-600">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+          </button>
+        </div>
+      )}
 
       {/* Active config card */}
       <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm overflow-hidden relative">

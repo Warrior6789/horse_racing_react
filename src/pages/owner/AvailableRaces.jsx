@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { MapPin, Sprout, Mountain, Ruler, ChevronDown, ChevronLeft, ChevronRight, Search, Calendar, Users } from 'lucide-react'
+import { MapPin, Sprout, Mountain, Ruler, ChevronLeft, ChevronRight, Search, Calendar, Users } from 'lucide-react'
 import OwnerLayout from '../../components/OwnerLayout'
 import { getUpcomingRaces, getRaceRegistrations } from '../../api/races'
 import { getOwnerAllRegistrations } from '../../api/registrations'
@@ -22,13 +22,13 @@ function Highlight({ text, query }) {
 
 function rawDate(st) {
   if (!st) return null
-  const [y, mo, d] = st.slice(0, 10).split('-').map(Number)
-  return new Date(y, mo - 1, d)
+  return new Date(st)
 }
 function rawTimeStr(st) {
-  if (!st || st.length < 16) return null
-  const h = parseInt(st.substring(11, 13), 10)
-  const m = st.substring(14, 16)
+  if (!st) return null
+  const d = new Date(st)
+  const h = d.getHours()
+  const m = String(d.getMinutes()).padStart(2, '0')
   return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
 }
 
@@ -44,8 +44,6 @@ function RaceCard({ race, regCount, onRegister, isRegistered, search }) {
   const venue     = race.racecourseName || race.racecourse?.racecourseName || '—'
   const address   = race.location || null
   const distance  = race.trackLength ? `${race.trackLength}m` : race.distance ? `${race.distance}m` : '—'
-  const prizeVal  = race.totalPoolAmount ?? 0
-  const prize     = Number(prizeVal).toLocaleString('vi-VN')
   const grade     = race.raceGrade || race.grade || null
   const status    = race.status || race.raceStatus || ''
   const maxSlots  = race.maxHorses || race.maxEntries || race.capacity || null
@@ -124,18 +122,20 @@ function RaceCard({ race, regCount, onRegister, isRegistered, search }) {
 
       {/* Right */}
       <div className="flex items-center justify-between w-full md:w-auto gap-8 shrink-0">
-        <div className="text-right">
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Prize Pool</p>
-          <p className="text-lg font-black text-white">
-            {prize} <span className="text-xs text-[#facc15] ml-0.5">VND</span>
-          </p>
-        </div>
         {isRegistered ? (
           <button
             disabled
             className="border-2 border-green-600/50 text-green-400 bg-green-500/10 px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap cursor-not-allowed opacity-80"
           >
             ✓ Registered
+          </button>
+        ) : status !== 'Scheduled' ? (
+          <button
+            disabled
+            title="Registration closes once a race leaves Scheduled status"
+            className="border-2 border-gray-700 text-gray-500 bg-gray-800/40 px-5 py-2 rounded-lg text-sm font-bold whitespace-nowrap cursor-not-allowed opacity-80"
+          >
+            Registration Closed
           </button>
         ) : (
           <button
@@ -161,8 +161,6 @@ export default function AvailableRaces() {
   const [loading,         setLoading]         = useState(true)
   const [search,       setSearch]       = useState('')
   const [trackFilter,  setTrackFilter]  = useState('All')
-  const [sortBy,       setSortBy]       = useState('date')
-  const [sortOpen,     setSortOpen]     = useState(false)
   const [showSuccess,  setShowSuccess]  = useState(!!location.state?.success)
   const [refreshKey,   setRefreshKey]   = useState(0)
   const [page,         setPage]         = useState(1)
@@ -218,12 +216,9 @@ export default function AvailableRaces() {
         return t === trackFilter
       })
     }
-    if (sortBy === 'prize') list.sort((a, b) => (b.totalPoolAmount || 0) - (a.totalPoolAmount || 0))
-    else                    list.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+    list.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
     return list
-  }, [races, search, trackFilter, sortBy])
-
-  const SORT_LABELS = { date: 'Date (Soonest)', prize: 'Prize Pool' }
+  }, [races, search, trackFilter])
 
   return (
     <OwnerLayout>
@@ -257,24 +252,6 @@ export default function AvailableRaces() {
                 {t === 'All' ? 'Track: All' : t}
               </button>
             ))}
-
-            <div className="relative">
-              <button onClick={() => setSortOpen(o => !o)}
-                className="flex items-center gap-2 bg-[#161a23] border border-gray-800 rounded-lg px-4 py-2 text-xs font-medium text-gray-400 hover:border-gray-600 hover:text-gray-200 transition-colors">
-                Sort: <span className="text-white font-bold">{SORT_LABELS[sortBy]}</span>
-                <ChevronDown size={13} className={`transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {sortOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-44 bg-[#1a1f2b] border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
-                  {Object.entries(SORT_LABELS).map(([k, v]) => (
-                    <button key={k} onClick={() => { setSortBy(k); setSortOpen(false) }}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors ${sortBy === k ? 'text-[#facc15] bg-[#facc15]/10' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}>
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
@@ -355,7 +332,6 @@ export default function AvailableRaces() {
         })()}
       </div>
 
-      {sortOpen && <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />}
     </OwnerLayout>
   )
 }

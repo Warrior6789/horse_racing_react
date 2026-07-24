@@ -4,6 +4,7 @@ import SpectatorLayout from '../../components/SpectatorLayout'
 import { getBalance, deposit, getTransactions } from '../../api/payments'
 import { requestWithdrawal } from '../../api/withdrawals'
 import { getMyBetsPaged } from '../../api/bets'
+import { getMyWalletTransactions } from '../../api/walletTransactions'
 import { useRaceHub } from '../../hooks/useRaceHub'
 import { useAuth } from '../../context/AuthContext'
 
@@ -26,6 +27,20 @@ const BALANCE_REASON_MSG = {
   PrizePayout:           (amount) => `+${amount.toLocaleString()} VND prize payout`,
   RefundBet:             (amount) => `+${amount.toLocaleString()} VND bet refund`,
   RefundRegistrationFee: (amount) => `+${amount.toLocaleString()} VND registration fee refund`,
+  BetPlaced:             (amount) => `-${Math.abs(amount).toLocaleString()} VND bet placed`,
+}
+
+const LEDGER_TYPE_LABEL = {
+  Deposit:                'Deposit',
+  Withdrawal:             'Withdrawal',
+  BetPlaced:              'Bet Placed',
+  BetPayout:              'Bet Payout',
+  BetRefund:              'Bet Refund',
+  RegistrationFeeCharged: 'Registration Fee',
+  RegistrationFeeRefund:  'Registration Fee Refund',
+  PrizePayout:            'Prize Payout',
+  PrizeAdjustment:        'Prize Adjustment',
+  Fine:                   'Fine',
 }
 
 export default function WalletPage() {
@@ -41,6 +56,28 @@ export default function WalletPage() {
   const [totalWinnings, setTotalWinnings] = useState(0)
   const [pendingBets, setPendingBets]     = useState(0)
   const [wonBets, setWonBets]             = useState(0)
+
+  const [ledger, setLedger]             = useState([])
+  const [ledgerPage, setLedgerPage]     = useState(1)
+  const [ledgerTotalPages, setLedgerTotalPages] = useState(1)
+  const [ledgerTotalCount, setLedgerTotalCount] = useState(0)
+  const [ledgerLoading, setLedgerLoading] = useState(true)
+  const LEDGER_PAGE_SIZE = 8
+
+  const fetchLedger = useCallback((p) => {
+    setLedgerLoading(true)
+    getMyWalletTransactions({ page: p, pageSize: LEDGER_PAGE_SIZE })
+      .then(r => {
+        const data = r.data?.data
+        setLedger(data?.items || [])
+        setLedgerTotalPages(Math.ceil((data?.totalCount || 0) / LEDGER_PAGE_SIZE) || 1)
+        setLedgerTotalCount(data?.totalCount || 0)
+      })
+      .catch(() => {})
+      .finally(() => setLedgerLoading(false))
+  }, [])
+
+  useEffect(() => { fetchLedger(ledgerPage) }, [ledgerPage, fetchLedger])
 
   const [depositModal, setDepositModal]   = useState(false)
   const [withdrawModal, setWithdrawModal] = useState(false)
@@ -66,8 +103,8 @@ export default function WalletPage() {
       }).catch(() => {}),
       getMyBetsPaged({ page: 1, pageSize: 100 }).then(r => {
         const items = r.data.data?.items || []
-        setTotalWinnings(items.filter(b => b.status === 'Won').reduce((s, b) => s + (b.potentialWinnings || 0), 0))
-        setPendingBets(items.filter(b => b.status === 'Pending').length)
+        setTotalWinnings(items.filter(b => b.status === 'Won').reduce((s, b) => s + (b.betAmount || 0) * (b.payoutRatio || 0), 0))
+        setPendingBets(items.filter(b => b.status === 'Active').length)
         setWonBets(items.filter(b => b.status === 'Won').length)
       }).catch(() => {}),
     ]).finally(() => setLoading(false))
@@ -99,7 +136,9 @@ export default function WalletPage() {
       setTotalCount(completed.length)
       setPage(1)
     }).catch(() => {})
-  }, [user])
+    setLedgerPage(1)
+    fetchLedger(1)
+  }, [user, fetchLedger])
 
   useRaceHub(null, {
     onPaymentsUpdated:    handlePaymentsUpdated,
@@ -223,7 +262,7 @@ export default function WalletPage() {
           {[
             { icon: <TrendingUp size={16} />, color: 'text-emerald-400 bg-emerald-500/10', label: 'Total Winnings', value: loading ? '—' : `+${totalWinnings.toLocaleString()} VND` },
             { icon: <Trophy size={16} />,    color: 'text-[#f7e0a3] bg-[#f7e0a3]/10',    label: 'Bets Won',        value: loading ? '—' : `${wonBets} Races` },
-            { icon: <Clock size={16} />,     color: 'text-stone-400 bg-stone-500/10',     label: 'Pending Bets',    value: loading ? '—' : `${pendingBets} Stakes` },
+            { icon: <Clock size={16} />,     color: 'text-stone-400 bg-stone-500/10',     label: 'Active Bets',    value: loading ? '—' : `${pendingBets} Stakes` },
           ].map(({ icon, color, label, value }) => (
             <div key={label} className="bg-[#171410] p-4 rounded-xl border border-stone-800/50 flex items-center space-x-3">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
@@ -309,6 +348,68 @@ export default function WalletPage() {
                   Prev
                 </button>
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-stone-800 text-stone-400 hover:bg-stone-800/40 disabled:opacity-40 text-xs font-bold transition-colors">
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Wallet Ledger — every balance-affecting event, not just deposits/withdrawals */}
+        <section className="bg-[#171410] rounded-xl border border-stone-800/50 overflow-hidden">
+          <div className="p-4 flex justify-between items-center border-b border-stone-800/50">
+            <h3 className="font-bold text-sm tracking-wide text-stone-200">Wallet Ledger</h3>
+            <span className="text-[11px] text-stone-500 font-medium">{ledgerTotalCount} total</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-stone-300">
+              <thead className="bg-[#110e0b] text-stone-500 font-bold uppercase text-[10px] tracking-wider border-b border-stone-800/30">
+                <tr>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4 text-right">Amount</th>
+                  <th className="p-4 text-right">Balance After</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-800/40">
+                {ledgerLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>{Array.from({ length: 4 }).map((_, j) => (
+                      <td key={j} className="p-4"><div className="h-4 bg-stone-800 rounded animate-pulse w-20" /></td>
+                    ))}</tr>
+                  ))
+                ) : ledger.length === 0 ? (
+                  <tr><td colSpan={4} className="p-12 text-center text-stone-500">No wallet activity yet.</td></tr>
+                ) : (
+                  ledger.map((tx) => {
+                    const positive = (tx.amount || 0) >= 0
+                    return (
+                      <tr key={tx.walletTransactionId} className="hover:bg-[#1a1610] transition-colors">
+                        <td className="p-4 font-bold text-stone-200">{LEDGER_TYPE_LABEL[tx.type] || tx.type}</td>
+                        <td className="p-4 text-stone-500">{fmtDate(tx.createdAt)}</td>
+                        <td className={`p-4 text-right font-bold ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {positive ? '+' : ''}{(tx.amount || 0).toLocaleString()} VND
+                        </td>
+                        <td className="p-4 text-right text-stone-400">{(tx.balanceAfter || 0).toLocaleString()} VND</td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {ledgerTotalPages > 1 && (
+            <div className="p-4 border-t border-stone-800/50 flex items-center justify-between">
+              <span className="text-[11px] text-stone-500">Page {ledgerPage} / {ledgerTotalPages}</span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setLedgerPage(p => Math.max(1, p - 1))} disabled={ledgerPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-stone-800 text-stone-400 hover:bg-stone-800/40 disabled:opacity-40 text-xs font-bold transition-colors">
+                  Prev
+                </button>
+                <button onClick={() => setLedgerPage(p => Math.min(ledgerTotalPages, p + 1))} disabled={ledgerPage === ledgerTotalPages}
                   className="px-3 py-1.5 rounded-lg border border-stone-800 text-stone-400 hover:bg-stone-800/40 disabled:opacity-40 text-xs font-bold transition-colors">
                   Next
                 </button>

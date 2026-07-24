@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
         const next = {
           ...prev,
           requestedRole: me.requestedRole ?? null,
+          avatarUrl: me.avatarUrl ?? prev?.avatarUrl ?? null,
           ...(mappedRole && { role: mappedRole }),
         }
         localStorage.setItem('user', JSON.stringify(next))

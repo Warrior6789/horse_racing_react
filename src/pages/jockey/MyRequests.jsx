@@ -29,6 +29,7 @@ export default function JockeyRequests() {
   const [page, setPage]           = useState(1)
   const [selectedOwner, setSelectedOwner] = useState(null)
   const [selectedHorse, setSelectedHorse] = useState(null)
+  const [error, setError] = useState('')
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -52,6 +53,7 @@ export default function JockeyRequests() {
 
   const handle = async (id, action) => {
     setActing(id)
+    setError('')
     try {
       if (action === 'accept') {
         await acceptRegistration(id)
@@ -65,11 +67,16 @@ export default function JockeyRequests() {
         }).catch(() => {})
       }
       fetchData()
-    } catch {}
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     finally { setActing(null) }
   }
 
-  const pendingRegs = regs.filter(r => r.jockeyConfirmation === null || r.jockeyConfirmation === undefined)
+  const pendingRegs = regs.filter(r =>
+    (r.jockeyConfirmation === null || r.jockeyConfirmation === undefined) &&
+    !['Completed', 'Finished', 'Cancelled'].includes(r.race?.status)
+  )
   const totalPages  = Math.max(1, Math.ceil(pendingRegs.length / PAGE_SIZE))
   const safePage    = Math.min(page, totalPages)
   const pageItems   = pendingRegs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
@@ -84,9 +91,17 @@ export default function JockeyRequests() {
           <p className="text-gray-400 text-sm">Review and respond to race assignment requests from horse owners.</p>
         </div>
 
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto"><X size={14} /></button>
+          </div>
+        )}
+
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Pending"  value={pendingRegs.length} subtitle="Requires action"     icon={Clock}        />
+          <StatCard title="Accepted" value={regs.filter(r => r.jockeyConfirmation === true).length}  subtitle="Confirmed rides"     icon={Check}        />
           <StatCard title="Rejected" value={regs.filter(r => r.jockeyConfirmation === false).length} subtitle="Declined invitations" icon={AlertCircle}  />
           <StatCard title="Total"    value={regs.length}        subtitle="All invitations"      icon={CalendarDays} />
         </div>

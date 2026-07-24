@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { ShieldAlert, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ShieldAlert, FileText, CheckCircle2, XCircle, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import DashboardLayout from '../../components/DashboardLayout'
 import { getReports, approveReport, rejectReport } from '../../api/refereeReports'
 import { useRaceHub } from '../../hooks/useRaceHub'
@@ -66,10 +66,55 @@ export default function AdminRefereeReports() {
   const [rejected, setRejected]   = useState(0)
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState(null)
+  const [error, setError]         = useState('')
+
+  const [selectedRace, setSelectedRace]     = useState(null)
+  const [raceSummaries, setRaceSummaries]   = useState([])
+  const [racesLoading, setRacesLoading]     = useState(true)
+  const [racePage, setRacePage]             = useState(1)
+
+  const RACE_PAGE_SIZE = 10
+  const raceTotalPages = Math.max(1, Math.ceil(raceSummaries.length / RACE_PAGE_SIZE))
+  const pagedRaceSummaries = raceSummaries.slice((racePage - 1) * RACE_PAGE_SIZE, racePage * RACE_PAGE_SIZE)
+
+  const loadRaceSummaries = useCallback(() => {
+    setRacesLoading(true)
+    getReports({ page: 1, pageSize: 200 })
+      .then(r => {
+        const all = r.data.data?.items || []
+        const map = new Map()
+        all.forEach(row => {
+          if (!map.has(row.raceId)) {
+            map.set(row.raceId, {
+              raceId: row.raceId,
+              raceName: row.raceName,
+              raceNumber: row.raceNumber,
+              racecourseName: row.racecourseName,
+              total: 0, pending: 0, approved: 0, rejected: 0,
+            })
+          }
+          const s = map.get(row.raceId)
+          s.total += 1
+          if (row.status === 'Pending') s.pending += 1
+          else if (row.status === 'Approved') s.approved += 1
+          else if (row.status === 'Rejected') s.rejected += 1
+        })
+        setRaceSummaries(Array.from(map.values()))
+      })
+      .catch(() => {})
+      .finally(() => setRacesLoading(false))
+  }, [])
+
+  useEffect(() => { loadRaceSummaries() }, [loadRaceSummaries])
+
+  useEffect(() => {
+    setRacePage(p => Math.min(p, Math.max(1, Math.ceil(raceSummaries.length / RACE_PAGE_SIZE))))
+  }, [raceSummaries])
 
   const load = useCallback((p = page) => {
+    if (!selectedRace) return
     setLoading(true)
-    getReports({ page: p, pageSize: 4 })
+    getReports({ raceId: selectedRace.raceId, page: p, pageSize: 4 })
       .then(r => {
         const d = r.data.data || {}
         setItems(d.items || [])
@@ -81,29 +126,152 @@ export default function AdminRefereeReports() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [page])
+  }, [page, selectedRace])
 
-  useEffect(() => { load(page) }, [page])
+  useEffect(() => { if (selectedRace) load(page) }, [page, selectedRace, load])
 
-  useRaceHub(null, { onReportUpdated: () => load(page) })
+  useRaceHub(null, {
+    onReportUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) },
+    onRacesUpdated: () => { loadRaceSummaries(); if (selectedRace) load(page) },
+  })
+
+  const openRace = (race) => {
+    setSelectedRace(race)
+    setPage(1)
+  }
+
+  const backToRaces = () => {
+    setSelectedRace(null)
+    loadRaceSummaries()
+  }
 
   const handle = async (id, fn) => {
     setActing(id)
-    try { await fn(id) } catch {}
+    setError('')
+    try {
+      await fn(id)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Action failed.')
+    }
     setActing(null)
     load(page)
+    loadRaceSummaries()
   }
 
   return (
     <DashboardLayout title="Referee Reports">
       <div className="space-y-8">
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 border border-red-200 text-red-700">
+            {error}
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-600">
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+            </button>
+          </div>
+        )}
 
         {/* Page heading */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Referee Reports</h1>
-          <p className="text-sm text-gray-500 mt-1">Review and approve incident reports submitted by referees.</p>
-        </div>
+        {selectedRace ? (
+          <div>
+            <button onClick={backToRaces} className="text-xs font-bold text-gray-500 hover:text-gray-800 flex items-center gap-1 mb-3">
+              <ChevronLeft size={14} /> Back to Races
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">{selectedRace.raceName || `Race #${selectedRace.raceNumber}`}</h1>
+            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5">
+              <MapPin size={13} /> {selectedRace.racecourseName || '—'}
+            </p>
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Referee Reports</h1>
+            <p className="text-sm text-gray-500 mt-1">Select a race to review its incident reports.</p>
+          </div>
+        )}
 
+        {!selectedRace ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] px-5 py-3 bg-gray-50 border-b border-gray-100">
+              {['Race', 'Racecourse', 'Pending', 'Approved', 'Rejected', ''].map(col => (
+                <span key={col} className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{col}</span>
+              ))}
+            </div>
+
+            {racesLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <span className="material-symbols-outlined animate-spin text-3xl text-gray-300">progress_activity</span>
+              </div>
+            ) : raceSummaries.length === 0 ? (
+              <div className="text-center py-16 text-sm font-semibold text-gray-400">No reports found.</div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {pagedRaceSummaries.map(r => (
+                  <div
+                    key={r.raceId}
+                    onClick={() => openRace(r)}
+                    className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_24px] items-center px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors gap-x-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-900 text-sm truncate">{r.raceName || `Race #${r.raceNumber}`}</p>
+                      <p className="text-gray-400 text-xs truncate">{r.raceNumber ? `#${r.raceNumber}` : '—'}</p>
+                    </div>
+                    <p className="text-gray-500 text-xs truncate flex items-center gap-1.5">
+                      <MapPin size={12} className="shrink-0" /> {r.racecourseName || '—'}
+                    </p>
+                    <div>
+                      {r.pending > 0 ? (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-amber-50 text-amber-600 ring-amber-500/20">
+                          {r.pending}
+                        </span>
+                      ) : <span className="text-gray-300 text-xs">—</span>}
+                    </div>
+                    <div>
+                      {r.approved > 0 ? (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-emerald-50 text-emerald-600 ring-emerald-500/20">
+                          {r.approved}
+                        </span>
+                      ) : <span className="text-gray-300 text-xs">—</span>}
+                    </div>
+                    <div>
+                      {r.rejected > 0 ? (
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-red-50 text-red-600 ring-red-500/20">
+                          {r.rejected}
+                        </span>
+                      ) : <span className="text-gray-300 text-xs">—</span>}
+                    </div>
+                    <span className="text-gray-300 text-base text-center">›</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {raceSummaries.length > 0 && (
+              <footer className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between text-xs font-medium text-gray-500">
+                <div>
+                  Showing page <span className="text-gray-900 font-bold">{racePage}</span> of <span className="text-gray-900 font-bold">{raceTotalPages}</span>
+                  <span className="ml-2 text-gray-400">({raceSummaries.length} total)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setRacePage(p => Math.max(1, p - 1))}
+                    disabled={racePage === 1}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-white transition-colors disabled:opacity-40"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setRacePage(p => Math.min(raceTotalPages, p + 1))}
+                    disabled={racePage === raceTotalPages}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-white transition-colors disabled:opacity-40"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </footer>
+            )}
+          </div>
+        ) : (
+          <>
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <KpiCard title="Total Reports" value={totalCount}  icon={<ShieldAlert size={20} />}   iconColor="text-gray-600"    bgIcon="bg-gray-100"    />
@@ -146,7 +314,12 @@ export default function AdminRefereeReports() {
 
                       {/* Race & Horse */}
                       <td className="py-5 px-5 whitespace-nowrap">
-                        <div className="font-bold text-gray-900 text-xs">Race #{row.raceNumber}</div>
+                        <div className="font-bold text-gray-900 text-xs">
+                          {row.raceName || `Race #${row.raceNumber}`}
+                        </div>
+                        <div className="text-gray-400 text-[11px] mt-0.5">
+                          {row.racecourseName || '—'}{row.raceNumber ? ` · #${row.raceNumber}` : ''}
+                        </div>
                         <div className="text-gray-500 text-xs mt-0.5">{row.horseName || '—'}</div>
                       </td>
 
@@ -226,6 +399,8 @@ export default function AdminRefereeReports() {
             </div>
           </footer>
         </div>
+          </>
+        )}
 
       </div>
     </DashboardLayout>
